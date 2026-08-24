@@ -21,7 +21,7 @@ use Modules\Inventory\Policies\OrderPolicy;
  * table that drives those effects.
  */
 #[Fillable([
-    'order_number', 'customer_name', 'customer_email', 'customer_phone',
+    'order_number', 'customer_id', 'customer_name', 'customer_email', 'customer_phone',
     'delivery_address', 'status', 'subtotal', 'discount_total', 'tax_total',
     'total', 'currency', 'notes', 'created_by',
 ])]
@@ -54,6 +54,15 @@ class Order extends BaseModel
     public function items(): HasMany
     {
         return $this->hasMany(OrderItem::class);
+    }
+
+    /**
+     * The customer record this order belongs to. Null for a walk-in sale,
+     * where the customer_name snapshot is all there is.
+     */
+    public function customer(): BelongsTo
+    {
+        return $this->belongsTo(Customer::class);
     }
 
     public function createdBy(): BelongsTo

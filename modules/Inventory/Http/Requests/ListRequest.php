@@ -30,6 +30,7 @@ class ListRequest extends FormRequest
             'category_id' => ['nullable', 'uuid'],
             'parent_id' => ['nullable', 'uuid'],
             'supplier_id' => ['nullable', 'uuid'],
+            'customer_id' => ['nullable', 'uuid'],
             'product_id' => ['nullable', 'uuid'],
             'product_variant_id' => ['nullable', 'uuid'],
             'order_id' => ['nullable', 'uuid'],

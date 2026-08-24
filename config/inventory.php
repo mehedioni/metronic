@@ -36,7 +36,7 @@ return [
     'number_prefixes' => [
         'inbound_receipt' => 'GRN',
         'order' => 'ORD',
-        'shipment' => 'SHP',
+        'customer' => 'CUS',
     ],
 
     /*

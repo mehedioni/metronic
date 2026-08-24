@@ -3,6 +3,7 @@
 use App\Core\Support\Permissions;
 use Illuminate\Support\Facades\Route;
 use Modules\Inventory\Http\Controllers\CategoryController;
+use Modules\Inventory\Http\Controllers\CustomerController;
 use Modules\Inventory\Http\Controllers\DashboardController;
 use Modules\Inventory\Http\Controllers\InboundReceiptController;
 use Modules\Inventory\Http\Controllers\InventoryController;
@@ -40,6 +41,13 @@ Route::middleware(['auth'])->prefix('inventory')->name('inventory.')->group(func
     Route::patch('suppliers/{supplier}/status', [SupplierController::class, 'toggleStatus'])
         ->middleware('permission:'.Permissions::SUPPLIERS_UPDATE)
         ->name('suppliers.status');
+
+    Route::resource('customers', CustomerController::class)
+        ->except(['create', 'edit'])
+        ->middleware('permission:'.Permissions::CUSTOMERS_VIEW);
+    Route::patch('customers/{customer}/status', [CustomerController::class, 'toggleStatus'])
+        ->middleware('permission:'.Permissions::CUSTOMERS_UPDATE)
+        ->name('customers.status');
 
     Route::resource('products', ProductController::class)
         ->except(['create', 'edit'])

@@ -22,6 +22,7 @@ class UpdateOrderRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'customer_id' => ['nullable', 'uuid', Rule::exists('customers', 'id')->whereNull('deleted_at')],
             'customer_name' => ['sometimes', 'string', 'max:255'],
             'customer_email' => ['nullable', 'email', 'max:255'],
             'customer_phone' => ['nullable', 'string', 'max:40'],

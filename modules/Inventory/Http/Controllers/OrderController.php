@@ -15,6 +15,7 @@ use Modules\Inventory\Http\Requests\FulfillOrderRequest;
 use Modules\Inventory\Http\Requests\ListRequest;
 use Modules\Inventory\Http\Requests\StoreOrderRequest;
 use Modules\Inventory\Http\Requests\UpdateOrderRequest;
+use Modules\Inventory\Models\Customer;
 use Modules\Inventory\Models\Order;
 use Modules\Inventory\Models\Product;
 use Modules\Inventory\Services\OrderService;
@@ -51,6 +52,7 @@ class OrderController extends Controller
 
         return Inertia::render('Inventory::Orders/Show', [
             'order' => $order->load([
+                'customer:id,code,name,email,phone,city,country',
                 'items.product:id,name,sku',
                 'items.variant:id,sku,name',
                 'createdBy:id,name',
@@ -127,6 +129,11 @@ class OrderController extends Controller
     {
         return [
             'statuses' => OrderStatus::values(),
+            'customers' => Customer::query()
+                ->active()
+                ->select(['id', 'code', 'name', 'email'])
+                ->orderBy('name')
+                ->get(),
             'products' => Product::query()
                 ->active()
                 ->select(['id', 'name', 'sku', 'selling_price', 'type'])

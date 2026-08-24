@@ -5,6 +5,7 @@ namespace Modules\Inventory\Services;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Modules\Inventory\Exceptions\RestrictedDeletionException;
+use Modules\Inventory\Models\Customer;
 use Modules\Inventory\Models\Order;
 use Modules\Inventory\Models\Product;
 use Modules\Inventory\Models\ProductVariant;
@@ -15,17 +16,18 @@ class OrderService
     public function __construct(private DocumentNumberGenerator $numbers) {}
 
     /**
-     * @param  array{search?: string|null, status?: string|null, from?: string|null, to?: string|null, per_page?: int|null}  $filters
+     * @param  array{search?: string|null, status?: string|null, customer_id?: string|null, from?: string|null, to?: string|null, per_page?: int|null}  $filters
      * @return LengthAwarePaginator<int, Order>
      */
     public function paginate(array $filters): LengthAwarePaginator
     {
         return Order::query()
-            ->with('createdBy:id,name')
+            ->with(['createdBy:id,name', 'customer:id,code,name,email'])
             ->withCount('items')
             ->search($filters['search'] ?? null)
             ->between($filters['from'] ?? null, $filters['to'] ?? null)
             ->when($filters['status'] ?? null, fn ($query, $status) => $query->where('status', $status))
+            ->when($filters['customer_id'] ?? null, fn ($query, $customerId) => $query->where('customer_id', $customerId))
             ->latest()
             ->paginate($filters['per_page'] ?? 15)
             ->withQueryString();
@@ -39,6 +41,7 @@ class OrderService
         return DB::transaction(function () use ($data, $userId): Order {
             $order = Order::create([
                 ...collect($data)->except('items')->all(),
+                ...$this->contactSnapshot($data),
                 'order_number' => $data['order_number']
                     ?? $this->numbers->generate(Order::class, 'order_number', 'order'),
                 'created_by' => $userId,
@@ -79,7 +82,28 @@ class OrderService
     }
 
     /**
-     * Once an order reserves or ships stock its lines are frozen; it can only
+     * Contact details for a new order. When it names a customer, their current
+     * details are copied onto the order so it still reads correctly after the
+     * customer record changes; anything the caller sent explicitly wins.
+     *
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    private function contactSnapshot(array $data): array
+    {
+        if (empty($data['customer_id'])) {
+            return [];
+        }
+
+        $customer = Customer::query()->findOrFail($data['customer_id']);
+
+        return collect($customer->orderSnapshot())
+            ->reject(fn (mixed $value, string $key): bool => filled($data[$key] ?? null))
+            ->all();
+    }
+
+    /**
+     * Once an order reserves or fulfils stock its lines are frozen; it can only
      * be cancelled from then on.
      */
     private function assertEditable(Order $order): void
