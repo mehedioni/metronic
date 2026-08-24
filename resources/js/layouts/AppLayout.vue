@@ -1,142 +1,78 @@
 <script setup lang="ts">
-import { Link, router, usePage } from '@inertiajs/vue3';
-import { MoonIcon, SunIcon } from 'lucide-vue-next';
-import { Button } from '@/components/ui/button';
-import { useAppearance } from '@/composables/useAppearance';
-import { usePermissions } from '@/composables/usePermissions';
-import type { SharedData } from '@/types';
-
-defineProps<{
-    title?: string;
-}>();
-
-const page = usePage<SharedData>();
-const { resolvedAppearance, updateAppearance } = useAppearance();
-const { can } = usePermissions();
+import { Link } from '@inertiajs/vue3';
+import { ChevronRightIcon } from 'lucide-vue-next';
+import type { Crumb } from '@/components/PageHeader.vue';
+import { useSidebar } from '@/composables/useSidebar';
+import AppSidebar from '@/layouts/partials/AppSidebar.vue';
+import AppTopbar from '@/layouts/partials/AppTopbar.vue';
+import FlashMessages from '@/layouts/partials/FlashMessages.vue';
 
 /**
- * Nav entries are filtered by the same permission names the backend
- * enforces, so a user never sees a link they cannot follow.
+ * Application shell: collapsible sidebar, sticky topbar, flash toasts.
+ *
+ * Pages own their own heading (see components/PageHeader.vue); this layout
+ * only renders the breadcrumb trail in the topbar, because that sits outside
+ * the scrolling content.
  */
-const navigation = [
-    { label: 'Dashboard', href: '/dashboard', permission: 'dashboard.view' },
-    {
-        label: 'Products',
-        href: '/inventory/products',
-        permission: 'products.view',
-    },
-    {
-        label: 'Categories',
-        href: '/inventory/categories',
-        permission: 'categories.view',
-    },
-    {
-        label: 'Suppliers',
-        href: '/inventory/suppliers',
-        permission: 'suppliers.view',
-    },
-    { label: 'Stock', href: '/inventory/stock', permission: 'inventory.view' },
-    {
-        label: 'Movements',
-        href: '/inventory/movements',
-        permission: 'inventory.view',
-    },
-    {
-        label: 'Receiving',
-        href: '/inventory/inbound',
-        permission: 'inventory.view',
-    },
-    { label: 'Orders', href: '/inventory/orders', permission: 'orders.view' },
-    {
-        label: 'Customers',
-        href: '/inventory/customers',
-        permission: 'customers.view',
-    },
-    { label: 'Users', href: '/access/users', permission: 'users.view' },
-    { label: 'Roles', href: '/access/roles', permission: 'roles.view' },
-];
+defineProps<{
+    title?: string;
+    breadcrumbs?: Crumb[];
+}>();
 
-function toggleAppearance() {
-    updateAppearance(resolvedAppearance.value === 'dark' ? 'light' : 'dark');
-}
-
-function logout() {
-    router.post('/logout');
-}
+const { collapsed } = useSidebar();
 </script>
 
 <template>
-    <div class="flex min-h-svh flex-col bg-background text-foreground">
-        <header class="border-b border-border">
-            <div class="flex items-center justify-between px-6 py-4">
-                <Link href="/dashboard" class="text-lg font-semibold">{{
-                    page.props.app.name
-                }}</Link>
+    <div class="min-h-svh bg-background text-foreground">
+        <AppSidebar />
 
-                <div class="flex items-center gap-3">
+        <div
+            class="flex min-h-svh min-w-0 flex-col transition-[padding] duration-300 ease-out"
+            :class="collapsed ? 'lg:ps-18' : 'lg:ps-64'"
+        >
+            <AppTopbar>
+                <template #breadcrumbs>
+                    <nav
+                        v-if="breadcrumbs?.length"
+                        class="flex items-center gap-1.5 text-xs font-medium text-muted-foreground lg:text-sm"
+                        aria-label="Breadcrumb"
+                    >
+                        <template
+                            v-for="(crumb, index) in breadcrumbs"
+                            :key="crumb.label"
+                        >
+                            <Link
+                                v-if="crumb.href"
+                                :href="crumb.href"
+                                class="truncate transition-colors hover:text-foreground"
+                                >{{ crumb.label }}</Link
+                            >
+                            <span
+                                v-else
+                                class="truncate font-semibold text-foreground"
+                                >{{ crumb.label }}</span
+                            >
+
+                            <ChevronRightIcon
+                                v-if="index < breadcrumbs.length - 1"
+                                class="size-3.5 shrink-0"
+                            />
+                        </template>
+                    </nav>
+
                     <span
-                        v-if="page.props.auth.user"
-                        class="text-sm text-muted-foreground"
+                        v-else-if="title"
+                        class="truncate text-sm font-semibold"
+                        >{{ title }}</span
                     >
-                        {{ page.props.auth.user.name }}
-                    </span>
-
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        aria-label="Toggle theme"
-                        @click="toggleAppearance"
-                    >
-                        <SunIcon
-                            v-if="resolvedAppearance === 'dark'"
-                            class="size-4"
-                        />
-                        <MoonIcon v-else class="size-4" />
-                    </Button>
-
-                    <Button
-                        v-if="page.props.auth.user"
-                        variant="ghost"
-                        @click="logout"
-                        >Sign out</Button
-                    >
-                </div>
-            </div>
-
-            <nav
-                v-if="page.props.auth.user"
-                class="flex flex-wrap gap-1 px-6 pb-3 text-sm"
-            >
-                <template v-for="item in navigation" :key="item.href">
-                    <Link
-                        v-if="can(item.permission)"
-                        :href="item.href"
-                        class="rounded px-3 py-1 text-muted-foreground hover:bg-muted hover:text-foreground"
-                    >
-                        {{ item.label }}
-                    </Link>
                 </template>
-            </nav>
-        </header>
+            </AppTopbar>
 
-        <main class="flex-1 px-6 py-8">
-            <div
-                v-if="page.props.flash?.success"
-                class="mb-4 rounded border border-emerald-500/40 bg-emerald-500/10 px-4 py-2 text-sm"
-            >
-                {{ page.props.flash.success }}
-            </div>
-            <div
-                v-if="page.props.flash?.error"
-                class="mb-4 rounded border border-red-500/40 bg-red-500/10 px-4 py-2 text-sm"
-            >
-                {{ page.props.flash.error }}
-            </div>
+            <FlashMessages />
 
-            <h1 v-if="title" class="mb-6 text-2xl font-semibold">
-                {{ title }}
-            </h1>
-            <slot />
-        </main>
+            <main class="flex-1 space-y-6 px-4 py-6 lg:px-8">
+                <slot />
+            </main>
+        </div>
     </div>
 </template>

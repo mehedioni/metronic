@@ -59,7 +59,7 @@ class StockQueryService
     }
 
     /**
-     * @param  array{type?: string|null, product_id?: string|null, product_variant_id?: string|null, supplier_id?: string|null, user_id?: int|null, from?: string|null, to?: string|null, per_page?: int|null}  $filters
+     * @param  array{type?: string|null, direction_flow?: string|null, product_id?: string|null, product_variant_id?: string|null, supplier_id?: string|null, user_id?: int|null, from?: string|null, to?: string|null, per_page?: int|null}  $filters
      * @return LengthAwarePaginator<int, StockMovement>
      */
     public function paginateMovements(array $filters): LengthAwarePaginator
@@ -77,6 +77,17 @@ class StockQueryService
             ->when($filters['product_variant_id'] ?? null, fn ($query, $variant) => $query->where('product_variant_id', $variant))
             ->when($filters['supplier_id'] ?? null, fn ($query, $supplier) => $query->where('supplier_id', $supplier))
             ->when($filters['user_id'] ?? null, fn ($query, $user) => $query->where('user_id', $user))
+            // "Inbound" and "outbound" are directions, not types: several
+            // types share each direction, and the sign of the quantity is the
+            // authority on which one a row is.
+            ->when(
+                ($filters['direction_flow'] ?? null) === 'inbound',
+                fn ($query) => $query->inbound(),
+            )
+            ->when(
+                ($filters['direction_flow'] ?? null) === 'outbound',
+                fn ($query) => $query->outbound(),
+            )
             ->tap(fn ($query) => QuerySorter::apply(
                 $query,
                 $filters['sort'] ?? null,

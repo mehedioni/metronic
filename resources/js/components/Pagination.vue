@@ -13,28 +13,28 @@ const props = defineProps<{
 <template>
     <div
         v-if="props.links.length > 3"
-        class="flex flex-wrap items-center justify-between gap-3 border-t border-border px-4 py-3"
+        class="flex flex-wrap items-center justify-between gap-3 border-t border-border px-5 py-3"
     >
-        <p class="text-sm text-muted-foreground">
+        <p class="text-xs text-muted-foreground">
             Showing {{ props.from ?? 0 }}–{{ props.to ?? 0 }} of
             {{ props.total ?? 0 }}
         </p>
 
-        <div class="flex flex-wrap gap-1">
+        <div class="flex flex-wrap items-center gap-1">
             <template v-for="link in props.links" :key="link.label">
                 <span
                     v-if="!link.url"
-                    class="rounded px-3 py-1 text-sm text-muted-foreground"
+                    class="rounded-md px-2.5 py-1 text-xs text-muted-foreground/60"
                     v-html="link.label"
                 />
                 <Link
                     v-else
                     :href="link.url"
-                    class="rounded px-3 py-1 text-sm"
+                    class="rounded-md px-2.5 py-1 text-xs transition-colors"
                     :class="
                         link.active
-                            ? 'bg-primary text-primary-foreground'
-                            : 'hover:bg-muted'
+                            ? 'bg-primary font-semibold text-primary-foreground'
+                            : 'text-muted-foreground hover:bg-accent hover:text-foreground'
                     "
                     preserve-scroll
                 >

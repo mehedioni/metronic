@@ -39,6 +39,7 @@ class ListRequest extends FormRequest
             'low_stock' => ['nullable', 'boolean'],
             'from' => ['nullable', 'date'],
             'to' => ['nullable', 'date', 'after_or_equal:from'],
+            'direction_flow' => ['nullable', 'in:inbound,outbound'],
             'sort' => ['nullable', 'string', 'max:40'],
             'direction' => ['nullable', 'in:asc,desc'],
             'reorder_within' => ['nullable', 'integer', 'between:1,365'],
