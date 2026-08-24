@@ -1,11 +1,14 @@
 <script setup lang="ts">
-import { Head, useForm } from '@inertiajs/vue3';
+import { Head, useForm, usePage } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
+import type { SharedData } from '@/types';
 
 defineProps<{
     canResetPassword: boolean;
     status?: string | null;
 }>();
+
+const page = usePage<SharedData>();
 
 const form = useForm({
     email: '',
@@ -32,7 +35,7 @@ function submit() {
             <div>
                 <h1 class="text-xl font-semibold">Sign in</h1>
                 <p class="text-sm text-muted-foreground">
-                    RentMy Admin — inventory management
+                    {{ page.props.app.name }} — inventory management
                 </p>
             </div>
 

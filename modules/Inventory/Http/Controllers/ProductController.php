@@ -31,6 +31,15 @@ class ProductController extends Controller
         ]);
     }
 
+    public function create(): Response
+    {
+        $this->authorize('create', Product::class);
+
+        return Inertia::render('Inventory::Products/Create', [
+            'options' => $this->formOptions(),
+        ]);
+    }
+
     public function store(StoreProductRequest $request): RedirectResponse
     {
         $this->authorize('create', Product::class);
@@ -53,6 +62,21 @@ class ProductController extends Controller
                 'variants',
                 'suppliers:id,company_name',
                 'inventoryItems',
+            ]),
+            'options' => $this->formOptions(),
+        ]);
+    }
+
+    public function edit(Product $product): Response
+    {
+        $this->authorize('update', $product);
+
+        return Inertia::render('Inventory::Products/Edit', [
+            'product' => $product->load([
+                'category:id,name',
+                'primarySupplier:id,company_name',
+                'variants',
+                'suppliers:id,company_name',
             ]),
             'options' => $this->formOptions(),
         ]);

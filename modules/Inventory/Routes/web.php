@@ -32,7 +32,6 @@ Route::middleware(['auth'])->group(function (): void {
 
 Route::middleware(['auth'])->prefix('inventory')->name('inventory.')->group(function (): void {
     Route::resource('categories', CategoryController::class)
-        ->except(['create', 'edit'])
         ->middleware('permission:'.Permissions::CATEGORIES_VIEW);
 
     Route::resource('suppliers', SupplierController::class)
@@ -50,12 +49,14 @@ Route::middleware(['auth'])->prefix('inventory')->name('inventory.')->group(func
         ->name('customers.status');
 
     Route::resource('products', ProductController::class)
-        ->except(['create', 'edit'])
         ->middleware('permission:'.Permissions::PRODUCTS_VIEW);
 
     Route::get('stock', [InventoryController::class, 'index'])
         ->middleware('permission:'.Permissions::INVENTORY_VIEW)
         ->name('stock.index');
+    Route::get('stock/planner', [InventoryController::class, 'planner'])
+        ->middleware('permission:'.Permissions::INVENTORY_VIEW)
+        ->name('stock.planner');
     Route::post('stock/adjust', [InventoryController::class, 'adjust'])
         ->middleware('permission:'.Permissions::INVENTORY_ADJUST)
         ->name('stock.adjust');

@@ -39,6 +39,7 @@ class ListRequest extends FormRequest
             'low_stock' => ['nullable', 'boolean'],
             'from' => ['nullable', 'date'],
             'to' => ['nullable', 'date', 'after_or_equal:from'],
+            'reorder_within' => ['nullable', 'integer', 'between:1,365'],
             'per_page' => ['nullable', 'integer', 'between:1,100'],
         ];
     }

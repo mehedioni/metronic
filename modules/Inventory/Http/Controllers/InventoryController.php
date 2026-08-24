@@ -12,6 +12,7 @@ use Modules\Inventory\Http\Requests\AdjustStockRequest;
 use Modules\Inventory\Http\Requests\ListRequest;
 use Modules\Inventory\Models\Category;
 use Modules\Inventory\Models\InventoryItem;
+use Modules\Inventory\Services\StockPlannerService;
 use Modules\Inventory\Services\StockQueryService;
 use Modules\Inventory\Support\StockableUnit;
 
@@ -28,6 +29,25 @@ class InventoryController extends Controller
             'filters' => $request->filters(),
             'categories' => Category::query()->select(['id', 'name'])->orderBy('name')->get(),
             'movementTypes' => StockMovementType::manualValues(),
+        ]);
+    }
+
+    /**
+     * Reorder planning. Every figure is derived on read from the ledger, the
+     * thresholds and the supplier links — see StockPlannerService.
+     */
+    public function planner(ListRequest $request, StockPlannerService $planner): Response
+    {
+        $this->authorize('viewAny', InventoryItem::class);
+
+        return Inertia::render('Inventory::Stock/Planner', [
+            'items' => $planner->paginate([
+                ...$request->filters(),
+                'reorder_within' => $request->integer('reorder_within') ?: null,
+            ]),
+            'filters' => $request->filters(),
+            'summary' => Inertia::defer(fn () => $planner->summary()),
+            'categories' => Category::query()->select(['id', 'name'])->orderBy('name')->get(),
         ]);
     }
 

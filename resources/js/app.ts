@@ -5,7 +5,7 @@ import { createApp, h } from 'vue';
 import { initializeTheme } from '@/composables/useAppearance';
 import '../css/app.css';
 
-const appName = import.meta.env.VITE_APP_NAME || 'RentMy Admin';
+const appName = import.meta.env.VITE_APP_NAME ?? '';
 
 const appPages = import.meta.glob<DefineComponent>('./pages/**/*.vue');
 const modulePages = import.meta.glob<DefineComponent>(
@@ -31,7 +31,8 @@ function resolvePage(name: string) {
 }
 
 createInertiaApp({
-    title: (title) => (title ? `${title} - ${appName}` : appName),
+    title: (title) =>
+        [title, appName].filter(Boolean).join(' - ') || document.title,
     resolve: resolvePage,
     setup({ el, App, props, plugin }) {
         createApp({ render: () => h(App, props) })

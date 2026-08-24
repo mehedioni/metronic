@@ -10,6 +10,9 @@ export interface AuthUser {
 
 /** Props shared with every page via HandleInertiaRequests::share(). */
 export interface SharedData {
+    app: {
+        name: string;
+    };
     auth: {
         user: AuthUser | null;
         roles: string[];

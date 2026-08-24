@@ -5,7 +5,7 @@ import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import type { DefineComponent } from 'vue';
 import { createSSRApp, h } from 'vue';
 
-const appName = import.meta.env.VITE_APP_NAME || 'RentMy Admin';
+const appName = import.meta.env.VITE_APP_NAME ?? '';
 
 const appPages = import.meta.glob<DefineComponent>('./pages/**/*.vue');
 const modulePages = import.meta.glob<DefineComponent>(
@@ -29,7 +29,7 @@ createServer((page) =>
     createInertiaApp({
         page,
         render: renderToString,
-        title: (title) => (title ? `${title} - ${appName}` : appName),
+        title: (title) => [title, appName].filter(Boolean).join(' - '),
         resolve: resolvePage,
         setup({ App, props, plugin }) {
             return createSSRApp({ render: () => h(App, props) }).use(plugin);

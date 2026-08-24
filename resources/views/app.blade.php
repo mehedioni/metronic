@@ -30,7 +30,7 @@
             }
         </style>
 
-        <title inertia>{{ config('app.name', 'RentMy Admin') }}</title>
+        <title inertia>{{ config('app.name') }}</title>
 
         <link rel="icon" href="/favicon.ico" sizes="any">
 

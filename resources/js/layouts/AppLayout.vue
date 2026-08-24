@@ -69,9 +69,9 @@ function logout() {
     <div class="flex min-h-svh flex-col bg-background text-foreground">
         <header class="border-b border-border">
             <div class="flex items-center justify-between px-6 py-4">
-                <Link href="/dashboard" class="text-lg font-semibold"
-                    >RentMy Admin</Link
-                >
+                <Link href="/dashboard" class="text-lg font-semibold">{{
+                    page.props.app.name
+                }}</Link>
 
                 <div class="flex items-center gap-3">
                     <span

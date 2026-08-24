@@ -39,6 +39,10 @@ class HandleInertiaRequests extends Middleware
 
         return [
             ...parent::share($request),
+            // The store's name lives in config/env only; no component hardcodes it.
+            'app' => [
+                'name' => config('app.name'),
+            ],
             'auth' => [
                 'user' => $user?->only('id', 'name', 'email', 'is_active'),
                 'roles' => $user?->getRoleNames()->all() ?? [],

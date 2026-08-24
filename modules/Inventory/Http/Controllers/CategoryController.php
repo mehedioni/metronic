@@ -29,13 +29,25 @@ class CategoryController extends Controller
         ]);
     }
 
+    public function create(): Response
+    {
+        $this->authorize('create', Category::class);
+
+        return Inertia::render('Inventory::Categories/Create', [
+            'statuses' => RecordStatus::values(),
+            'parents' => Category::query()->select(['id', 'name'])->orderBy('name')->get(),
+        ]);
+    }
+
     public function store(StoreCategoryRequest $request): RedirectResponse
     {
         $this->authorize('create', Category::class);
 
-        $this->categories->create($request->validated());
+        $category = $this->categories->create($request->validated());
 
-        return back()->with('success', 'Category created.');
+        return redirect()
+            ->route('inventory.categories.show', $category)
+            ->with('success', 'Category created.');
     }
 
     public function show(Category $category): Response
@@ -44,6 +56,22 @@ class CategoryController extends Controller
 
         return Inertia::render('Inventory::Categories/Show', [
             'category' => $category->load(['parent:id,name', 'children:id,name,parent_id'])->loadCount('products'),
+        ]);
+    }
+
+    public function edit(Category $category): Response
+    {
+        $this->authorize('update', $category);
+
+        return Inertia::render('Inventory::Categories/Edit', [
+            'category' => $category->load('parent:id,name'),
+            'statuses' => RecordStatus::values(),
+            // A category can never be its own parent, nor a parent of itself.
+            'parents' => Category::query()
+                ->whereKeyNot($category->getKey())
+                ->select(['id', 'name'])
+                ->orderBy('name')
+                ->get(),
         ]);
     }
 
