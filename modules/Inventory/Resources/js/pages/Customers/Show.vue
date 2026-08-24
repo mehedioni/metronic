@@ -1,10 +1,20 @@
 <script setup lang="ts">
 import { Deferred, Head, Link, router, useForm } from '@inertiajs/vue3';
-import DataCard from '@/components/DataCard.vue';
+import { PowerIcon } from 'lucide-vue-next';
+import { computed, ref } from 'vue';
+import { FormField, Textarea } from '@/components/form';
+import PageHeader from '@/components/PageHeader.vue';
+import StatusBadge from '@/components/StatusBadge.vue';
+import { Avatar } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { TabPanel, Tabs } from '@/components/ui/tabs';
 import { usePermissions } from '@/composables/usePermissions';
 import AppLayout from '@/layouts/AppLayout.vue';
-import customersRoutes from '@/routes/inventory/customers';
+import { date, money, number } from '@/lib/format';
+import customers from '@/routes/inventory/customers';
+import orders from '@/routes/inventory/orders';
 
 interface Customer {
     id: string;
@@ -40,6 +50,8 @@ const props = defineProps<{ customer: Customer; history?: History }>();
 
 const { can } = usePermissions();
 
+const tab = ref('orders');
+
 const form = useForm({
     name: props.customer.name,
     email: props.customer.email ?? '',
@@ -49,6 +61,17 @@ const form = useForm({
     country: props.customer.country ?? '',
     notes: props.customer.notes ?? '',
 });
+
+const tabs = [
+    { value: 'orders', label: 'Orders', count: null },
+    { value: 'edit', label: 'Edit', count: null },
+];
+
+const breadcrumbs = computed(() => [
+    { label: 'Store Inventory' },
+    { label: 'Customers', href: customers.index.url() },
+    { label: props.customer.name },
+]);
 
 function toggleStatus() {
     router.patch(`/inventory/customers/${props.customer.id}/status`, {}, {
@@ -60,149 +83,249 @@ function toggleStatus() {
 <template>
     <Head :title="customer.name" />
 
-    <AppLayout :title="customer.name">
-        <div class="grid gap-6 lg:grid-cols-2">
-            <DataCard title="Details">
-                <template #actions>
-                    <Button
-                        v-if="can('customers.update')"
-                        variant="ghost"
-                        @click="toggleStatus"
-                    >
-                        {{ customer.status === 'active' ? 'Deactivate' : 'Activate' }}
-                    </Button>
-                </template>
+    <AppLayout :breadcrumbs="breadcrumbs">
+        <PageHeader
+            :title="customer.name"
+            :description="customer.code"
+            :breadcrumbs="breadcrumbs"
+        >
+            <template #actions>
+                <StatusBadge :status="customer.status" />
 
-                <dl class="space-y-2 p-4 text-sm">
-                    <div class="flex justify-between">
-                        <dt class="text-muted-foreground">Code</dt>
-                        <dd>{{ customer.code }}</dd>
-                    </div>
-                    <div class="flex justify-between">
-                        <dt class="text-muted-foreground">Status</dt>
-                        <dd class="capitalize">{{ customer.status }}</dd>
-                    </div>
-                    <div class="flex justify-between">
-                        <dt class="text-muted-foreground">Email</dt>
-                        <dd>{{ customer.email ?? '—' }}</dd>
-                    </div>
-                    <div class="flex justify-between">
-                        <dt class="text-muted-foreground">Phone</dt>
-                        <dd>{{ customer.phone ?? '—' }}</dd>
-                    </div>
-                    <div class="flex justify-between">
-                        <dt class="text-muted-foreground">City</dt>
-                        <dd>{{ customer.city ?? '—' }}</dd>
-                    </div>
-                    <div class="flex justify-between">
-                        <dt class="text-muted-foreground">Country</dt>
-                        <dd>{{ customer.country ?? '—' }}</dd>
-                    </div>
-                </dl>
-            </DataCard>
-
-            <DataCard v-if="can('customers.update')" title="Edit">
-                <form
-                    class="space-y-3 p-4"
-                    @submit.prevent="form.put(customersRoutes.update.url(customer.id))"
+                <Button
+                    v-if="can('customers.update')"
+                    variant="outline"
+                    size="dense"
+                    @click="toggleStatus"
                 >
-                    <input
-                        v-model="form.name"
-                        placeholder="Name"
-                        class="w-full rounded border border-border bg-background px-3 py-2 text-sm"
+                    <PowerIcon />
+                    {{ customer.status === 'active' ? 'Deactivate' : 'Activate' }}
+                </Button>
+            </template>
+        </PageHeader>
+
+        <Deferred data="history">
+            <template #fallback>
+                <div class="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+                    <div
+                        v-for="index in 4"
+                        :key="index"
+                        class="h-24 animate-pulse rounded-xl bg-muted/40"
                     />
-                    <input
-                        v-model="form.email"
-                        placeholder="Email"
-                        class="w-full rounded border border-border bg-background px-3 py-2 text-sm"
-                    />
-                    <input
-                        v-model="form.phone"
-                        placeholder="Phone"
-                        class="w-full rounded border border-border bg-background px-3 py-2 text-sm"
-                    />
-                    <input
-                        v-model="form.address_line1"
-                        placeholder="Address"
-                        class="w-full rounded border border-border bg-background px-3 py-2 text-sm"
-                    />
-                    <input
-                        v-model="form.city"
-                        placeholder="City"
-                        class="w-full rounded border border-border bg-background px-3 py-2 text-sm"
-                    />
-                    <input
-                        v-model="form.country"
-                        placeholder="Country code"
-                        class="w-full rounded border border-border bg-background px-3 py-2 text-sm"
-                    />
-                    <textarea
-                        v-model="form.notes"
-                        rows="3"
-                        placeholder="Notes"
-                        class="w-full rounded border border-border bg-background px-3 py-2 text-sm"
-                    />
-                    <Button type="submit" :disabled="form.processing">Save</Button>
-                    <p
-                        v-for="(error, field) in form.errors"
-                        :key="field"
-                        class="text-sm text-red-500"
-                    >
-                        {{ error }}
+                </div>
+            </template>
+
+            <div v-if="history" class="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+                <Card class="p-5">
+                    <p class="text-xs text-muted-foreground">Orders</p>
+                    <p class="mt-1 text-2xl font-bold">
+                        {{ number(history.orders_count) }}
                     </p>
-                </form>
-            </DataCard>
+                </Card>
+                <Card class="p-5">
+                    <p class="text-xs text-muted-foreground">Total spent</p>
+                    <p class="mt-1 text-2xl font-bold">
+                        {{ money(history.total_spent) }}
+                    </p>
+                </Card>
+                <Card class="p-5">
+                    <p class="text-xs text-muted-foreground">Average order</p>
+                    <p class="mt-1 text-2xl font-bold">
+                        {{ money(history.average_order_value) }}
+                    </p>
+                </Card>
+                <Card class="p-5">
+                    <p class="text-xs text-muted-foreground">Last order</p>
+                    <p class="mt-1 text-[0.9375rem] font-semibold">
+                        {{ date(history.last_order_at) }}
+                    </p>
+                    <p class="mt-0.5 text-[11px] text-muted-foreground">
+                        {{ number(history.cancelled_orders_count) }} cancelled
+                    </p>
+                </Card>
+            </div>
+        </Deferred>
 
-            <DataCard title="Order history" class="lg:col-span-2">
-                <Deferred data="history">
-                    <template #fallback>
-                        <div class="h-24 animate-pulse bg-muted/40" />
-                    </template>
+        <div class="grid gap-6 lg:grid-cols-3">
+            <Card class="lg:col-span-2">
+                <Tabs
+                    v-model="tab"
+                    :tabs="can('customers.update') ? tabs : tabs.slice(0, 1)"
+                    class="px-5"
+                >
+                    <TabPanel value="orders">
+                        <Deferred data="history">
+                            <template #fallback>
+                                <div class="h-32 animate-pulse bg-muted/40" />
+                            </template>
 
-                    <div v-if="history" class="space-y-4 p-4 text-sm">
-                        <div class="grid gap-3 sm:grid-cols-4">
-                            <p>
-                                Orders: <strong>{{ history.orders_count }}</strong>
-                            </p>
-                            <p>
-                                Total spent: <strong>{{ history.total_spent }}</strong>
-                            </p>
-                            <p>
-                                Avg. order:
-                                <strong>{{ history.average_order_value }}</strong>
-                            </p>
-                            <p>
-                                Last order:
-                                <strong>{{ history.last_order_at ?? '—' }}</strong>
-                            </p>
-                        </div>
-
-                        <div>
-                            <h3 class="mb-2 font-semibold">Recent orders</h3>
-                            <ul class="space-y-1">
-                                <li
-                                    v-for="order in history.recent_orders"
-                                    :key="order.id"
-                                >
-                                    <Link
-                                        :href="`/inventory/orders/${order.id}`"
-                                        class="underline"
-                                        >{{ order.order_number }}</Link
+                            <div v-if="history" class="overflow-x-auto">
+                                <table class="w-full text-xs">
+                                    <thead
+                                        class="border-b border-border bg-muted/70 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground"
                                     >
-                                    — <span class="capitalize">{{ order.status }}</span>
-                                    — {{ order.total }} {{ order.currency }}
-                                </li>
-                                <li
-                                    v-if="!history.recent_orders.length"
-                                    class="text-muted-foreground"
-                                >
-                                    No orders yet.
-                                </li>
-                            </ul>
+                                        <tr>
+                                            <th class="px-5 py-3 text-start">Order</th>
+                                            <th class="px-5 py-3 text-start">Date</th>
+                                            <th class="px-5 py-3 text-center">Items</th>
+                                            <th class="px-5 py-3 text-end">Total</th>
+                                            <th class="px-5 py-3 text-start">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-border">
+                                        <tr
+                                            v-for="order in history.recent_orders"
+                                            :key="order.id"
+                                        >
+                                            <td class="px-5 py-3">
+                                                <Link
+                                                    :href="orders.show.url(order.id)"
+                                                    class="font-mono font-medium hover:underline"
+                                                    >{{ order.order_number }}</Link
+                                                >
+                                            </td>
+                                            <td class="px-5 py-3 text-muted-foreground">
+                                                {{ date(order.created_at) }}
+                                            </td>
+                                            <td class="px-5 py-3 text-center">
+                                                {{ order.items_count }}
+                                            </td>
+                                            <td class="px-5 py-3 text-end font-medium">
+                                                {{ money(order.total, order.currency) }}
+                                            </td>
+                                            <td class="px-5 py-3">
+                                                <StatusBadge
+                                                    :status="order.status"
+                                                    size="sm"
+                                                />
+                                            </td>
+                                        </tr>
+                                        <tr v-if="!history.recent_orders.length">
+                                            <td
+                                                colspan="5"
+                                                class="px-5 py-8 text-center text-muted-foreground"
+                                            >
+                                                No orders yet.
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </Deferred>
+                    </TabPanel>
+
+                    <TabPanel v-if="can('customers.update')" value="edit">
+                        <CardContent>
+                            <form
+                                class="space-y-4"
+                                @submit.prevent="
+                                    form.put(customers.update.url(customer.id), {
+                                        preserveScroll: true,
+                                    })
+                                "
+                            >
+                                <div class="grid gap-4 sm:grid-cols-2">
+                                    <FormField label="Name" :error="form.errors.name">
+                                        <Input v-model="form.name" />
+                                    </FormField>
+
+                                    <FormField label="Email" :error="form.errors.email">
+                                        <Input v-model="form.email" type="email" />
+                                    </FormField>
+
+                                    <FormField label="Phone" :error="form.errors.phone">
+                                        <Input v-model="form.phone" />
+                                    </FormField>
+
+                                    <FormField
+                                        label="Address"
+                                        :error="form.errors.address_line1"
+                                    >
+                                        <Input v-model="form.address_line1" />
+                                    </FormField>
+
+                                    <FormField label="City" :error="form.errors.city">
+                                        <Input v-model="form.city" />
+                                    </FormField>
+
+                                    <FormField
+                                        label="Country"
+                                        :error="form.errors.country"
+                                        hint="Two-letter code"
+                                    >
+                                        <Input v-model="form.country" maxlength="2" />
+                                    </FormField>
+                                </div>
+
+                                <FormField label="Notes" :error="form.errors.notes">
+                                    <Textarea v-model="form.notes" :rows="4" />
+                                </FormField>
+
+                                <div class="flex justify-end">
+                                    <Button
+                                        type="submit"
+                                        size="dense"
+                                        :disabled="form.processing"
+                                        >Save changes</Button
+                                    >
+                                </div>
+                            </form>
+                        </CardContent>
+                    </TabPanel>
+                </Tabs>
+            </Card>
+
+            <Card class="self-start">
+                <CardHeader>
+                    <template #title><CardTitle>Contact</CardTitle></template>
+                </CardHeader>
+
+                <CardContent>
+                    <div class="mb-4 flex items-center gap-3">
+                        <Avatar :name="customer.name" class="size-10" />
+                        <div class="min-w-0">
+                            <p class="truncate text-[0.8125rem] font-medium">
+                                {{ customer.name }}
+                            </p>
+                            <p class="truncate text-[11px] text-muted-foreground">
+                                {{ customer.email ?? 'No email' }}
+                            </p>
                         </div>
                     </div>
-                </Deferred>
-            </DataCard>
+
+                    <dl class="space-y-3">
+                        <div class="flex justify-between gap-3">
+                            <dt class="text-xs text-muted-foreground">Phone</dt>
+                            <dd class="text-[0.8125rem]">
+                                {{ customer.phone ?? '—' }}
+                            </dd>
+                        </div>
+                        <div class="flex justify-between gap-3">
+                            <dt class="text-xs text-muted-foreground">Address</dt>
+                            <dd class="text-end text-[0.8125rem]">
+                                {{ customer.address_line1 ?? '—' }}
+                            </dd>
+                        </div>
+                        <div class="flex justify-between gap-3">
+                            <dt class="text-xs text-muted-foreground">Location</dt>
+                            <dd class="text-[0.8125rem]">
+                                {{
+                                    [customer.city, customer.country]
+                                        .filter(Boolean)
+                                        .join(', ') || '—'
+                                }}
+                            </dd>
+                        </div>
+                    </dl>
+
+                    <div v-if="customer.notes" class="mt-4">
+                        <p class="mb-1 text-xs text-muted-foreground">Notes</p>
+                        <p class="whitespace-pre-line text-[0.8125rem]">
+                            {{ customer.notes }}
+                        </p>
+                    </div>
+                </CardContent>
+            </Card>
         </div>
     </AppLayout>
 </template>

@@ -10,7 +10,9 @@ defineProps<{ title: string; description?: string }>();
             class="flex min-h-9.5 flex-wrap items-center justify-between gap-2 border-b border-border bg-muted/60 px-5 py-2"
         >
             <div class="min-w-0">
-                <h3 class="truncate text-xs font-semibold tracking-tight text-foreground">
+                <h3
+                    class="truncate text-xs font-semibold tracking-tight text-foreground"
+                >
                     {{ title }}
                 </h3>
                 <p v-if="description" class="text-[11px] text-muted-foreground">

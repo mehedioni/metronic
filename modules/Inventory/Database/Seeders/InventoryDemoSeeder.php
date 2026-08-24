@@ -5,6 +5,7 @@ namespace Modules\Inventory\Database\Seeders;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Modules\Inventory\Actions\CancelOrderAction;
 use Modules\Inventory\Actions\ConfirmOrderAction;
@@ -52,6 +53,7 @@ class InventoryDemoSeeder extends Seeder
         $this->openingStock($products);
         $this->receivingHistory($products, $suppliers);
         $this->salesHistory($products, $customers);
+        $this->alignLedgerDates();
 
         $this->command?->info(sprintf(
             'Seeded %d categories, %d suppliers, %d customers, %d products.',
@@ -160,13 +162,22 @@ class InventoryDemoSeeder extends Seeder
         $receive = app(ReceiveInboundReceiptAction::class);
 
         foreach (range(1, 12) as $index) {
+            $receivedOn = Carbon::now()->subDays(fake()->numberBetween(0, 60));
+
             $receipt = InboundReceipt::create([
                 'reference_number' => 'GRN-'.str_pad((string) $index, 5, '0', STR_PAD_LEFT),
                 'supplier_id' => $suppliers->random()->id,
                 'status' => InboundReceiptStatus::Pending,
-                'received_date' => Carbon::now()->subDays(fake()->numberBetween(0, 60))->toDateString(),
+                'received_date' => $receivedOn->toDateString(),
                 'notes' => 'Restock delivery',
             ]);
+
+            // alignLedgerDates() dates each movement from its document, so the
+            // document itself has to be dated first.
+            $receipt->forceFill([
+                'created_at' => $receivedOn,
+                'updated_at' => $receivedOn,
+            ])->save();
 
             foreach ($products->random(fake()->numberBetween(1, 3)) as $product) {
                 $variant = $product->variants()->inRandomOrder()->first();
@@ -199,7 +210,7 @@ class InventoryDemoSeeder extends Seeder
         $fulfill = app(FulfillOrderAction::class);
         $cancel = app(CancelOrderAction::class);
 
-        foreach (range(1, 40) as $index) {
+        foreach (range(1, 120) as $index) {
             $customer = $customers->random();
             $order = Order::factory()->create([
                 'customer_id' => $customer->id,
@@ -277,6 +288,32 @@ class InventoryDemoSeeder extends Seeder
     private function cancel(CancelOrderAction $cancel, Order $order): void
     {
         rescue(fn () => $cancel->handle($order->refresh(), 'Customer changed their mind'), report: false);
+    }
+
+    /**
+     * Date each ledger row to the document that caused it.
+     *
+     * The actions run now, so every movement would otherwise be stamped
+     * today and the dashboard's trend charts would show one spike. Only the
+     * demo data is rewritten this way — the application never backdates a
+     * movement.
+     */
+    private function alignLedgerDates(): void
+    {
+        foreach ([Order::class, InboundReceipt::class] as $model) {
+            DB::table('stock_movements')
+                ->join(
+                    (new $model)->getTable().' as document',
+                    'stock_movements.reference_id',
+                    '=',
+                    'document.id',
+                )
+                ->where('stock_movements.reference_type', $model)
+                ->update([
+                    'stock_movements.created_at' => DB::raw('document.created_at'),
+                    'stock_movements.updated_at' => DB::raw('document.created_at'),
+                ]);
+        }
     }
 
     /**

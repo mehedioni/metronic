@@ -1,10 +1,16 @@
 <script setup lang="ts">
-import { Head, useForm } from '@inertiajs/vue3';
-import DataCard from '@/components/DataCard.vue';
+import { Head, Link } from '@inertiajs/vue3';
+import { PencilIcon } from 'lucide-vue-next';
+import { computed } from 'vue';
+import PageHeader from '@/components/PageHeader.vue';
+import StatusBadge from '@/components/StatusBadge.vue';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { usePermissions } from '@/composables/usePermissions';
 import AppLayout from '@/layouts/AppLayout.vue';
-import categoriesRoutes from '@/routes/inventory/categories';
+import { number } from '@/lib/format';
+import categories from '@/routes/inventory/categories';
+import products from '@/routes/inventory/products';
 
 interface Category {
     id: string;
@@ -21,65 +27,116 @@ const props = defineProps<{ category: Category }>();
 
 const { can } = usePermissions();
 
-const form = useForm({
-    name: props.category.name,
-    description: props.category.description ?? '',
-    status: props.category.status,
-});
+const breadcrumbs = computed(() => [
+    { label: 'Store Inventory' },
+    { label: 'Categories', href: categories.index.url() },
+    { label: props.category.name },
+]);
 </script>
 
 <template>
     <Head :title="category.name" />
 
-    <AppLayout :title="category.name">
-        <div class="grid gap-6 lg:grid-cols-2">
-            <DataCard title="Details">
-                <dl class="space-y-2 p-4 text-sm">
-                    <div class="flex justify-between">
-                        <dt class="text-muted-foreground">Slug</dt>
-                        <dd>{{ category.slug }}</dd>
-                    </div>
-                    <div class="flex justify-between">
-                        <dt class="text-muted-foreground">Parent</dt>
-                        <dd>{{ category.parent?.name ?? '—' }}</dd>
-                    </div>
-                    <div class="flex justify-between">
-                        <dt class="text-muted-foreground">Products</dt>
-                        <dd>{{ category.products_count }}</dd>
-                    </div>
-                    <div class="flex justify-between">
-                        <dt class="text-muted-foreground">Children</dt>
-                        <dd>{{ category.children.length }}</dd>
-                    </div>
-                </dl>
-            </DataCard>
+    <AppLayout :breadcrumbs="breadcrumbs">
+        <PageHeader
+            :title="category.name"
+            :description="category.slug"
+            :breadcrumbs="breadcrumbs"
+        >
+            <template #actions>
+                <StatusBadge :status="category.status" />
 
-            <DataCard v-if="can('categories.update')" title="Edit">
-                <form
-                    class="space-y-3 p-4"
-                    @submit.prevent="
-                        form.put(categoriesRoutes.update.url(category.id))
-                    "
+                <Button
+                    v-if="can('categories.update')"
+                    variant="outline"
+                    size="dense"
+                    as="a"
+                    :href="categories.edit.url(category.id)"
                 >
-                    <input
-                        v-model="form.name"
-                        class="w-full rounded border border-border bg-background px-3 py-2 text-sm"
-                    />
-                    <textarea
-                        v-model="form.description"
-                        rows="3"
-                        class="w-full rounded border border-border bg-background px-3 py-2 text-sm"
-                    />
-                    <select
-                        v-model="form.status"
-                        class="w-full rounded border border-border bg-background px-3 py-2 text-sm"
+                    <PencilIcon />
+                    Edit
+                </Button>
+            </template>
+        </PageHeader>
+
+        <div class="grid gap-6 lg:grid-cols-3">
+            <Card class="lg:col-span-2">
+                <CardHeader>
+                    <template #title><CardTitle>Details</CardTitle></template>
+                </CardHeader>
+
+                <CardContent>
+                    <dl class="grid gap-4 sm:grid-cols-2">
+                        <div>
+                            <dt class="text-xs text-muted-foreground">Parent</dt>
+                            <dd class="text-[0.8125rem]">
+                                <Link
+                                    v-if="category.parent"
+                                    :href="categories.show.url(category.parent.id)"
+                                    class="hover:underline"
+                                    >{{ category.parent.name }}</Link
+                                >
+                                <span v-else>Top level</span>
+                            </dd>
+                        </div>
+                        <div>
+                            <dt class="text-xs text-muted-foreground">Products</dt>
+                            <dd class="text-[0.8125rem]">
+                                <Link
+                                    :href="
+                                        products.index.url({
+                                            query: { category_id: category.id },
+                                        })
+                                    "
+                                    class="hover:underline"
+                                >
+                                    {{ number(category.products_count) }}
+                                </Link>
+                            </dd>
+                        </div>
+                    </dl>
+
+                    <div v-if="category.description" class="mt-5">
+                        <p class="mb-1 text-xs text-muted-foreground">
+                            Description
+                        </p>
+                        <p class="whitespace-pre-line text-[0.8125rem] leading-relaxed">
+                            {{ category.description }}
+                        </p>
+                    </div>
+                </CardContent>
+            </Card>
+
+            <Card class="self-start">
+                <CardHeader>
+                    <template #title>
+                        <CardTitle
+                            :description="`${category.children.length} sub-categories`"
+                            >Children</CardTitle
+                        >
+                    </template>
+                </CardHeader>
+
+                <ul class="divide-y divide-border">
+                    <li
+                        v-for="child in category.children"
+                        :key="child.id"
+                        class="px-5 py-3 text-[0.8125rem]"
                     >
-                        <option value="active">active</option>
-                        <option value="inactive">inactive</option>
-                    </select>
-                    <Button type="submit" :disabled="form.processing">Save</Button>
-                </form>
-            </DataCard>
+                        <Link
+                            :href="categories.show.url(child.id)"
+                            class="hover:underline"
+                            >{{ child.name }}</Link
+                        >
+                    </li>
+                    <li
+                        v-if="!category.children.length"
+                        class="px-5 py-6 text-center text-xs text-muted-foreground"
+                    >
+                        No sub-categories.
+                    </li>
+                </ul>
+            </Card>
         </div>
     </AppLayout>
 </template>

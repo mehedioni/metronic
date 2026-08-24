@@ -1,16 +1,34 @@
 <script setup lang="ts">
-import { Head, router, useForm } from '@inertiajs/vue3';
-import { computed, reactive, watch } from 'vue';
-import DataCard from '@/components/DataCard.vue';
+import { Head, Link, useForm } from '@inertiajs/vue3';
+import { SlidersHorizontalIcon } from 'lucide-vue-next';
+import { computed, ref } from 'vue';
+import DataTable from '@/components/DataTable.vue';
+import type { Column } from '@/components/DataTable.vue';
+import { FormField, Textarea } from '@/components/form';
+import PageHeader from '@/components/PageHeader.vue';
 import Pagination from '@/components/Pagination.vue';
+import TableToolbar from '@/components/TableToolbar.vue';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Card, CardHeader, CardTitle } from '@/components/ui/card';
+import { Modal } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Select } from '@/components/ui/select';
+import { useCsvExport } from '@/composables/useCsvExport';
+import { usePageErrors } from '@/composables/usePageErrors';
 import { usePermissions } from '@/composables/usePermissions';
+import { useTableQuery } from '@/composables/useTableQuery';
 import AppLayout from '@/layouts/AppLayout.vue';
-import stockRoutes from '@/routes/inventory/stock';
+import { number } from '@/lib/format';
+import { humanize } from '@/lib/status';
+import products from '@/routes/inventory/products';
+import stock from '@/routes/inventory/stock';
 import type { Paginated } from '@/types';
 
-interface StockItem {
+interface StockRow {
     id: string;
+    product_id: string;
+    product_variant_id: string | null;
     quantity_on_hand: number;
     quantity_reserved: number;
     product: {
@@ -18,218 +36,294 @@ interface StockItem {
         name: string;
         sku: string | null;
         low_stock_threshold: number;
+        category: { id: string; name: string } | null;
     };
     variant: { id: string; sku: string; name: string } | null;
 }
 
 const props = defineProps<{
-    items: Paginated<StockItem>;
+    items: Paginated<StockRow>;
     filters: Record<string, unknown>;
     categories: Array<{ id: string; name: string }>;
     movementTypes: string[];
 }>();
 
 const { can } = usePermissions();
+const { firstOf } = usePageErrors();
+const { exportRows } = useCsvExport();
 
-const filters = reactive({
-    search: (props.filters.search as string) ?? '',
-    category_id: (props.filters.category_id as string) ?? '',
-    low_stock: Boolean(props.filters.low_stock),
+const { params, loading, toggleSort, sortState, reset } = useTableQuery({
+    url: stock.index.url(),
+    filters: props.filters,
+    only: ['items', 'filters'],
 });
 
-watch(filters, (value) => {
-    router.get(stockRoutes.index.url(), { ...value }, {
-        preserveState: true,
-        replace: true,
-    });
-});
+const rows = computed(() => props.items.data);
+const adjusting = ref<StockRow | null>(null);
 
-/** Units that may still be promised to a new order. */
-function available(item: StockItem): number {
-    return item.quantity_on_hand - item.quantity_reserved;
-}
-
-const adjustable = computed(() =>
-    props.items.data.map((item) => ({
-        label: item.variant
-            ? `${item.product.name} · ${item.variant.sku}`
-            : item.product.name,
-        productId: item.product.id,
-        variantId: item.variant?.id ?? '',
-    })),
-);
-
-const form = useForm({
+const adjustForm = useForm({
     product_id: '',
-    product_variant_id: '',
+    product_variant_id: '' as string | null,
     type: 'adjustment_increase',
     quantity: 1,
     reason: '',
 });
 
-function pickUnit(index: string) {
-    const unit = adjustable.value[Number(index)];
+const columns: Column[] = [
+    { key: 'product.name', label: 'Product', width: '280px' },
+    { key: 'product.category.name', label: 'Category', width: '150px' },
+    {
+        key: 'quantity_on_hand',
+        label: 'On hand',
+        sort: 'quantity_on_hand',
+        align: 'center',
+        width: '110px',
+    },
+    {
+        key: 'quantity_reserved',
+        label: 'Reserved',
+        sort: 'quantity_reserved',
+        align: 'center',
+        width: '110px',
+    },
+    { key: 'available', label: 'Available', align: 'center', width: '110px' },
+    { key: 'level', label: 'Level', width: '130px' },
+];
 
-    if (!unit) {
-        return;
-    }
+const breadcrumbs = [
+    { label: 'Store Inventory' },
+    { label: 'Inventory' },
+    { label: 'All Stock' },
+];
 
-    form.product_id = unit.productId;
-    form.product_variant_id = unit.variantId;
+function available(row: StockRow): number {
+    return row.quantity_on_hand - row.quantity_reserved;
+}
+
+function isLow(row: StockRow): boolean {
+    return row.quantity_on_hand <= row.product.low_stock_threshold;
+}
+
+function openAdjust(row: StockRow) {
+    adjustForm.product_id = row.product_id;
+    adjustForm.product_variant_id = row.product_variant_id;
+    adjustForm.type = 'adjustment_increase';
+    adjustForm.quantity = 1;
+    adjustForm.reason = '';
+
+    adjusting.value = row;
 }
 
 function adjust() {
-    form.post(stockRoutes.adjust.url(), {
+    adjustForm.post(stock.adjust.url(), {
         preserveScroll: true,
-        onSuccess: () => form.reset('quantity', 'reason'),
+        onSuccess: () => (adjusting.value = null),
     });
+}
+
+function exportCurrent() {
+    exportRows('stock', rows.value, [
+        { label: 'Product', value: (row) => row.product.name },
+        { label: 'Variant', value: (row) => row.variant?.name ?? '' },
+        { label: 'SKU', value: (row) => row.variant?.sku ?? row.product.sku ?? '' },
+        { label: 'Category', value: (row) => row.product.category?.name ?? '' },
+        { label: 'On hand', value: (row) => row.quantity_on_hand },
+        { label: 'Reserved', value: (row) => row.quantity_reserved },
+        { label: 'Available', value: (row) => available(row) },
+        { label: 'Threshold', value: (row) => row.product.low_stock_threshold },
+    ]);
 }
 </script>
 
 <template>
-    <Head title="Stock on hand" />
+    <Head title="All stock" />
 
-    <AppLayout title="Stock on hand">
-        <div class="space-y-6">
-            <DataCard title="Filters">
-                <div class="flex flex-wrap gap-3 p-4">
-                    <input
-                        v-model="filters.search"
-                        placeholder="Search product or SKU"
-                        class="rounded border border-border bg-background px-3 py-2 text-sm"
-                    />
-                    <select
-                        v-model="filters.category_id"
-                        class="rounded border border-border bg-background px-3 py-2 text-sm"
-                    >
+    <AppLayout :breadcrumbs="breadcrumbs">
+        <PageHeader
+            title="All stock"
+            :description="`${number(props.items.total)} stockable units. Available is on hand minus what confirmed orders have reserved.`"
+            :breadcrumbs="breadcrumbs"
+        >
+            <template #actions>
+                <Button variant="outline" size="dense" as="a" :href="stock.planner.url()">
+                    Plan reorders
+                </Button>
+            </template>
+        </PageHeader>
+
+        <Card>
+            <CardHeader>
+                <template #title>
+                    <CardTitle>Current stock</CardTitle>
+                </template>
+            </CardHeader>
+
+            <TableToolbar
+                v-model:search="params.search"
+                v-model:per-page="params.per_page"
+                search-placeholder="Search product or SKU"
+                exportable
+                @export="exportCurrent"
+                @clear="reset"
+            >
+                <template #filters>
+                    <Select v-model="params.category_id" class="w-44">
                         <option value="">All categories</option>
                         <option
-                            v-for="category in categories"
+                            v-for="category in props.categories"
                             :key="category.id"
                             :value="category.id"
                         >
                             {{ category.name }}
                         </option>
-                    </select>
-                    <label class="flex items-center gap-2 text-sm">
-                        <input v-model="filters.low_stock" type="checkbox" />
+                    </Select>
+
+                    <label
+                        class="flex h-8.5 items-center gap-2 rounded-md border border-input px-3 text-xs shadow-xs"
+                    >
+                        <input v-model="params.low_stock" type="checkbox" />
                         Low stock only
                     </label>
-                </div>
-            </DataCard>
+                </template>
+            </TableToolbar>
 
-            <DataCard
-                v-if="can('inventory.adjust')"
-                title="Adjust stock"
-                description="Every adjustment writes a stock movement; a reason is required when stock is removed."
+            <DataTable
+                :columns="columns"
+                :rows="rows"
+                :loading="loading"
+                :sort-state="sortState"
+                empty-title="No stock rows"
+                empty-description="A unit appears here once it has been received or adjusted."
+                @sort="toggleSort"
             >
-                <form class="grid gap-3 p-4 sm:grid-cols-2" @submit.prevent="adjust">
-                    <select
-                        class="rounded border border-border bg-background px-3 py-2 text-sm"
-                        @change="pickUnit(($event.target as HTMLSelectElement).value)"
+                <template #cell-product_name="{ row }">
+                    <Link
+                        :href="products.show.url(row.product_id)"
+                        class="font-medium hover:underline"
+                        >{{ row.product.name }}</Link
                     >
-                        <option value="">Select a stock item</option>
+                    <span class="block font-mono text-[11px] text-muted-foreground">
+                        {{ row.variant?.sku ?? row.product.sku ?? '—' }}
+                        <template v-if="row.variant"> · {{ row.variant.name }}</template>
+                    </span>
+                </template>
+
+                <template #cell-product_category_name="{ row }">
+                    <span class="text-muted-foreground">
+                        {{ row.product.category?.name ?? '—' }}
+                    </span>
+                </template>
+
+                <template #cell-available="{ row }">
+                    <span class="font-medium">{{ available(row) }}</span>
+                </template>
+
+                <template #cell-level="{ row }">
+                    <Badge
+                        :variant="
+                            row.quantity_on_hand <= 0
+                                ? 'danger'
+                                : isLow(row)
+                                  ? 'warning'
+                                  : 'success'
+                        "
+                        size="sm"
+                    >
+                        {{
+                            row.quantity_on_hand <= 0
+                                ? 'Out of stock'
+                                : isLow(row)
+                                  ? 'Low'
+                                  : 'In stock'
+                        }}
+                    </Badge>
+                </template>
+
+                <template #actions="{ row }">
+                    <Button
+                        v-if="can('inventory.adjust')"
+                        variant="ghost"
+                        size="icon-dense"
+                        aria-label="Adjust stock"
+                        @click="openAdjust(row)"
+                    >
+                        <SlidersHorizontalIcon />
+                    </Button>
+                </template>
+            </DataTable>
+
+            <Pagination
+                :links="props.items.links"
+                :from="props.items.from"
+                :to="props.items.to"
+                :total="props.items.total"
+            />
+        </Card>
+
+        <Modal
+            :open="Boolean(adjusting)"
+            title="Adjust stock"
+            :description="
+                adjusting
+                    ? `${adjusting.product.name}${adjusting.variant ? ` · ${adjusting.variant.name}` : ''} — currently ${adjusting.quantity_on_hand} on hand`
+                    : undefined
+            "
+            size="sm"
+            @update:open="adjusting = null"
+        >
+            <div class="space-y-4">
+                <FormField
+                    label="Movement type"
+                    :error="adjustForm.errors.type"
+                    hint="The type decides the direction; quantity is always positive."
+                >
+                    <Select v-model="adjustForm.type">
                         <option
-                            v-for="(unit, index) in adjustable"
-                            :key="unit.productId + unit.variantId"
-                            :value="index"
+                            v-for="type in props.movementTypes"
+                            :key="type"
+                            :value="type"
                         >
-                            {{ unit.label }}
+                            {{ humanize(type) }}
                         </option>
-                    </select>
+                    </Select>
+                </FormField>
 
-                    <select
-                        v-model="form.type"
-                        class="rounded border border-border bg-background px-3 py-2 text-sm"
-                    >
-                        <option v-for="type in movementTypes" :key="type" :value="type">
-                            {{ type }}
-                        </option>
-                    </select>
+                <FormField
+                    label="Quantity"
+                    :error="adjustForm.errors.quantity"
+                    required
+                >
+                    <Input v-model.number="adjustForm.quantity" type="number" min="1" />
+                </FormField>
 
-                    <input
-                        v-model.number="form.quantity"
-                        type="number"
-                        min="1"
-                        class="rounded border border-border bg-background px-3 py-2 text-sm"
+                <FormField label="Reason" :error="adjustForm.errors.reason">
+                    <Textarea
+                        v-model="adjustForm.reason"
+                        :rows="3"
+                        placeholder="Recorded on the ledger row"
                     />
-                    <input
-                        v-model="form.reason"
-                        placeholder="Reason"
-                        class="rounded border border-border bg-background px-3 py-2 text-sm"
-                    />
+                </FormField>
 
-                    <div class="sm:col-span-2">
-                        <Button
-                            type="submit"
-                            :disabled="form.processing || !form.product_id"
-                            >Apply adjustment</Button
-                        >
-                        <p
-                            v-for="(error, field) in form.errors"
-                            :key="field"
-                            class="text-sm text-red-500"
-                        >
-                            {{ error }}
-                        </p>
-                    </div>
-                </form>
-            </DataCard>
+                <p
+                    v-if="firstOf('inventory', 'quantity')"
+                    class="text-[11px] text-danger"
+                >
+                    {{ firstOf('inventory', 'quantity') }}
+                </p>
+            </div>
 
-            <DataCard title="Stock on hand">
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm">
-                        <thead class="bg-muted/50 text-left">
-                            <tr>
-                                <th class="px-4 py-2">Product</th>
-                                <th class="px-4 py-2">SKU</th>
-                                <th class="px-4 py-2">Variant</th>
-                                <th class="px-4 py-2 text-right">On hand</th>
-                                <th class="px-4 py-2 text-right">Reserved</th>
-                                <th class="px-4 py-2 text-right">Available</th>
-                                <th class="px-4 py-2 text-right">Threshold</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr
-                                v-for="item in items.data"
-                                :key="item.id"
-                                class="border-t border-border"
-                            >
-                                <td class="px-4 py-2">{{ item.product.name }}</td>
-                                <td class="px-4 py-2 text-muted-foreground">
-                                    {{ item.product.sku ?? '—' }}
-                                </td>
-                                <td class="px-4 py-2">{{ item.variant?.sku ?? '—' }}</td>
-                                <td class="px-4 py-2 text-right">
-                                    {{ item.quantity_on_hand }}
-                                </td>
-                                <td class="px-4 py-2 text-right">
-                                    {{ item.quantity_reserved }}
-                                </td>
-                                <td class="px-4 py-2 text-right">
-                                    {{ available(item) }}
-                                </td>
-                                <td class="px-4 py-2 text-right">
-                                    {{ item.product.low_stock_threshold }}
-                                </td>
-                            </tr>
-                            <tr v-if="!items.data.length">
-                                <td class="px-4 py-3 text-muted-foreground" colspan="7">
-                                    No stock records yet.
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <Pagination
-                    :links="items.links"
-                    :from="items.from"
-                    :to="items.to"
-                    :total="items.total"
-                />
-            </DataCard>
-        </div>
+            <template #footer>
+                <Button variant="outline" size="dense" @click="adjusting = null">
+                    Cancel
+                </Button>
+                <Button
+                    size="dense"
+                    :disabled="adjustForm.processing"
+                    @click="adjust"
+                >
+                    Record adjustment
+                </Button>
+            </template>
+        </Modal>
     </AppLayout>
 </template>

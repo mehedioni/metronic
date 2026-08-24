@@ -47,6 +47,10 @@ return [
     'dashboard' => [
         'recent_limit' => 10,
         'low_stock_limit' => 10,
+
+        // Days covered by the dashboard's trend charts, and therefore also the
+        // window the period-over-period comparison uses.
+        'trend_days' => 14,
     ],
 
 ];
