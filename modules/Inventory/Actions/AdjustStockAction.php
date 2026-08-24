@@ -10,7 +10,7 @@ use Modules\Inventory\Support\StockableUnit;
 
 /**
  * Manual stock correction: opening stock, damage, transfers, write-offs.
- * Everything a user can do to stock outside receiving and shipping goes
+ * Everything a user can do to stock outside receiving and fulfilment goes
  * through here so it always lands in the ledger.
  */
 class AdjustStockAction

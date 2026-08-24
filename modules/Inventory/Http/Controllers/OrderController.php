@@ -8,8 +8,10 @@ use Inertia\Inertia;
 use Inertia\Response;
 use Modules\Inventory\Actions\CancelOrderAction;
 use Modules\Inventory\Actions\ConfirmOrderAction;
+use Modules\Inventory\Actions\FulfillOrderAction;
 use Modules\Inventory\Enums\OrderStatus;
 use Modules\Inventory\Http\Requests\CancelRequest;
+use Modules\Inventory\Http\Requests\FulfillOrderRequest;
 use Modules\Inventory\Http\Requests\ListRequest;
 use Modules\Inventory\Http\Requests\StoreOrderRequest;
 use Modules\Inventory\Http\Requests\UpdateOrderRequest;
@@ -51,7 +53,6 @@ class OrderController extends Controller
             'order' => $order->load([
                 'items.product:id,name,sku',
                 'items.variant:id,sku,name',
-                'shipments:id,order_id,shipment_number,status,shipped_at',
                 'createdBy:id,name',
             ]),
             'allowedTransitions' => array_map(
@@ -92,6 +93,22 @@ class OrderController extends Controller
         $confirm->handle($order);
 
         return back()->with('success', 'Order confirmed and stock reserved.');
+    }
+
+    /**
+     * Fulfil the order: deduct on-hand stock for the quantities handed over and
+     * release their reservation. This is the only outbound stock path for
+     * orders. Sending no lines fulfils everything still outstanding.
+     */
+    public function fulfill(FulfillOrderRequest $request, Order $order, FulfillOrderAction $fulfill): RedirectResponse
+    {
+        $this->authorize('fulfill', $order);
+
+        $updated = $fulfill->handle($order, $request->lines(), $request->user()->id);
+
+        return back()->with('success', $updated->status === OrderStatus::Completed
+            ? 'Order fulfilled and stock deducted.'
+            : 'Order partially fulfilled and stock deducted.');
     }
 
     public function cancel(CancelRequest $request, Order $order, CancelOrderAction $cancel): RedirectResponse

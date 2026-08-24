@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import { Head, useForm } from '@inertiajs/vue3';
 import { reactive } from 'vue';
 import DataCard from '@/components/DataCard.vue';
 import { Button } from '@/components/ui/button';
@@ -9,7 +9,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 interface OrderItem {
     id: string;
     quantity: number;
-    quantity_shipped: number;
+    quantity_fulfilled: number;
     unit_price: string;
     line_total: string;
     product: { id: string; name: string; sku: string | null };
@@ -26,13 +26,8 @@ interface Order {
     total: string;
     currency: string;
     confirmed_at: string | null;
+    completed_at: string | null;
     items: OrderItem[];
-    shipments: Array<{
-        id: string;
-        shipment_number: string;
-        status: string;
-        shipped_at: string | null;
-    }>;
 }
 
 const props = defineProps<{ order: Order; allowedTransitions: string[] }>();
@@ -42,20 +37,17 @@ const { can } = usePermissions();
 const confirmForm = useForm({});
 const cancelForm = useForm({ reason: '' });
 
-const shipmentLines = reactive<Record<string, number>>(
+/** Per-line quantities for a partial fulfilment; defaults to everything outstanding. */
+const fulfillLines = reactive<Record<string, number>>(
     Object.fromEntries(
         props.order.items.map((item) => [
             item.id,
-            item.quantity - item.quantity_shipped,
+            item.quantity - item.quantity_fulfilled,
         ]),
     ),
 );
 
-const shipmentForm = useForm({
-    carrier: '',
-    tracking_number: '',
-    items: [] as Array<{ order_item_id: string; quantity: number }>,
-});
+const fulfillForm = useForm({ lines: {} as Record<string, number> });
 
 function confirm() {
     confirmForm.post(`/inventory/orders/${props.order.id}/confirm`, {
@@ -69,15 +61,14 @@ function cancel() {
     });
 }
 
-function createShipment() {
-    shipmentForm.items = Object.entries(shipmentLines)
-        .filter(([, quantity]) => quantity > 0)
-        .map(([orderItemId, quantity]) => ({
-            order_item_id: orderItemId,
-            quantity,
-        }));
+function fulfill() {
+    fulfillForm.lines = Object.fromEntries(
+        Object.entries(fulfillLines).filter(([, quantity]) => quantity > 0),
+    );
 
-    shipmentForm.post(`/inventory/orders/${props.order.id}/shipments`);
+    fulfillForm.post(`/inventory/orders/${props.order.id}/fulfill`, {
+        preserveScroll: true,
+    });
 }
 </script>
 
@@ -110,6 +101,10 @@ function createShipment() {
                         <dd>{{ order.confirmed_at ?? '—' }}</dd>
                     </div>
                     <div class="flex justify-between">
+                        <dt class="text-muted-foreground">Completed</dt>
+                        <dd>{{ order.completed_at ?? '—' }}</dd>
+                    </div>
+                    <div class="flex justify-between">
                         <dt class="text-muted-foreground">Total</dt>
                         <dd>{{ order.total }} {{ order.currency }}</dd>
                     </div>
@@ -123,7 +118,7 @@ function createShipment() {
                             <th class="px-4 py-2">Product</th>
                             <th class="px-4 py-2">Variant</th>
                             <th class="px-4 py-2 text-right">Ordered</th>
-                            <th class="px-4 py-2 text-right">Shipped</th>
+                            <th class="px-4 py-2 text-right">Fulfilled</th>
                             <th class="px-4 py-2 text-right">Unit price</th>
                             <th class="px-4 py-2 text-right">Line total</th>
                         </tr>
@@ -138,7 +133,7 @@ function createShipment() {
                             <td class="px-4 py-2">{{ item.variant?.sku ?? '—' }}</td>
                             <td class="px-4 py-2 text-right">{{ item.quantity }}</td>
                             <td class="px-4 py-2 text-right">
-                                {{ item.quantity_shipped }}
+                                {{ item.quantity_fulfilled }}
                             </td>
                             <td class="px-4 py-2 text-right">{{ item.unit_price }}</td>
                             <td class="px-4 py-2 text-right">{{ item.line_total }}</td>
@@ -147,41 +142,12 @@ function createShipment() {
                 </table>
             </DataCard>
 
-            <DataCard title="Shipments">
-                <ul class="space-y-1 p-4 text-sm">
-                    <li v-for="shipment in order.shipments" :key="shipment.id">
-                        <Link
-                            :href="`/inventory/shipments/${shipment.id}`"
-                            class="underline"
-                            >{{ shipment.shipment_number }}</Link
-                        >
-                        — <span class="capitalize">{{ shipment.status }}</span>
-                    </li>
-                    <li v-if="!order.shipments.length" class="text-muted-foreground">
-                        No shipments yet.
-                    </li>
-                </ul>
-            </DataCard>
-
             <DataCard
-                v-if="can('shipments.create') && order.status !== 'cancelled'"
-                title="New shipment"
-                description="Creating a shipment does not move stock; dispatching it does."
+                v-if="can('orders.fulfill') && allowedTransitions.includes('completed')"
+                title="Fulfil order"
+                description="Deducts on-hand stock for the quantities handed over and releases their reservation. Leave the full amounts to complete the order."
             >
-                <form class="space-y-3 p-4" @submit.prevent="createShipment">
-                    <div class="grid gap-2 sm:grid-cols-2">
-                        <input
-                            v-model="shipmentForm.carrier"
-                            placeholder="Carrier"
-                            class="rounded border border-border bg-background px-3 py-2 text-sm"
-                        />
-                        <input
-                            v-model="shipmentForm.tracking_number"
-                            placeholder="Tracking number"
-                            class="rounded border border-border bg-background px-3 py-2 text-sm"
-                        />
-                    </div>
-
+                <form class="space-y-3 p-4" @submit.prevent="fulfill">
                     <div
                         v-for="item in order.items"
                         :key="item.id"
@@ -189,19 +155,19 @@ function createShipment() {
                     >
                         <span class="flex-1">{{ item.product.name }}</span>
                         <input
-                            v-model.number="shipmentLines[item.id]"
+                            v-model.number="fulfillLines[item.id]"
                             type="number"
                             min="0"
-                            :max="item.quantity - item.quantity_shipped"
+                            :max="item.quantity - item.quantity_fulfilled"
                             class="w-24 rounded border border-border bg-background px-3 py-2"
                         />
                     </div>
 
-                    <Button type="submit" :disabled="shipmentForm.processing"
-                        >Create shipment</Button
+                    <Button type="submit" :disabled="fulfillForm.processing"
+                        >Fulfil</Button
                     >
                     <p
-                        v-for="(error, field) in shipmentForm.errors"
+                        v-for="(error, field) in fulfillForm.errors"
                         :key="field"
                         class="text-sm text-red-500"
                     >
@@ -213,7 +179,7 @@ function createShipment() {
             <DataCard
                 v-if="can('orders.cancel') && order.status !== 'cancelled'"
                 title="Cancel order"
-                description="Releases outstanding reservations and returns any shipped units to stock."
+                description="Releases outstanding reservations and returns any fulfilled units to stock."
             >
                 <form class="flex flex-wrap gap-3 p-4" @submit.prevent="cancel">
                     <input

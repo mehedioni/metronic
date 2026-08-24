@@ -47,15 +47,14 @@ final class Roles
         return [
             self::ADMIN => Permissions::all(),
             self::MANAGER => Permissions::forGroups([
-                'dashboard', 'categories', 'suppliers', 'products', 'inventory', 'orders', 'shipments',
+                'dashboard', 'categories', 'suppliers', 'products', 'inventory', 'orders', 'customers',
             ]),
             self::INVENTORY_MANAGER => array_merge(
                 Permissions::forGroups(['dashboard', 'categories', 'suppliers', 'products', 'inventory']),
                 [
                     Permissions::ORDERS_VIEW,
-                    Permissions::SHIPMENTS_VIEW,
-                    Permissions::SHIPMENTS_CREATE,
-                    Permissions::SHIPMENTS_UPDATE,
+                    Permissions::ORDERS_FULFILL,
+                    Permissions::CUSTOMERS_VIEW,
                 ],
             ),
             self::STAFF => [
@@ -66,7 +65,7 @@ final class Roles
                 Permissions::INVENTORY_VIEW,
                 Permissions::ORDERS_VIEW,
                 Permissions::ORDERS_CREATE,
-                Permissions::SHIPMENTS_VIEW,
+                Permissions::CUSTOMERS_VIEW,
             ],
         ];
     }

@@ -12,7 +12,7 @@ use Modules\Inventory\Http\Controllers\Api\StockController;
 |--------------------------------------------------------------------------
 |
 | Registered under the "api/v1" prefix by App\Core\ModuleServiceProvider.
-| Read-only for now: every write path (receiving, ordering, dispatching) is
+| Read-only for now: every write path (receiving, ordering, fulfilling) is
 | owned by the Inertia controllers so the inventory rules have exactly one
 | implementation. Add write endpoints here by delegating to the same
 | services/actions those controllers use — never by re-implementing the rules.

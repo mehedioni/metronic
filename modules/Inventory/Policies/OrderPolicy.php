@@ -36,6 +36,11 @@ class OrderPolicy
         return $user->can(Permissions::ORDERS_UPDATE);
     }
 
+    public function fulfill(User $user, Order $order): bool
+    {
+        return $user->can(Permissions::ORDERS_FULFILL);
+    }
+
     public function cancel(User $user, Order $order): bool
     {
         return $user->can(Permissions::ORDERS_CANCEL);

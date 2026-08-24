@@ -5,9 +5,9 @@ namespace Modules\Inventory\Enums;
 /**
  * Inventory effects are bound to transitions, not to the status itself:
  *
- *  - pending  -> confirmed : reserves stock (quantity_reserved += qty)
- *  - shipment shipped      : deducts on-hand and releases the reservation
- *  - confirmed -> cancelled: releases any remaining reservation
+ *  - pending   -> confirmed : reserves stock (quantity_reserved += qty)
+ *  - confirmed -> completed : deducts on-hand and releases the reservation
+ *  - confirmed -> cancelled : releases any remaining reservation
  *
  * See Modules\Inventory\Services\InventoryService for the mechanics.
  */
@@ -17,7 +17,6 @@ enum OrderStatus: string
     case Pending = 'pending';
     case Confirmed = 'confirmed';
     case Processing = 'processing';
-    case Shipped = 'shipped';
     case Completed = 'completed';
     case Cancelled = 'cancelled';
 
@@ -45,6 +44,15 @@ enum OrderStatus: string
         return in_array($this, [self::Confirmed, self::Processing], true);
     }
 
+    /**
+     * Statuses from which the order's lines may still be handed over to the
+     * customer, which is what turns the reservation into an on-hand deduction.
+     */
+    public function isFulfillable(): bool
+    {
+        return $this->holdsReservation();
+    }
+
     public function isCancellable(): bool
     {
         return ! in_array($this, [self::Completed, self::Cancelled], true);
@@ -58,9 +66,8 @@ enum OrderStatus: string
         return match ($this) {
             self::Draft => [self::Pending, self::Cancelled],
             self::Pending => [self::Confirmed, self::Cancelled],
-            self::Confirmed => [self::Processing, self::Shipped, self::Cancelled],
-            self::Processing => [self::Shipped, self::Cancelled],
-            self::Shipped => [self::Completed, self::Cancelled],
+            self::Confirmed => [self::Processing, self::Completed, self::Cancelled],
+            self::Processing => [self::Completed, self::Cancelled],
             self::Completed, self::Cancelled => [],
         };
     }

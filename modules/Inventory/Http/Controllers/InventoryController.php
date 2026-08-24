@@ -33,7 +33,7 @@ class InventoryController extends Controller
 
     /**
      * Manual stock correction. Everything else that moves stock does so
-     * through receiving or shipping.
+     * through receiving or order fulfilment.
      */
     public function adjust(AdjustStockRequest $request, AdjustStockAction $adjust): RedirectResponse
     {

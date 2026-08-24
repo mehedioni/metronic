@@ -48,9 +48,9 @@ const navigation = [
     },
     { label: 'Orders', href: '/inventory/orders', permission: 'orders.view' },
     {
-        label: 'Shipments',
-        href: '/inventory/shipments',
-        permission: 'shipments.view',
+        label: 'Customers',
+        href: '/inventory/customers',
+        permission: 'customers.view',
     },
     { label: 'Users', href: '/access/users', permission: 'users.view' },
     { label: 'Roles', href: '/access/roles', permission: 'roles.view' },

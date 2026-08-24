@@ -51,15 +51,17 @@ final class Permissions
 
     public const ORDERS_UPDATE = 'orders.update';
 
+    public const ORDERS_FULFILL = 'orders.fulfill';
+
     public const ORDERS_CANCEL = 'orders.cancel';
 
-    public const SHIPMENTS_VIEW = 'shipments.view';
+    public const CUSTOMERS_VIEW = 'customers.view';
 
-    public const SHIPMENTS_CREATE = 'shipments.create';
+    public const CUSTOMERS_CREATE = 'customers.create';
 
-    public const SHIPMENTS_UPDATE = 'shipments.update';
+    public const CUSTOMERS_UPDATE = 'customers.update';
 
-    public const SHIPMENTS_DELETE = 'shipments.delete';
+    public const CUSTOMERS_DELETE = 'customers.delete';
 
     public const USERS_VIEW = 'users.view';
 
@@ -118,13 +120,14 @@ final class Permissions
                 self::ORDERS_VIEW,
                 self::ORDERS_CREATE,
                 self::ORDERS_UPDATE,
+                self::ORDERS_FULFILL,
                 self::ORDERS_CANCEL,
             ],
-            'shipments' => [
-                self::SHIPMENTS_VIEW,
-                self::SHIPMENTS_CREATE,
-                self::SHIPMENTS_UPDATE,
-                self::SHIPMENTS_DELETE,
+            'customers' => [
+                self::CUSTOMERS_VIEW,
+                self::CUSTOMERS_CREATE,
+                self::CUSTOMERS_UPDATE,
+                self::CUSTOMERS_DELETE,
             ],
             'users' => [
                 self::USERS_VIEW,

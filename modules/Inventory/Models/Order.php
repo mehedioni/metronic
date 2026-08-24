@@ -16,13 +16,13 @@ use Modules\Inventory\Enums\OrderStatus;
 use Modules\Inventory\Policies\OrderPolicy;
 
 /**
- * Sales order. Stock is reserved on confirmation and deducted when a shipment
- * for the order is dispatched — see Modules\Inventory\Enums\OrderStatus for
- * the transition table that drives those effects.
+ * Sales order. Stock is reserved on confirmation and deducted when the order
+ * is fulfilled — see Modules\Inventory\Enums\OrderStatus for the transition
+ * table that drives those effects.
  */
 #[Fillable([
     'order_number', 'customer_name', 'customer_email', 'customer_phone',
-    'shipping_address', 'status', 'subtotal', 'discount_total', 'tax_total',
+    'delivery_address', 'status', 'subtotal', 'discount_total', 'tax_total',
     'total', 'currency', 'notes', 'created_by',
 ])]
 #[UsePolicy(OrderPolicy::class)]
@@ -54,11 +54,6 @@ class Order extends BaseModel
     public function items(): HasMany
     {
         return $this->hasMany(OrderItem::class);
-    }
-
-    public function shipments(): HasMany
-    {
-        return $this->hasMany(Shipment::class);
     }
 
     public function createdBy(): BelongsTo
@@ -96,10 +91,10 @@ class Order extends BaseModel
         ])->save();
     }
 
-    public function isFullyShipped(): bool
+    public function isFullyFulfilled(): bool
     {
         return $this->items->every(
-            fn (OrderItem $item) => $item->quantity_shipped >= $item->quantity,
+            fn (OrderItem $item) => $item->quantity_fulfilled >= $item->quantity,
         );
     }
 }

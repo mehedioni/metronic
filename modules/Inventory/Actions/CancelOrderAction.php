@@ -13,8 +13,8 @@ use Modules\Inventory\Support\MovementContext;
 
 /**
  * Cancels an order and unwinds whatever inventory effect it still holds:
- * outstanding reservations are released, and quantities already shipped are
- * returned to stock as a customer return movement.
+ * outstanding reservations are released, and quantities already handed over to
+ * the customer are returned to stock as a customer return movement.
  */
 class CancelOrderAction
 {
@@ -43,11 +43,11 @@ class CancelOrderAction
                     $this->inventory->release($item->unit(), $item->outstandingQuantity());
                 }
 
-                if ($item->quantity_shipped > 0) {
+                if ($item->quantity_fulfilled > 0) {
                     $this->inventory->record(
                         $item->unit(),
                         StockMovementType::CustomerReturn,
-                        $item->quantity_shipped,
+                        $item->quantity_fulfilled,
                         new MovementContext(
                             reference: $locked,
                             reason: $reason ?? "Cancelled order {$locked->order_number}",
@@ -55,7 +55,7 @@ class CancelOrderAction
                         ),
                     );
 
-                    $item->forceFill(['quantity_shipped' => 0])->save();
+                    $item->forceFill(['quantity_fulfilled' => 0])->save();
                 }
             }
 

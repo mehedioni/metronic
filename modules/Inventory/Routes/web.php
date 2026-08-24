@@ -8,7 +8,6 @@ use Modules\Inventory\Http\Controllers\InboundReceiptController;
 use Modules\Inventory\Http\Controllers\InventoryController;
 use Modules\Inventory\Http\Controllers\OrderController;
 use Modules\Inventory\Http\Controllers\ProductController;
-use Modules\Inventory\Http\Controllers\ShipmentController;
 use Modules\Inventory\Http\Controllers\StockMovementController;
 use Modules\Inventory\Http\Controllers\SupplierController;
 
@@ -74,20 +73,10 @@ Route::middleware(['auth'])->prefix('inventory')->name('inventory.')->group(func
     Route::post('orders/{order}/confirm', [OrderController::class, 'confirm'])
         ->middleware('permission:'.Permissions::ORDERS_UPDATE)
         ->name('orders.confirm');
+    Route::post('orders/{order}/fulfill', [OrderController::class, 'fulfill'])
+        ->middleware('permission:'.Permissions::ORDERS_FULFILL)
+        ->name('orders.fulfill');
     Route::post('orders/{order}/cancel', [OrderController::class, 'cancel'])
         ->middleware('permission:'.Permissions::ORDERS_CANCEL)
         ->name('orders.cancel');
-    Route::post('orders/{order}/shipments', [ShipmentController::class, 'store'])
-        ->middleware('permission:'.Permissions::SHIPMENTS_CREATE)
-        ->name('orders.shipments.store');
-
-    Route::resource('shipments', ShipmentController::class)
-        ->only(['index', 'show', 'update', 'destroy'])
-        ->middleware('permission:'.Permissions::SHIPMENTS_VIEW);
-    Route::post('shipments/{shipment}/dispatch', [ShipmentController::class, 'dispatchShipment'])
-        ->middleware('permission:'.Permissions::SHIPMENTS_UPDATE)
-        ->name('shipments.dispatch');
-    Route::post('shipments/{shipment}/transition', [ShipmentController::class, 'transition'])
-        ->middleware('permission:'.Permissions::SHIPMENTS_UPDATE)
-        ->name('shipments.transition');
 });

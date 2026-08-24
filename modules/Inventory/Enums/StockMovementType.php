@@ -15,7 +15,7 @@ enum StockMovementType: string
     case TransferIn = 'transfer_in';
 
     case AdjustmentDecrease = 'adjustment_decrease';
-    case ShipmentOut = 'shipment_out';
+    case OrderOut = 'order_out';
     case Damage = 'damage';
     case ManualRemoval = 'manual_removal';
     case TransferOut = 'transfer_out';
@@ -52,7 +52,7 @@ enum StockMovementType: string
 
     /**
      * Types a user may pick when manually adjusting stock. System-driven types
-     * (shipment, receipt reversal) are excluded.
+     * (order fulfilment, receipt reversal) are excluded.
      *
      * @return array<int, string>
      */

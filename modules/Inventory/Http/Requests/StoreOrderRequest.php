@@ -25,7 +25,7 @@ class StoreOrderRequest extends FormRequest
             'customer_name' => ['required', 'string', 'max:255'],
             'customer_email' => ['nullable', 'email', 'max:255'],
             'customer_phone' => ['nullable', 'string', 'max:40'],
-            'shipping_address' => ['nullable', 'string', 'max:1000'],
+            'delivery_address' => ['nullable', 'string', 'max:1000'],
             'status' => ['nullable', Rule::in([OrderStatus::Draft->value, OrderStatus::Pending->value])],
             'discount_total' => ['nullable', 'numeric', 'min:0'],
             'tax_total' => ['nullable', 'numeric', 'min:0'],

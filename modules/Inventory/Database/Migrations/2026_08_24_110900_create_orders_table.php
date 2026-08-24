@@ -14,7 +14,7 @@ return new class extends Migration
             $table->string('customer_name');
             $table->string('customer_email')->nullable()->index();
             $table->string('customer_phone', 40)->nullable();
-            $table->text('shipping_address')->nullable();
+            $table->text('delivery_address')->nullable();
             $table->string('status')->default('draft')->index();
             $table->decimal('subtotal', 12, 2)->default(0);
             $table->decimal('discount_total', 12, 2)->default(0);
@@ -38,7 +38,7 @@ return new class extends Migration
             $table->foreignUuid('product_id')->constrained('products')->restrictOnDelete();
             $table->foreignUuid('product_variant_id')->nullable()->constrained('product_variants')->restrictOnDelete();
             $table->unsignedInteger('quantity');
-            $table->unsignedInteger('quantity_shipped')->default(0);
+            $table->unsignedInteger('quantity_fulfilled')->default(0);
             $table->decimal('unit_price', 12, 2)->default(0);
             $table->decimal('line_total', 12, 2)->default(0);
             $table->timestamps();

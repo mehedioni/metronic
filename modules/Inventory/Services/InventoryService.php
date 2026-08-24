@@ -95,7 +95,7 @@ class InventoryService
 
     /**
      * Release a reservation without moving on-hand stock (order cancelled, or
-     * the reserved units have just been shipped).
+     * the reserved units have just been handed over to the customer).
      *
      * Clamped at zero so a double release can never drive the counter
      * negative.
@@ -116,16 +116,16 @@ class InventoryService
     }
 
     /**
-     * Deduct on-hand stock for a dispatched shipment and release the matching
+     * Deduct on-hand stock for a fulfilled order line and release the matching
      * reservation in the same transaction.
      */
-    public function issueForShipment(
+    public function issueForOrder(
         StockableUnit $unit,
         int $quantity,
         MovementContext $context,
     ): StockMovement {
         return DB::transaction(function () use ($unit, $quantity, $context): StockMovement {
-            $movement = $this->record($unit, StockMovementType::ShipmentOut, $quantity, $context);
+            $movement = $this->record($unit, StockMovementType::OrderOut, $quantity, $context);
 
             $this->release($unit, $quantity);
 

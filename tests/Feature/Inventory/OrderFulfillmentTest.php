@@ -2,10 +2,7 @@
 
 use Modules\Inventory\Actions\CancelOrderAction;
 use Modules\Inventory\Actions\ConfirmOrderAction;
-use Modules\Inventory\Actions\CreateShipmentAction;
-use Modules\Inventory\Actions\DispatchShipmentAction;
-use Modules\Inventory\Actions\TransitionShipmentAction;
-use Modules\Inventory\Enums\ShipmentStatus;
+use Modules\Inventory\Actions\FulfillOrderAction;
 use Modules\Inventory\Enums\StockMovementType;
 use Modules\Inventory\Exceptions\AlreadyProcessedException;
 use Modules\Inventory\Exceptions\InsufficientStockException;
@@ -78,58 +75,122 @@ it('refuses to confirm the same order twice', function () {
         ->toThrow(InvalidStatusTransitionException::class);
 });
 
-it('deducts stock and releases the reservation when a shipment is dispatched', function () {
+it('deducts stock and releases the reservation when an order is fulfilled', function () {
     [$product, $order] = orderWithStock(10, 4);
     app(ConfirmOrderAction::class)->handle($order);
 
-    $shipment = app(CreateShipmentAction::class)->handle($order->refresh(), [
-        'carrier' => 'UPS',
-        'items' => [['order_item_id' => $order->items->first()->id, 'quantity' => 4]],
-    ]);
-
-    app(DispatchShipmentAction::class)->handle($shipment);
+    app(FulfillOrderAction::class)->handle($order->refresh());
 
     $item = app(InventoryService::class)->itemFor(new StockableUnit($product->id));
 
     expect($item->quantity_on_hand)->toBe(6)
         ->and($item->quantity_reserved)->toBe(0)
-        ->and($order->refresh()->status->value)->toBe('shipped')
-        ->and($order->items->first()->refresh()->quantity_shipped)->toBe(4);
+        ->and($order->refresh()->status->value)->toBe('completed')
+        ->and($order->refresh()->completed_at)->not->toBeNull()
+        ->and($order->items->first()->refresh()->quantity_fulfilled)->toBe(4);
 
-    $movement = StockMovement::query()->where('type', StockMovementType::ShipmentOut)->firstOrFail();
+    $movement = StockMovement::query()->where('type', StockMovementType::OrderOut)->firstOrFail();
 
-    expect($movement->type)->toBe(StockMovementType::ShipmentOut)
-        ->and($movement->quantity)->toBe(-4);
+    expect($movement->type)->toBe(StockMovementType::OrderOut)
+        ->and($movement->quantity)->toBe(-4)
+        ->and($movement->reference_id)->toBe($order->id);
 });
 
-it('does not deduct twice when a shipment is dispatched again', function () {
+it('does not deduct twice when an order is fulfilled again', function () {
     [$product, $order] = orderWithStock(10, 3);
     app(ConfirmOrderAction::class)->handle($order);
 
-    $shipment = app(CreateShipmentAction::class)->handle($order->refresh(), [
-        'items' => [['order_item_id' => $order->items->first()->id, 'quantity' => 3]],
-    ]);
+    $fulfill = app(FulfillOrderAction::class);
+    $fulfill->handle($order->refresh());
 
-    $dispatch = app(DispatchShipmentAction::class);
-    $dispatch->handle($shipment);
-
-    expect(fn () => $dispatch->handle($shipment->refresh()))
+    expect(fn () => $fulfill->handle($order->refresh()))
         ->toThrow(AlreadyProcessedException::class);
 
     expect(app(InventoryService::class)->onHandQuantity(new StockableUnit($product->id)))->toBe(7);
 });
 
-it('moves a partially shipped order to processing', function () {
-    [, $order] = orderWithStock(10, 5);
+it('refuses to fulfil an order that was never confirmed', function () {
+    [$product, $order] = orderWithStock(10, 3);
+
+    expect(fn () => app(FulfillOrderAction::class)->handle($order))
+        ->toThrow(InvalidStatusTransitionException::class);
+
+    expect(app(InventoryService::class)->onHandQuantity(new StockableUnit($product->id)))->toBe(10);
+});
+
+it('moves a partially fulfilled order to processing and keeps the rest reserved', function () {
+    [$product, $order] = orderWithStock(10, 5);
     app(ConfirmOrderAction::class)->handle($order);
 
-    $shipment = app(CreateShipmentAction::class)->handle($order->refresh(), [
-        'items' => [['order_item_id' => $order->items->first()->id, 'quantity' => 2]],
-    ]);
+    $line = $order->items->first();
 
-    app(DispatchShipmentAction::class)->handle($shipment);
+    app(FulfillOrderAction::class)->handle($order->refresh(), [$line->id => 2]);
 
-    expect($order->refresh()->status->value)->toBe('processing');
+    $item = app(InventoryService::class)->itemFor(new StockableUnit($product->id));
+
+    expect($order->refresh()->status->value)->toBe('processing')
+        ->and($item->quantity_on_hand)->toBe(8)
+        ->and($item->quantity_reserved)->toBe(3)
+        ->and($line->refresh()->quantity_fulfilled)->toBe(2)
+        ->and($order->refresh()->completed_at)->toBeNull();
+});
+
+it('completes the order once the remaining lines are fulfilled', function () {
+    [$product, $order] = orderWithStock(10, 5);
+    app(ConfirmOrderAction::class)->handle($order);
+
+    $line = $order->items->first();
+    $fulfill = app(FulfillOrderAction::class);
+
+    $fulfill->handle($order->refresh(), [$line->id => 2]);
+    $fulfill->handle($order->refresh());
+
+    $item = app(InventoryService::class)->itemFor(new StockableUnit($product->id));
+
+    expect($order->refresh()->status->value)->toBe('completed')
+        ->and($item->quantity_on_hand)->toBe(5)
+        ->and($item->quantity_reserved)->toBe(0)
+        ->and($line->refresh()->quantity_fulfilled)->toBe(5);
+});
+
+it('never fulfils more than a line still has outstanding', function () {
+    [$product, $order] = orderWithStock(10, 3);
+    app(ConfirmOrderAction::class)->handle($order);
+
+    $line = $order->items->first();
+
+    app(FulfillOrderAction::class)->handle($order->refresh(), [$line->id => 99]);
+
+    expect($line->refresh()->quantity_fulfilled)->toBe(3)
+        ->and(app(InventoryService::class)->onHandQuantity(new StockableUnit($product->id)))->toBe(7);
+});
+
+it('returns fulfilled units to stock when a partly fulfilled order is cancelled', function () {
+    [$product, $order] = orderWithStock(10, 5);
+    app(ConfirmOrderAction::class)->handle($order);
+
+    $line = $order->items->first();
+    app(FulfillOrderAction::class)->handle($order->refresh(), [$line->id => 2]);
+
+    app(CancelOrderAction::class)->handle($order->refresh(), 'Returned in full');
+
+    $item = app(InventoryService::class)->itemFor(new StockableUnit($product->id));
+
+    expect($order->refresh()->status->value)->toBe('cancelled')
+        ->and($item->quantity_on_hand)->toBe(10)
+        ->and($item->quantity_reserved)->toBe(0)
+        ->and($line->refresh()->quantity_fulfilled)->toBe(0);
+});
+
+it('fulfils an order that is already processing', function () {
+    [$product, $order] = orderWithStock(10, 4);
+    app(ConfirmOrderAction::class)->handle($order);
+    $order->refresh()->forceFill(['status' => 'processing'])->save();
+
+    app(FulfillOrderAction::class)->handle($order->refresh());
+
+    expect($order->refresh()->status->value)->toBe('completed')
+        ->and(app(InventoryService::class)->onHandQuantity(new StockableUnit($product->id)))->toBe(6);
 });
 
 it('releases the reservation when a confirmed order is cancelled', function () {
@@ -145,52 +206,13 @@ it('releases the reservation when a confirmed order is cancelled', function () {
         ->and($item->quantity_on_hand)->toBe(10);
 });
 
-it('returns shipped units to stock when the order is cancelled', function () {
+it('refuses to cancel a completed order', function () {
     [$product, $order] = orderWithStock(10, 4);
     app(ConfirmOrderAction::class)->handle($order);
+    app(FulfillOrderAction::class)->handle($order->refresh());
 
-    $shipment = app(CreateShipmentAction::class)->handle($order->refresh(), [
-        'items' => [['order_item_id' => $order->items->first()->id, 'quantity' => 4]],
-    ]);
-    app(DispatchShipmentAction::class)->handle($shipment);
-
-    app(CancelOrderAction::class)->handle($order->refresh(), 'Returned in full');
-
-    $item = app(InventoryService::class)->itemFor(new StockableUnit($product->id));
-
-    expect($item->quantity_on_hand)->toBe(10)
-        ->and($item->quantity_reserved)->toBe(0)
-        ->and($order->items->first()->refresh()->quantity_shipped)->toBe(0);
-});
-
-it('returns stock and re-reserves it when a dispatched shipment is cancelled', function () {
-    [$product, $order] = orderWithStock(10, 4);
-    app(ConfirmOrderAction::class)->handle($order);
-
-    $shipment = app(CreateShipmentAction::class)->handle($order->refresh(), [
-        'items' => [['order_item_id' => $order->items->first()->id, 'quantity' => 4]],
-    ]);
-    app(DispatchShipmentAction::class)->handle($shipment);
-
-    // Dispatching a full shipment advances the order to "shipped", which no
-    // longer holds a reservation, so only on-hand comes back.
-    app(TransitionShipmentAction::class)->handle($shipment->refresh(), ShipmentStatus::Cancelled);
-
-    $item = app(InventoryService::class)->itemFor(new StockableUnit($product->id));
-
-    expect($item->quantity_on_hand)->toBe(10)
-        ->and($shipment->refresh()->status->value)->toBe('cancelled')
-        ->and($order->items->first()->refresh()->quantity_shipped)->toBe(0);
-});
-
-it('refuses to ship a shipment through the plain status endpoint', function () {
-    [, $order] = orderWithStock(10, 1);
-    app(ConfirmOrderAction::class)->handle($order);
-
-    $shipment = app(CreateShipmentAction::class)->handle($order->refresh(), [
-        'items' => [['order_item_id' => $order->items->first()->id, 'quantity' => 1]],
-    ]);
-
-    expect(fn () => app(TransitionShipmentAction::class)->handle($shipment, ShipmentStatus::Shipped))
+    expect(fn () => app(CancelOrderAction::class)->handle($order->refresh(), 'Too late'))
         ->toThrow(InvalidStatusTransitionException::class);
+
+    expect(app(InventoryService::class)->onHandQuantity(new StockableUnit($product->id)))->toBe(6);
 });
