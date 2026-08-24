@@ -2,13 +2,13 @@
 
 namespace Modules\Inventory\Services;
 
+use App\Core\Support\QuerySorter;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Modules\Inventory\Exceptions\RestrictedDeletionException;
 use Modules\Inventory\Models\Product;
 use Modules\Inventory\Models\ProductSupplier;
 use Modules\Inventory\Models\ProductVariant;
-use Modules\Inventory\Support\QuerySorter;
 
 class ProductService
 {

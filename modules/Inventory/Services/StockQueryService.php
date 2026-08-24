@@ -2,10 +2,10 @@
 
 namespace Modules\Inventory\Services;
 
+use App\Core\Support\QuerySorter;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Modules\Inventory\Models\InventoryItem;
 use Modules\Inventory\Models\StockMovement;
-use Modules\Inventory\Support\QuerySorter;
 
 /**
  * Read side of inventory: current stock levels and ledger history. Kept apart

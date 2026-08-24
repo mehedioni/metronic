@@ -2,6 +2,7 @@
 
 namespace Modules\Access\Services;
 
+use App\Core\Support\QuerySorter;
 use App\Core\Support\Roles;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -11,8 +12,15 @@ use Spatie\Permission\Models\Role;
 
 class UserService
 {
+    private const SORTABLE = [
+        'name' => 'name',
+        'email' => 'email',
+        'is_active' => 'is_active',
+        'created_at' => 'created_at',
+    ];
+
     /**
-     * @param  array{search?: string|null, role?: string|null, is_active?: bool|null, per_page?: int|null}  $filters
+     * @param  array{search?: string|null, role?: string|null, is_active?: bool|null, sort?: string|null, direction?: string|null, per_page?: int|null}  $filters
      * @return LengthAwarePaginator<int, User>
      */
     public function paginate(array $filters): LengthAwarePaginator
@@ -28,7 +36,12 @@ class UserService
                 array_key_exists('is_active', $filters) && $filters['is_active'] !== null,
                 fn ($query) => $query->where('is_active', (bool) $filters['is_active']),
             )
-            ->latest()
+            ->tap(fn ($query) => QuerySorter::apply(
+                $query,
+                $filters['sort'] ?? null,
+                $filters['direction'] ?? null,
+                self::SORTABLE,
+            ))
             ->paginate($filters['per_page'] ?? 15)
             ->withQueryString();
     }

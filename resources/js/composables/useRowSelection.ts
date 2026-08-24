@@ -8,8 +8,12 @@ import type { Ref } from 'vue';
  * page changes, because a hidden selection is a bulk action waiting to
  * surprise someone.
  */
-export function useRowSelection<T extends { id: string }>(rows: Ref<T[]>) {
-    const selected = ref<Set<string>>(new Set());
+export function useRowSelection<T extends { id: string | number }>(
+    rows: Ref<T[]>,
+) {
+    // Ids are uuids in the inventory module and integers for users, so the
+    // selection is keyed by either.
+    const selected = ref<Set<string | number>>(new Set());
 
     watch(rows, () => (selected.value = new Set()));
 
@@ -22,11 +26,11 @@ export function useRowSelection<T extends { id: string }>(rows: Ref<T[]>) {
         () => selected.value.size > 0 && !allSelected.value,
     );
 
-    function isSelected(id: string): boolean {
+    function isSelected(id: string | number): boolean {
         return selected.value.has(id);
     }
 
-    function toggle(id: string) {
+    function toggle(id: string | number) {
         const next = new Set(selected.value);
 
         if (next.has(id)) {

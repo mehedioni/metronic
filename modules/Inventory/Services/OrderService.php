@@ -2,6 +2,7 @@
 
 namespace Modules\Inventory\Services;
 
+use App\Core\Support\QuerySorter;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Modules\Inventory\Exceptions\RestrictedDeletionException;
@@ -10,7 +11,6 @@ use Modules\Inventory\Models\Order;
 use Modules\Inventory\Models\Product;
 use Modules\Inventory\Models\ProductVariant;
 use Modules\Inventory\Support\DocumentNumberGenerator;
-use Modules\Inventory\Support\QuerySorter;
 
 class OrderService
 {

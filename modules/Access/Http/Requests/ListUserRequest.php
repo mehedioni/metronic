@@ -20,6 +20,8 @@ class ListUserRequest extends FormRequest
             'search' => ['nullable', 'string', 'max:255'],
             'role' => ['nullable', 'string', 'exists:roles,name'],
             'is_active' => ['nullable', 'boolean'],
+            'sort' => ['nullable', 'string', 'max:40'],
+            'direction' => ['nullable', 'in:asc,desc'],
             'per_page' => ['nullable', 'integer', 'between:1,100'],
         ];
     }

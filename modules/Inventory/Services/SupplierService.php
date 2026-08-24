@@ -2,11 +2,11 @@
 
 namespace Modules\Inventory\Services;
 
+use App\Core\Support\QuerySorter;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Modules\Inventory\Enums\RecordStatus;
 use Modules\Inventory\Exceptions\RestrictedDeletionException;
 use Modules\Inventory\Models\Supplier;
-use Modules\Inventory\Support\QuerySorter;
 
 class SupplierService
 {

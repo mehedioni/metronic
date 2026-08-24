@@ -1,6 +1,9 @@
 <script setup lang="ts">
-import { Head, useForm } from '@inertiajs/vue3';
+import { Head, Link, useForm } from '@inertiajs/vue3';
+import { FormField } from '@/components/form';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import AuthLayout from '@/layouts/AuthLayout.vue';
 
 defineProps<{ status?: string | null }>();
 
@@ -10,43 +13,37 @@ const form = useForm({ email: '' });
 <template>
     <Head title="Forgot password" />
 
-    <div
-        class="flex min-h-svh items-center justify-center bg-background px-4 text-foreground"
+    <AuthLayout
+        title="Reset your password"
+        description="We will email you a link to choose a new one."
     >
-        <div
-            class="w-full max-w-sm space-y-6 rounded-lg border border-border bg-card p-6"
+        <p
+            v-if="status"
+            class="mb-4 rounded-md border border-success/20 bg-success-soft px-3 py-2 text-xs text-success"
         >
-            <h1 class="text-xl font-semibold">Reset your password</h1>
-            <p v-if="status" class="text-sm text-emerald-600">{{ status }}</p>
+            {{ status }}
+        </p>
 
-            <form
-                class="space-y-4"
-                @submit.prevent="form.post('/forgot-password')"
-            >
-                <div class="space-y-1">
-                    <label class="text-sm" for="email">Email</label>
-                    <input
-                        id="email"
-                        v-model="form.email"
-                        type="email"
-                        required
-                        class="w-full rounded border border-border bg-background px-3 py-2 text-sm"
-                    />
-                    <p v-if="form.errors.email" class="text-sm text-red-500">
-                        {{ form.errors.email }}
-                    </p>
-                </div>
+        <form class="space-y-4" @submit.prevent="form.post('/forgot-password')">
+            <FormField label="Email" :error="form.errors.email" required>
+                <Input
+                    v-model="form.email"
+                    type="email"
+                    autocomplete="username"
+                    :invalid="Boolean(form.errors.email)"
+                    required
+                />
+            </FormField>
 
-                <Button type="submit" class="w-full" :disabled="form.processing"
-                    >Email reset link</Button
-                >
-            </form>
+            <Button type="submit" class="w-full" :disabled="form.processing">
+                Email reset link
+            </Button>
 
-            <a
+            <Link
                 href="/login"
-                class="block text-sm text-muted-foreground underline"
-                >Back to sign in</a
+                class="block text-center text-xs text-muted-foreground transition-colors hover:text-foreground"
+                >Back to sign in</Link
             >
-        </div>
-    </div>
+        </form>
+    </AuthLayout>
 </template>

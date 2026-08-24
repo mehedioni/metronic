@@ -1,4 +1,4 @@
-<script setup lang="ts" generic="T extends { id: string }">
+<script setup lang="ts" generic="T extends { id: string | number }">
 import {
     ChevronDownIcon,
     ChevronsUpDownIcon,
@@ -61,7 +61,7 @@ const alignment = computed(() => (column: Column) => ({
     'text-end': column.align === 'end',
 }));
 
-function toggleRow(id: string) {
+function toggleRow(id: string | number) {
     selection.toggle(id);
     emit('selection-change', selection.selectedRows.value);
 }

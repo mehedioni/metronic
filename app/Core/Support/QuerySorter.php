@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\Inventory\Support;
+namespace App\Core\Support;
 
 use Illuminate\Database\Eloquent\Builder;
 

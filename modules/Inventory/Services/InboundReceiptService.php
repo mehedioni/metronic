@@ -2,13 +2,13 @@
 
 namespace Modules\Inventory\Services;
 
+use App\Core\Support\QuerySorter;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Modules\Inventory\Enums\InboundReceiptStatus;
 use Modules\Inventory\Exceptions\RestrictedDeletionException;
 use Modules\Inventory\Models\InboundReceipt;
 use Modules\Inventory\Support\DocumentNumberGenerator;
-use Modules\Inventory\Support\QuerySorter;
 
 class InboundReceiptService
 {
