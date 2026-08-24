@@ -8,6 +8,7 @@ use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Modules\Access\Database\Seeders\RolePermissionSeeder;
 use Modules\Access\Database\Seeders\SuperAdminSeeder;
+use Modules\Inventory\Database\Seeders\InventoryDemoSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -30,6 +31,12 @@ class DatabaseSeeder extends Seeder
             User::factory()
                 ->create(['name' => 'Test User', 'email' => 'test@example.com'])
                 ->assignRole(Roles::ADMIN);
+        }
+
+        // Demo catalogue, stock and sales history, so every screen has
+        // something realistic to render while the UI is being built.
+        if (app()->environment('local')) {
+            $this->call(InventoryDemoSeeder::class);
         }
     }
 }
