@@ -20,7 +20,7 @@ suppliers.view|create|update|delete
 products.view|create|update|delete
 inventory.view|create|adjust|delete
 orders.view|create|update|cancel
-shipments.view|create|update|delete
+customers.view|create|update|delete
 users.view|create|update|delete
 roles.view|create|update|delete
 permissions.view|manage
@@ -35,8 +35,8 @@ groups (`Roles::permissionMap()`):
 | --- | --- |
 | Super Admin | everything, via `Gate::before` — holds no explicit permissions |
 | Admin | every permission in the catalogue |
-| Manager | dashboard, categories, suppliers, products, inventory, orders, shipments |
-| Inventory Manager | dashboard, categories, suppliers, products, inventory + view orders, view/create/update shipments |
+| Manager | dashboard, categories, suppliers, products, inventory, orders, customers |
+| Inventory Manager | dashboard, categories, suppliers, products, inventory + view orders, fulfil orders, view customers |
 | Staff | read-only across the app, plus `orders.create` |
 
 Roles exist only to group permissions. Controllers and policies always check
@@ -85,7 +85,7 @@ php artisan access:super-admin user@example.com
    attributes).
 3. **Service-level rules** — `UserService` and `RoleService` refuse privilege
    escalation; `CategoryService`, `SupplierService`, `ProductService`,
-   `InboundReceiptService`, `OrderService` and `ShipmentService` refuse
+   `InboundReceiptService`, `OrderService` and `CustomerService` refuse
    deletions that would corrupt history.
 4. **Domain guards** — status-transition and idempotency checks inside the
    Actions, so a hand-crafted request cannot double-process a document.

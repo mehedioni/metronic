@@ -20,9 +20,9 @@ modules/
 
 Two modules, not eleven. `modules/README.md` forbids importing across module
 boundaries (cross-module talk goes through events), and the store entities are
-one transactional bounded context: an order reserves stock, a shipment deducts
+one transactional bounded context: an order reserves stock, fulfilling it deducts
 it, a receipt adds it, all inside single database transactions with foreign keys
-between the tables. Splitting catalogue, stock, orders and shipments into
+between the tables. Splitting catalogue, stock, orders and customers into
 separate modules would have meant either breaking that rule on every call or
 routing transactional work through events, which cannot be rolled back
 together.
@@ -69,13 +69,12 @@ through an Action, and every Action delegates the actual quantity change to
 
 - **Services** own listing, filtering, pagination and plain CRUD:
   `CategoryService`, `SupplierService`, `ProductService`,
-  `InboundReceiptService`, `OrderService`, `ShipmentService`,
-  `StockQueryService`, `DashboardService`.
+  `InboundReceiptService`, `OrderService`, `CustomerService`,
+  `StockQueryService`, `StockPlannerService`, `DashboardService`.
 - **Actions** own the transitions that have an inventory effect:
   `ReceiveInboundReceiptAction`, `CancelInboundReceiptAction`,
   `AdjustStockAction`, `ConfirmOrderAction`, `CancelOrderAction`,
-  `CreateShipmentAction`, `DispatchShipmentAction`,
-  `TransitionShipmentAction`.
+  `FulfillOrderAction`.
 
 ### Models and relationships
 
@@ -89,12 +88,12 @@ through an Action, and every Action delegates the actual quantity change to
 | `InventoryItem` | current stock for one product (+ optional variant) |
 | `StockMovement` | append-only ledger row; polymorphic-style `reference_type`/`reference_id` |
 | `InboundReceipt` / `InboundReceiptItem` | receiving document and its lines |
-| `Order` / `OrderItem` | sales order and its lines |
-| `Shipment` / `ShipmentItem` | outbound shipment; lines point at order lines |
+| `Order` / `OrderItem` | sales order and its lines; `belongsTo` customer (nullable — a walk-in sale has none) |
+| `Customer` | who the store sells to; orders keep their own contact snapshot |
 
 ### Enums as the transition table
 
-`OrderStatus`, `ShipmentStatus` and `InboundReceiptStatus` each expose
+`OrderStatus` and `InboundReceiptStatus` each expose
 `allowedTransitions()` and `canTransitionTo()`. Actions ask the enum instead of
 hard-coding status strings, so the rules live in one place and the UI can render
 the same list (controllers pass `allowedTransitions` to the page).

@@ -21,7 +21,17 @@ class InventoryItemPolicy
         return $user->can(Permissions::INVENTORY_VIEW);
     }
 
-    public function adjust(User $user, InventoryItem $inventoryItem): bool
+    /**
+     * Adjusting is checked before the row exists.
+     *
+     * An adjustment names a product (and optionally a variant), not an
+     * inventory_items row: InventoryService creates that row the first time a
+     * unit holds stock. So the controller authorizes this against the class,
+     * and Laravel then calls the policy with the user alone — the model
+     * parameter has to be optional or the check dies with an
+     * ArgumentCountError before the ability is ever evaluated.
+     */
+    public function adjust(User $user, ?InventoryItem $inventoryItem = null): bool
     {
         return $user->can(Permissions::INVENTORY_ADJUST);
     }

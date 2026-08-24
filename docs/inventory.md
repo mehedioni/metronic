@@ -39,7 +39,7 @@ quantity:
 | `record($unit, $type, $qty, $context)` | changes on-hand and appends one ledger row |
 | `reserve($unit, $qty)` | increases `quantity_reserved` (rejects overselling) |
 | `release($unit, $qty)` | decreases `quantity_reserved`, clamped at zero |
-| `issueForShipment($unit, $qty, $context)` | deducts on-hand **and** releases the reservation in one transaction |
+| `issueForOrder($unit, $qty, $context)` | deducts on-hand **and** releases the reservation in one transaction |
 | `itemFor` / `onHandQuantity` / `availableQuantity` | reads |
 
 Every write:
@@ -64,11 +64,11 @@ winner's row.
 Inbound (`direction() === 1`): `opening_stock`, `stock_received`,
 `customer_return`, `adjustment_increase`, `transfer_in`.
 
-Outbound: `adjustment_decrease`, `shipment_out`, `damage`, `manual_removal`,
+Outbound: `adjustment_decrease`, `order_out`, `damage`, `manual_removal`,
 `transfer_out`, `receipt_reversal`.
 
 `StockMovementType::manualValues()` is the subset a user may pick in the adjust
-form — `shipment_out` and `receipt_reversal` are system-driven only.
+form — `order_out` and `receipt_reversal` are system-driven only.
 
 ## What creates a movement
 
@@ -77,27 +77,29 @@ form — `shipment_out` and `receipt_reversal` are system-driven only.
 | Receipt transitions to `received` (`ReceiveInboundReceiptAction`) | one inbound movement per receipt line, type from `InboundSource::movementType()` | `inbound_receipts.processed_at`, checked under a row lock in the same transaction |
 | Processed receipt cancelled (`CancelInboundReceiptAction`) | `receipt_reversal` per line | `cancelled_at` + only reverses when `processed_at` was set |
 | Manual adjustment (`AdjustStockAction`) | the chosen manual type | none needed — each call is an explicit user action |
-| Shipment dispatched (`DispatchShipmentAction`) | `shipment_out` per line, plus reservation release | `shipments.shipped_at`, checked under a row lock |
-| Dispatched shipment cancelled (`TransitionShipmentAction`) | `customer_return` per line, re-reserved if the order still holds a reservation | `shipped_at` is cleared in the same transaction |
-| Order cancelled after shipping (`CancelOrderAction`) | `customer_return` for the shipped quantity | `order_items.quantity_shipped` reset to 0 in the same transaction |
+| Order fulfilled (`FulfillOrderAction`) | `order_out` per line, plus reservation release | the order and each line's `quantity_fulfilled` are read under a row lock and written in the same transaction as the movements; a repeat call with nothing outstanding raises `AlreadyProcessedException` |
+| Order cancelled after part of it was fulfilled (`CancelOrderAction`) | `customer_return` for the fulfilled quantity | `order_items.quantity_fulfilled` reset to 0 in the same transaction |
 
 ## Order lifecycle and its inventory effects
 
 ```
-draft ──► pending ──► confirmed ──► processing ──► shipped ──► completed
-   │          │            │             │            │
-   └──────────┴────────────┴─────────────┴────────────┴──► cancelled
+draft ──► pending ──► confirmed ──► processing ──► completed
+   │          │            │             │
+   └──────────┴────────────┴─────────────┴──► cancelled
 ```
 
 - `pending → confirmed` (`ConfirmOrderAction`): **reserves** stock for every
   line. Rejected with `InsufficientStockException` if a line exceeds available
   stock, unless `config('inventory.allow_overselling')` is true. A second
   confirm is rejected by the transition table, so a reservation is taken once.
-- Shipment dispatched: **deducts** on-hand, releases the matching reservation,
-  increments `order_items.quantity_shipped`, and advances the order to
-  `processing` (partially shipped) or `shipped` (fully shipped).
+- Fulfilment (`FulfillOrderAction`): **deducts** on-hand, releases the matching
+  reservation, increments `order_items.quantity_fulfilled`, and advances the
+  order to `processing` (partly fulfilled) or `completed` (fully fulfilled).
+  This is the only outbound stock path for an order — confirmation reserves,
+  fulfilment is what removes. Callers may pass per-line quantities for a
+  partial handover; passing none fulfils everything outstanding.
 - `→ cancelled` (`CancelOrderAction`): releases the outstanding reservation and
-  returns any already-shipped units to stock as `customer_return`.
+  returns any already-fulfilled units to stock as `customer_return`.
 
 Order lines are only editable while the status is `draft` or `pending`
 (`OrderStatus::isEditable()`), i.e. before the order has any inventory impact.
@@ -132,3 +134,21 @@ for Inertia requests — never as a 500:
 `InsufficientStockException` (`quantity`), `InvalidStatusTransitionException`
 (`status`), `AlreadyProcessedException`, `RestrictedDeletionException`,
 `CircularCategoryException` (`parent_id`).
+
+## Reorder planning
+
+`StockPlannerService` answers "what should be reordered, and when" without
+storing anything:
+
+| Figure | Derived from |
+| --- | --- |
+| daily velocity | outbound `stock_movements` over a 30-day window (`StockPlannerService::VELOCITY_WINDOW_DAYS`) |
+| target level | the variant's `low_stock_threshold`, falling back to the product's — the same precedence `InventoryItem::scopeLowStock()` uses |
+| lead time | the shortest `product_supplier.lead_time_days` on the product, or 7 days when no link states one |
+| days of cover | available ÷ daily velocity, `null` when the unit never moves |
+| suggested reorder | `max(0, target + velocity × lead time − available)` |
+
+Because nothing is persisted, a planner row is always a statement about the
+current ledger rather than a snapshot that can go stale. `GET
+inventory/stock/planner` also accepts `reorder_within=<days>` to keep only the
+units needing a reorder inside that horizon.
