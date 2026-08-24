@@ -3,6 +3,7 @@
 namespace App\Core;
 
 use App\Core\Traits\ApiResponse;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Routing\Controller;
 
 /**
@@ -12,5 +13,5 @@ use Illuminate\Routing\Controller;
  */
 abstract class BaseApiController extends Controller
 {
-    use ApiResponse;
+    use ApiResponse, AuthorizesRequests;
 }

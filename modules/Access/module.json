@@ -1,0 +1,6 @@
+{
+    "name": "Access",
+    "slug": "access",
+    "version": "0.1.0",
+    "provider": "Modules\\Access\\AccessServiceProvider"
+}

@@ -7,13 +7,32 @@ import '../css/app.css';
 
 const appName = import.meta.env.VITE_APP_NAME || 'RentMy Admin';
 
+const appPages = import.meta.glob<DefineComponent>('./pages/**/*.vue');
+const modulePages = import.meta.glob<DefineComponent>(
+    '../../modules/*/Resources/js/pages/**/*.vue',
+);
+
+/**
+ * Module pages are addressed as "Inventory::Products/Index" so each module
+ * keeps ownership of its own Vue files (see modules/README.md). Anything
+ * without "::" resolves from resources/js/pages as usual.
+ */
+function resolvePage(name: string) {
+    if (!name.includes('::')) {
+        return resolvePageComponent(`./pages/${name}.vue`, appPages);
+    }
+
+    const [module, page] = name.split('::');
+
+    return resolvePageComponent(
+        `../../modules/${module}/Resources/js/pages/${page}.vue`,
+        modulePages,
+    );
+}
+
 createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),
-    resolve: (name) =>
-        resolvePageComponent(
-            `./pages/${name}.vue`,
-            import.meta.glob<DefineComponent>('./pages/**/*.vue'),
-        ),
+    resolve: resolvePage,
     setup({ el, App, props, plugin }) {
         createApp({ render: () => h(App, props) })
             .use(plugin)

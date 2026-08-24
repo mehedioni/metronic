@@ -2,8 +2,6 @@
 
 namespace App\Core;
 
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
@@ -14,17 +12,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * domain data can be recovered/audited. Not used by App\Models\User, which
  * follows Laravel's default auth conventions instead.
  */
-abstract class BaseModel extends Model
+abstract class BaseModel extends BaseUuidModel
 {
-    use HasUuids, SoftDeletes;
-
-    /**
-     * The primary key type.
-     */
-    protected $keyType = 'string';
-
-    /**
-     * Indicates the primary key is not auto-incrementing.
-     */
-    public $incrementing = false;
+    use SoftDeletes;
 }

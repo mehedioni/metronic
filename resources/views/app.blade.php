@@ -34,7 +34,10 @@
 
         <link rel="icon" href="/favicon.ico" sizes="any">
 
-        @vite(['resources/css/app.css', 'resources/js/app.ts', "resources/js/pages/{$page['component']}.vue"])
+        {{-- Page components are code-split by Inertia's glob resolver (see
+             resources/js/app.ts), which also serves module-owned pages under
+             modules/<Module>/Resources/js/pages. --}}
+        @vite(['resources/css/app.css', 'resources/js/app.ts'])
         <x-inertia::head />
     </head>
     <body class="font-sans antialiased">

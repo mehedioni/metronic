@@ -1,6 +1,12 @@
 <?php
 
+use App\Core\Support\Roles;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
 use Tests\TestCase;
 
 /*
@@ -15,7 +21,10 @@ use Tests\TestCase;
 */
 
 pest()->extend(TestCase::class)
- // ->use(RefreshDatabase::class)
+    ->use(RefreshDatabase::class)
+    // Feature tests assert on rendered Inertia responses, not compiled assets,
+    // so they must not require a Vite build to have run.
+    ->beforeEach(fn () => $this->withoutVite())
     ->in('Feature');
 
 /*
@@ -44,7 +53,40 @@ expect()->extend('toBeOne', function () {
 |
 */
 
-function something()
+/**
+ * Create a signed-in-ready user holding exactly the given permissions.
+ *
+ * Tests assert against permissions rather than roles, which is how the
+ * application itself checks authorization.
+ *
+ * @param  array<int, string>  $permissions
+ */
+function userWithPermissions(array $permissions): User
 {
-    // ..
+    $user = User::factory()->create();
+
+    $role = Role::findOrCreate('Test Role '.Str::random(6), 'web');
+
+    foreach ($permissions as $permission) {
+        Permission::findOrCreate($permission, 'web');
+    }
+
+    $role->syncPermissions($permissions);
+    $user->assignRole($role);
+
+    app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+    return $user->refresh();
+}
+
+/**
+ * Create a user with the Super Admin role, which bypasses every ability via
+ * Gate::before.
+ */
+function superAdmin(): User
+{
+    $user = User::factory()->create();
+    $user->assignRole(Role::findOrCreate(Roles::SUPER_ADMIN, 'web'));
+
+    return $user->refresh();
 }

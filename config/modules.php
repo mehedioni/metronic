@@ -13,6 +13,9 @@ return [
     | See modules/README.md for the full scaffold convention.
     |
     */
-    'enabled' => [],
+    'enabled' => [
+        'Access',
+        'Inventory',
+    ],
 
 ];
