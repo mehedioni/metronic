@@ -12,7 +12,7 @@ import TableToolbar from '@/components/TableToolbar.vue';
 import { Avatar } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
-import { Modal } from '@/components/ui/dialog';
+import { Drawer } from '@/components/ui/drawer';
 import { Dropdown, DropdownItem } from '@/components/ui/dropdown';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
@@ -300,7 +300,7 @@ function exportCurrent() {
             />
         </Card>
 
-        <Modal
+        <Drawer
             :open="creating"
             title="New customer"
             description="A code is generated automatically."
@@ -347,9 +347,9 @@ function exportCurrent() {
                     Create customer
                 </Button>
             </template>
-        </Modal>
+        </Drawer>
 
-        <Modal
+        <Drawer
             :open="Boolean(confirming)"
             title="Delete customer"
             size="sm"
@@ -372,6 +372,6 @@ function exportCurrent() {
                     Delete customer
                 </Button>
             </template>
-        </Modal>
+        </Drawer>
     </AppLayout>
 </template>

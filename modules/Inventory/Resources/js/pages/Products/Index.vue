@@ -11,7 +11,7 @@ import TableToolbar from '@/components/TableToolbar.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
-import { Modal } from '@/components/ui/dialog';
+import { Drawer } from '@/components/ui/drawer';
 import { Dropdown, DropdownItem } from '@/components/ui/dropdown';
 import { Select } from '@/components/ui/select';
 import { useCsvExport } from '@/composables/useCsvExport';
@@ -318,7 +318,7 @@ function exportCurrent() {
             />
         </Card>
 
-        <Modal
+        <Drawer
             :open="Boolean(confirming)"
             title="Delete product"
             :description="
@@ -345,6 +345,6 @@ function exportCurrent() {
                     Delete product
                 </Button>
             </template>
-        </Modal>
+        </Drawer>
     </AppLayout>
 </template>

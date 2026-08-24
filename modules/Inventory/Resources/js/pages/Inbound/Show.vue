@@ -7,7 +7,7 @@ import PageHeader from '@/components/PageHeader.vue';
 import StatusBadge from '@/components/StatusBadge.vue';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Modal } from '@/components/ui/dialog';
+import { Drawer } from '@/components/ui/drawer';
 import { usePageErrors } from '@/composables/usePageErrors';
 import { usePermissions } from '@/composables/usePermissions';
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -303,7 +303,7 @@ function cancel() {
             </div>
         </div>
 
-        <Modal
+        <Drawer
             :open="receiving"
             title="Post receipt to stock"
             :description="`${number(totalUnits)} units will be added to the shelf and written to the ledger.`"
@@ -331,9 +331,9 @@ function cancel() {
                     Post to stock
                 </Button>
             </template>
-        </Modal>
+        </Drawer>
 
-        <Modal
+        <Drawer
             :open="cancelling"
             title="Cancel receipt"
             description="A posted receipt is reversed with a compensating movement, so the ledger keeps both entries."
@@ -361,6 +361,6 @@ function cancel() {
                     Cancel receipt
                 </Button>
             </template>
-        </Modal>
+        </Drawer>
     </AppLayout>
 </template>

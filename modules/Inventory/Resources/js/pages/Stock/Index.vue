@@ -11,7 +11,7 @@ import TableToolbar from '@/components/TableToolbar.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
-import { Modal } from '@/components/ui/dialog';
+import { Drawer } from '@/components/ui/drawer';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import { useCsvExport } from '@/composables/useCsvExport';
@@ -260,7 +260,7 @@ function exportCurrent() {
             />
         </Card>
 
-        <Modal
+        <Drawer
             :open="Boolean(adjusting)"
             title="Adjust stock"
             :description="
@@ -324,6 +324,6 @@ function exportCurrent() {
                     Record adjustment
                 </Button>
             </template>
-        </Modal>
+        </Drawer>
     </AppLayout>
 </template>

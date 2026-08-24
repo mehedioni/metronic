@@ -8,7 +8,7 @@ import StatusBadge from '@/components/StatusBadge.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Modal } from '@/components/ui/dialog';
+import { Drawer } from '@/components/ui/drawer';
 import { Input } from '@/components/ui/input';
 import { usePermissions } from '@/composables/usePermissions';
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -387,7 +387,7 @@ function cancel() {
             </div>
         </div>
 
-        <Modal
+        <Drawer
             :open="fulfilling"
             title="Fulfil order"
             description="Deducts on-hand stock for the quantities handed over and releases their reservation. Leaving the full amounts completes the order."
@@ -438,9 +438,9 @@ function cancel() {
                     Fulfil
                 </Button>
             </template>
-        </Modal>
+        </Drawer>
 
-        <Modal
+        <Drawer
             :open="cancelling"
             title="Cancel order"
             description="Releases outstanding reservations and returns any fulfilled units to stock as a customer return."
@@ -468,6 +468,6 @@ function cancel() {
                     Cancel order
                 </Button>
             </template>
-        </Modal>
+        </Drawer>
     </AppLayout>
 </template>

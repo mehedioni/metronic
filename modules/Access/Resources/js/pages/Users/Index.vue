@@ -12,7 +12,7 @@ import { Avatar } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
-import { Modal } from '@/components/ui/dialog';
+import { Drawer } from '@/components/ui/drawer';
 import { Dropdown, DropdownItem } from '@/components/ui/dropdown';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
@@ -250,7 +250,7 @@ function destroy() {
             />
         </Card>
 
-        <Modal
+        <Drawer
             :open="creating"
             title="New user"
             description="Roles bundle permissions; a role can never be granted more than the granting user holds."
@@ -308,9 +308,9 @@ function destroy() {
                     Create user
                 </Button>
             </template>
-        </Modal>
+        </Drawer>
 
-        <Modal
+        <Drawer
             :open="Boolean(confirming)"
             title="Delete user"
             size="sm"
@@ -333,6 +333,6 @@ function destroy() {
                     Delete user
                 </Button>
             </template>
-        </Modal>
+        </Drawer>
     </AppLayout>
 </template>

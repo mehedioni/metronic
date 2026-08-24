@@ -7,7 +7,7 @@ import StatusBadge from '@/components/StatusBadge.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Modal } from '@/components/ui/dialog';
+import { Drawer } from '@/components/ui/drawer';
 import { TabPanel, Tabs } from '@/components/ui/tabs';
 import { usePageErrors } from '@/composables/usePageErrors';
 import { usePermissions } from '@/composables/usePermissions';
@@ -364,7 +364,7 @@ function destroy() {
             </Card>
         </div>
 
-        <Modal
+        <Drawer
             :open="confirming"
             title="Delete product"
             :description="`${product.name} will be removed from the catalogue.`"
@@ -388,6 +388,6 @@ function destroy() {
                     Delete product
                 </Button>
             </template>
-        </Modal>
+        </Drawer>
     </AppLayout>
 </template>

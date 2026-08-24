@@ -12,7 +12,7 @@ import StatusBadge from '@/components/StatusBadge.vue';
 import TableToolbar from '@/components/TableToolbar.vue';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
-import { Modal } from '@/components/ui/dialog';
+import { Drawer } from '@/components/ui/drawer';
 import { Dropdown, DropdownItem } from '@/components/ui/dropdown';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
@@ -255,7 +255,7 @@ function exportCurrent() {
             />
         </Card>
 
-        <Modal
+        <Drawer
             :open="creating"
             title="New supplier"
             description="Supplier terms per product are set on the product itself."
@@ -313,9 +313,9 @@ function exportCurrent() {
                     Create supplier
                 </Button>
             </template>
-        </Modal>
+        </Drawer>
 
-        <Modal
+        <Drawer
             :open="Boolean(confirming)"
             title="Delete supplier"
             size="sm"
@@ -338,6 +338,6 @@ function exportCurrent() {
                     Delete supplier
                 </Button>
             </template>
-        </Modal>
+        </Drawer>
     </AppLayout>
 </template>

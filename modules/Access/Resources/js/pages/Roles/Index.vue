@@ -11,7 +11,7 @@ import TableToolbar from '@/components/TableToolbar.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
-import { Modal } from '@/components/ui/dialog';
+import { Drawer } from '@/components/ui/drawer';
 import { Dropdown, DropdownItem } from '@/components/ui/dropdown';
 import { Input } from '@/components/ui/input';
 import { usePageErrors } from '@/composables/usePageErrors';
@@ -194,7 +194,7 @@ function destroy() {
             />
         </Card>
 
-        <Modal
+        <Drawer
             :open="creating"
             title="New role"
             description="You can only grant permissions you hold yourself."
@@ -257,9 +257,9 @@ function destroy() {
                     Create role
                 </Button>
             </template>
-        </Modal>
+        </Drawer>
 
-        <Modal
+        <Drawer
             :open="Boolean(confirming)"
             title="Delete role"
             size="sm"
@@ -281,6 +281,6 @@ function destroy() {
                     Delete role
                 </Button>
             </template>
-        </Modal>
+        </Drawer>
     </AppLayout>
 </template>

@@ -11,7 +11,7 @@ import StatusBadge from '@/components/StatusBadge.vue';
 import TableToolbar from '@/components/TableToolbar.vue';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
-import { Modal } from '@/components/ui/dialog';
+import { Drawer } from '@/components/ui/drawer';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import { useCsvExport } from '@/composables/useCsvExport';
@@ -277,7 +277,7 @@ function exportCurrent() {
             />
         </Card>
 
-        <Modal
+        <Drawer
             :open="creating"
             title="New receipt"
             description="Creating a receipt records what is expected. Stock moves when it is posted."
@@ -414,6 +414,6 @@ function exportCurrent() {
                     Create receipt
                 </Button>
             </template>
-        </Modal>
+        </Drawer>
     </AppLayout>
 </template>
