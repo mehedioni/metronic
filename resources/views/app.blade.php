@@ -19,20 +19,28 @@
             })();
         </script>
 
-        {{-- Inline style to set the HTML background color based on our theme in app.css --}}
+        {{-- Inline style so the page paints the themed background before
+             app.css loads. Must match --background in resources/css/app.css. --}}
         <style>
             html {
-                background-color: oklch(1 0 0);
+                background-color: #ffffff;
             }
 
             html.dark {
-                background-color: oklch(0.145 0 0);
+                background-color: #09090b;
             }
         </style>
 
         <title inertia>{{ config('app.name') }}</title>
 
         <link rel="icon" href="/favicon.ico" sizes="any">
+
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+            rel="stylesheet"
+        >
 
         {{-- Page components are code-split by Inertia's glob resolver (see
              resources/js/app.ts), which also serves module-owned pages under

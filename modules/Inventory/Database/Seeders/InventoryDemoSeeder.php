@@ -4,6 +4,7 @@ namespace Modules\Inventory\Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Modules\Inventory\Actions\CancelOrderAction;
 use Modules\Inventory\Actions\ConfirmOrderAction;
@@ -62,9 +63,9 @@ class InventoryDemoSeeder extends Seeder
     }
 
     /**
-     * @return \Illuminate\Support\Collection<int, Category>
+     * @return Collection<int, Category>
      */
-    private function categories(): \Illuminate\Support\Collection
+    private function categories(): Collection
     {
         return collect(self::CATEGORIES)->map(fn (string $name): Category => Category::create([
             'name' => $name,
@@ -77,11 +78,11 @@ class InventoryDemoSeeder extends Seeder
      * A mix of simple and variable products, each with supplier terms so the
      * planner has a real lead time to work with.
      *
-     * @param  \Illuminate\Support\Collection<int, Category>  $categories
-     * @param  \Illuminate\Support\Collection<int, Supplier>  $suppliers
-     * @return \Illuminate\Support\Collection<int, Product>
+     * @param  Collection<int, Category>  $categories
+     * @param  Collection<int, Supplier>  $suppliers
+     * @return Collection<int, Product>
      */
-    private function products($categories, $suppliers): \Illuminate\Support\Collection
+    private function products($categories, $suppliers): Collection
     {
         $products = collect();
 
@@ -122,7 +123,7 @@ class InventoryDemoSeeder extends Seeder
      * Put stock on the shelf for every stockable unit, dated back across the
      * planner's velocity window so the numbers are not all from today.
      *
-     * @param  \Illuminate\Support\Collection<int, Product>  $products
+     * @param  Collection<int, Product>  $products
      */
     private function openingStock($products): void
     {
@@ -151,8 +152,8 @@ class InventoryDemoSeeder extends Seeder
      * Receipts in each state the receiving screens show. The received ones go
      * through the real action, so they add stock and write the ledger.
      *
-     * @param  \Illuminate\Support\Collection<int, Product>  $products
-     * @param  \Illuminate\Support\Collection<int, Supplier>  $suppliers
+     * @param  Collection<int, Product>  $products
+     * @param  Collection<int, Supplier>  $suppliers
      */
     private function receivingHistory($products, $suppliers): void
     {
@@ -189,8 +190,8 @@ class InventoryDemoSeeder extends Seeder
      * Orders in every state the list screen can show, driven through the real
      * actions so stock, reservations and the ledger stay consistent.
      *
-     * @param  \Illuminate\Support\Collection<int, Product>  $products
-     * @param  \Illuminate\Support\Collection<int, Customer>  $customers
+     * @param  Collection<int, Product>  $products
+     * @param  Collection<int, Customer>  $customers
      */
     private function salesHistory($products, $customers): void
     {
@@ -225,7 +226,7 @@ class InventoryDemoSeeder extends Seeder
     }
 
     /**
-     * @param  \Illuminate\Support\Collection<int, Product>  $products
+     * @param  Collection<int, Product>  $products
      */
     private function addLines(Order $order, $products): void
     {

@@ -10,9 +10,18 @@ use Modules\Inventory\Models\Order;
 use Modules\Inventory\Models\Product;
 use Modules\Inventory\Models\ProductVariant;
 use Modules\Inventory\Support\DocumentNumberGenerator;
+use Modules\Inventory\Support\QuerySorter;
 
 class OrderService
 {
+    private const SORTABLE = [
+        'order_number' => 'order_number',
+        'customer_name' => 'customer_name',
+        'status' => 'status',
+        'total' => 'total',
+        'created_at' => 'created_at',
+    ];
+
     public function __construct(private DocumentNumberGenerator $numbers) {}
 
     /**
@@ -28,7 +37,12 @@ class OrderService
             ->between($filters['from'] ?? null, $filters['to'] ?? null)
             ->when($filters['status'] ?? null, fn ($query, $status) => $query->where('status', $status))
             ->when($filters['customer_id'] ?? null, fn ($query, $customerId) => $query->where('customer_id', $customerId))
-            ->latest()
+            ->tap(fn ($query) => QuerySorter::apply(
+                $query,
+                $filters['sort'] ?? null,
+                $filters['direction'] ?? null,
+                self::SORTABLE,
+            ))
             ->paginate($filters['per_page'] ?? 15)
             ->withQueryString();
     }

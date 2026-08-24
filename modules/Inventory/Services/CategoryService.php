@@ -6,9 +6,17 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Modules\Inventory\Exceptions\CircularCategoryException;
 use Modules\Inventory\Exceptions\RestrictedDeletionException;
 use Modules\Inventory\Models\Category;
+use Modules\Inventory\Support\QuerySorter;
 
 class CategoryService
 {
+    private const SORTABLE = [
+        'name' => 'name',
+        'status' => 'status',
+        'products_count' => 'products_count',
+        'created_at' => 'created_at',
+    ];
+
     /**
      * @param  array{search?: string|null, status?: string|null, parent_id?: string|null, per_page?: int|null}  $filters
      * @return LengthAwarePaginator<int, Category>
@@ -21,7 +29,12 @@ class CategoryService
             ->search($filters['search'] ?? null)
             ->when($filters['status'] ?? null, fn ($query, $status) => $query->where('status', $status))
             ->when($filters['parent_id'] ?? null, fn ($query, $parent) => $query->where('parent_id', $parent))
-            ->latest()
+            ->tap(fn ($query) => QuerySorter::apply(
+                $query,
+                $filters['sort'] ?? null,
+                $filters['direction'] ?? null,
+                self::SORTABLE,
+            ))
             ->paginate($filters['per_page'] ?? 15)
             ->withQueryString();
     }

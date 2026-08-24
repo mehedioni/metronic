@@ -8,10 +8,19 @@ use Modules\Inventory\Enums\InboundReceiptStatus;
 use Modules\Inventory\Exceptions\RestrictedDeletionException;
 use Modules\Inventory\Models\InboundReceipt;
 use Modules\Inventory\Support\DocumentNumberGenerator;
+use Modules\Inventory\Support\QuerySorter;
 
 class InboundReceiptService
 {
     public function __construct(private DocumentNumberGenerator $numbers) {}
+
+    private const SORTABLE = [
+        'reference_number' => 'reference_number',
+        'status' => 'status',
+        'source' => 'source',
+        'received_date' => 'received_date',
+        'created_at' => 'created_at',
+    ];
 
     /**
      * @param  array{search?: string|null, status?: string|null, source?: string|null, supplier_id?: string|null, from?: string|null, to?: string|null, per_page?: int|null}  $filters
@@ -29,7 +38,12 @@ class InboundReceiptService
             ->when($filters['supplier_id'] ?? null, fn ($query, $supplier) => $query->where('supplier_id', $supplier))
             ->when($filters['from'] ?? null, fn ($query, $from) => $query->where('received_date', '>=', $from))
             ->when($filters['to'] ?? null, fn ($query, $to) => $query->where('received_date', '<=', $to))
-            ->latest()
+            ->tap(fn ($query) => QuerySorter::apply(
+                $query,
+                $filters['sort'] ?? null,
+                $filters['direction'] ?? null,
+                self::SORTABLE,
+            ))
             ->paginate($filters['per_page'] ?? 15)
             ->withQueryString();
     }

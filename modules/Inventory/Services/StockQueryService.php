@@ -5,6 +5,7 @@ namespace Modules\Inventory\Services;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Modules\Inventory\Models\InventoryItem;
 use Modules\Inventory\Models\StockMovement;
+use Modules\Inventory\Support\QuerySorter;
 
 /**
  * Read side of inventory: current stock levels and ledger history. Kept apart
@@ -12,6 +13,18 @@ use Modules\Inventory\Models\StockMovement;
  */
 class StockQueryService
 {
+    private const SORTABLE_ITEMS = [
+        'quantity_on_hand' => 'quantity_on_hand',
+        'quantity_reserved' => 'quantity_reserved',
+        'updated_at' => 'updated_at',
+    ];
+
+    private const SORTABLE_MOVEMENTS = [
+        'type' => 'type',
+        'quantity' => 'quantity',
+        'created_at' => 'created_at',
+    ];
+
     /**
      * @param  array{search?: string|null, category_id?: string|null, supplier_id?: string|null, low_stock?: bool|null, per_page?: int|null}  $filters
      * @return LengthAwarePaginator<int, InventoryItem>
@@ -33,7 +46,14 @@ class StockQueryService
                 fn ($product) => $product->forSupplier($supplier),
             ))
             ->when($filters['low_stock'] ?? false, fn ($query) => $query->lowStock())
-            ->orderBy('quantity_on_hand')
+            ->tap(fn ($query) => QuerySorter::apply(
+                $query,
+                $filters['sort'] ?? null,
+                $filters['direction'] ?? null,
+                self::SORTABLE_ITEMS,
+                'quantity_on_hand',
+                'asc',
+            ))
             ->paginate($filters['per_page'] ?? 15)
             ->withQueryString();
     }
@@ -57,7 +77,12 @@ class StockQueryService
             ->when($filters['product_variant_id'] ?? null, fn ($query, $variant) => $query->where('product_variant_id', $variant))
             ->when($filters['supplier_id'] ?? null, fn ($query, $supplier) => $query->where('supplier_id', $supplier))
             ->when($filters['user_id'] ?? null, fn ($query, $user) => $query->where('user_id', $user))
-            ->latest()
+            ->tap(fn ($query) => QuerySorter::apply(
+                $query,
+                $filters['sort'] ?? null,
+                $filters['direction'] ?? null,
+                self::SORTABLE_MOVEMENTS,
+            ))
             ->paginate($filters['per_page'] ?? 20)
             ->withQueryString();
     }

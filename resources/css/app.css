@@ -2,20 +2,31 @@
 
 @import 'tw-animate-css';
 
+@source '../../modules/*/Resources/js/**/*.vue';
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 
 @custom-variant dark (&:is(.dark *));
 
+/*
+  Design tokens for the Metronic store-inventory theme.
+
+  Semantic names only — a component never reaches for a zinc shade directly,
+  so the whole palette can move by editing this block. The status colours
+  (success/warning/danger/info) each have a "soft" companion for the tinted
+  badge backgrounds the design uses throughout.
+*/
 @theme inline {
     --font-sans:
-        'Instrument Sans', ui-sans-serif, system-ui, sans-serif,
-        'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
-        'Noto Color Emoji';
+        'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
+        'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-mono:
+        ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
     --radius-lg: var(--radius);
     --radius-md: calc(var(--radius) - 2px);
     --radius-sm: calc(var(--radius) - 4px);
+    --radius-xl: calc(var(--radius) + 4px);
 
     --color-background: var(--background);
     --color-foreground: var(--foreground);
@@ -41,27 +52,43 @@
     --color-destructive: var(--destructive);
     --color-destructive-foreground: var(--destructive-foreground);
 
+    --color-success: var(--success);
+    --color-success-foreground: var(--success-foreground);
+    --color-success-soft: var(--success-soft);
+
+    --color-warning: var(--warning);
+    --color-warning-foreground: var(--warning-foreground);
+    --color-warning-soft: var(--warning-soft);
+
+    --color-danger: var(--danger);
+    --color-danger-foreground: var(--danger-foreground);
+    --color-danger-soft: var(--danger-soft);
+
+    --color-info: var(--info);
+    --color-info-foreground: var(--info-foreground);
+    --color-info-soft: var(--info-soft);
+
     --color-border: var(--border);
+    --color-border-subtle: var(--border-subtle);
     --color-input: var(--input);
     --color-ring: var(--ring);
 
-    --color-sidebar: var(--sidebar-background);
+    --color-sidebar: var(--sidebar);
     --color-sidebar-foreground: var(--sidebar-foreground);
-    --color-sidebar-primary: var(--sidebar-primary);
-    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
     --color-sidebar-accent: var(--sidebar-accent);
     --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
     --color-sidebar-border: var(--sidebar-border);
-    --color-sidebar-ring: var(--sidebar-ring);
+
+    --color-chart-1: var(--chart-1);
+    --color-chart-2: var(--chart-2);
+    --color-chart-3: var(--chart-3);
+    --color-chart-4: var(--chart-4);
+    --color-chart-5: var(--chart-5);
 }
 
 /*
-  The default border color has changed to `currentColor` in Tailwind CSS v4,
-  so we've added these compatibility styles to make sure everything still
-  looks the same as it did with Tailwind CSS v3.
-
-  If we ever want to remove these styles, we need to add an explicit border
-  color utility to any element that depends on these defaults.
+  The default border color changed to `currentColor` in Tailwind CSS v4, so
+  these compatibility styles keep the previous behaviour.
 */
 @layer base {
     *,
@@ -69,78 +96,169 @@
     ::before,
     ::backdrop,
     ::file-selector-button {
-        border-color: var(--color-gray-200, currentColor);
+        border-color: var(--color-border, currentColor);
     }
 }
 
 :root {
-    --background: hsl(0 0% 100%);
-    --foreground: hsl(0 0% 3.9%);
-    --card: hsl(0 0% 100%);
-    --card-foreground: hsl(0 0% 3.9%);
-    --popover: hsl(0 0% 100%);
-    --popover-foreground: hsl(0 0% 3.9%);
-    --primary: hsl(214 100% 40%);
-    --primary-foreground: hsl(0 0% 100%);
-    --secondary: hsl(240 5% 96%);
-    --secondary-foreground: hsl(0 0% 9%);
-    --muted: hsl(240 5% 96%);
-    --muted-foreground: hsl(240 4% 46%);
-    --accent: hsl(240 5% 96%);
-    --accent-foreground: hsl(0 0% 9%);
-    --destructive: hsl(0 72% 51%);
-    --destructive-foreground: hsl(0 0% 100%);
-    --border: hsl(240 6% 90%);
-    --input: hsl(240 6% 90%);
-    --ring: hsl(214 100% 40%);
+    /* zinc-based light theme */
+    --background: #ffffff;
+    --foreground: #18181b;
+    --card: #ffffff;
+    --card-foreground: #18181b;
+    --popover: #ffffff;
+    --popover-foreground: #18181b;
+
+    /* The design's primary action is near-black, not a brand hue. */
+    --primary: #18181b;
+    --primary-foreground: #ffffff;
+    --secondary: #f4f4f5;
+    --secondary-foreground: #18181b;
+    --muted: #f8fafc;
+    --muted-foreground: #71717a;
+    --accent: #f1f5f9;
+    --accent-foreground: #18181b;
+
+    --destructive: #ef4444;
+    --destructive-foreground: #ffffff;
+
+    --success: #16a34a;
+    --success-foreground: #ffffff;
+    --success-soft: #dcfce7;
+    --warning: #d97706;
+    --warning-foreground: #ffffff;
+    --warning-soft: #fef3c7;
+    --danger: #dc2626;
+    --danger-foreground: #ffffff;
+    --danger-soft: #fee2e2;
+    --info: #2563eb;
+    --info-foreground: #ffffff;
+    --info-soft: #dbeafe;
+
+    --border: #e4e4e7;
+    --border-subtle: #f4f4f5;
+    --input: #e4e4e7;
+    --ring: #a1a1aa;
     --radius: 0.5rem;
-    --sidebar-background: hsl(0 0% 98%);
-    --sidebar-foreground: hsl(240 5.3% 26.1%);
-    --sidebar-primary: hsl(214 100% 40%);
-    --sidebar-primary-foreground: hsl(0 0% 100%);
-    --sidebar-accent: hsl(0 0% 94%);
-    --sidebar-accent-foreground: hsl(0 0% 30%);
-    --sidebar-border: hsl(0 0% 91%);
-    --sidebar-ring: hsl(214 100% 40%);
-    --sidebar: hsl(0 0% 98%);
+
+    --sidebar: #ffffff;
+    --sidebar-foreground: #3f3f46;
+    --sidebar-accent: #f4f4f5;
+    --sidebar-accent-foreground: #18181b;
+    --sidebar-border: #e4e4e7;
+
+    /* Chart series, in the order a chart consumes them. */
+    --chart-1: #3b82f6;
+    --chart-2: #f59e0b;
+    --chart-3: #8b5cf6;
+    --chart-4: #10b981;
+    --chart-5: #f43f5e;
 }
 
 .dark {
-    --background: hsl(0 0% 3.9%);
-    --foreground: hsl(0 0% 98%);
-    --card: hsl(0 0% 3.9%);
-    --card-foreground: hsl(0 0% 98%);
-    --popover: hsl(0 0% 3.9%);
-    --popover-foreground: hsl(0 0% 98%);
-    --primary: hsl(214 100% 60%);
-    --primary-foreground: hsl(0 0% 100%);
-    --secondary: hsl(0 0% 14.9%);
-    --secondary-foreground: hsl(0 0% 98%);
-    --muted: hsl(0 0% 16.08%);
-    --muted-foreground: hsl(0 0% 63.9%);
-    --accent: hsl(0 0% 14.9%);
-    --accent-foreground: hsl(0 0% 98%);
-    --destructive: hsl(0 72% 51%);
-    --destructive-foreground: hsl(0 0% 100%);
-    --border: hsl(0 0% 14.9%);
-    --input: hsl(0 0% 14.9%);
-    --ring: hsl(214 100% 60%);
-    --sidebar-background: hsl(0 0% 7%);
-    --sidebar-foreground: hsl(0 0% 95.9%);
-    --sidebar-primary: hsl(214 100% 60%);
-    --sidebar-primary-foreground: hsl(0 0% 100%);
-    --sidebar-accent: hsl(0 0% 15.9%);
-    --sidebar-accent-foreground: hsl(240 4.8% 95.9%);
-    --sidebar-border: hsl(0 0% 15.9%);
-    --sidebar-ring: hsl(214 100% 60%);
-    --sidebar: hsl(240 5.9% 10%);
+    --background: #09090b;
+    --foreground: #fafafa;
+    --card: #121215;
+    --card-foreground: #fafafa;
+    --popover: #121215;
+    --popover-foreground: #fafafa;
+
+    --primary: #fafafa;
+    --primary-foreground: #09090b;
+    --secondary: #27272a;
+    --secondary-foreground: #fafafa;
+    --muted: #18181b;
+    --muted-foreground: #a1a1aa;
+    --accent: #27272a;
+    --accent-foreground: #fafafa;
+
+    --destructive: #f87171;
+    --destructive-foreground: #09090b;
+
+    --success: #22c55e;
+    --success-foreground: #09090b;
+    --success-soft: rgba(34, 197, 94, 0.15);
+    --warning: #facc15;
+    --warning-foreground: #09090b;
+    --warning-soft: rgba(250, 204, 21, 0.15);
+    --danger: #f87171;
+    --danger-foreground: #09090b;
+    --danger-soft: rgba(248, 113, 113, 0.15);
+    --info: #60a5fa;
+    --info-foreground: #09090b;
+    --info-soft: rgba(96, 165, 250, 0.15);
+
+    --border: #27272a;
+    --border-subtle: #1f1f23;
+    --input: #27272a;
+    --ring: #52525b;
+
+    --sidebar: #121215;
+    --sidebar-foreground: #d4d4d8;
+    --sidebar-accent: #27272a;
+    --sidebar-accent-foreground: #ffffff;
+    --sidebar-border: #27272a;
+
+    --chart-1: #60a5fa;
+    --chart-2: #fbbf24;
+    --chart-3: #a78bfa;
+    --chart-4: #34d399;
+    --chart-5: #fb7185;
 }
 
 @layer base {
     * {
         @apply border-border outline-ring/50;
     }
+
     body {
-        @apply bg-background text-foreground;
+        @apply bg-background text-foreground text-sm antialiased;
+    }
+
+    /* The design's tables and cards are dense; 13px is its body size. */
+    ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: color-mix(in oklab, var(--muted-foreground) 40%, transparent);
+        border-radius: 9999px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: color-mix(in oklab, var(--muted-foreground) 70%, transparent);
+    }
+}
+
+/*
+  ApexCharts renders into its own DOM and cannot be styled with utilities, so
+  its chrome is themed here off the same tokens.
+*/
+@layer components {
+    .apexcharts-tooltip {
+        background: var(--card) !important;
+        border-color: var(--border) !important;
+        color: var(--foreground) !important;
+        box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1) !important;
+        border-radius: 8px !important;
+        font-family: var(--font-sans) !important;
+    }
+
+    .apexcharts-tooltip-title {
+        background: var(--muted) !important;
+        border-bottom: 1px solid var(--border) !important;
+        font-weight: 600 !important;
+    }
+
+    .apexcharts-xaxistooltip,
+    .apexcharts-yaxistooltip {
+        background: var(--card) !important;
+        border-color: var(--border) !important;
+        color: var(--foreground) !important;
     }
 }

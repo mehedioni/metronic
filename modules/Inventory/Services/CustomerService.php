@@ -9,9 +9,24 @@ use Modules\Inventory\Enums\RecordStatus;
 use Modules\Inventory\Exceptions\RestrictedDeletionException;
 use Modules\Inventory\Models\Customer;
 use Modules\Inventory\Support\DocumentNumberGenerator;
+use Modules\Inventory\Support\QuerySorter;
 
 class CustomerService
 {
+    /**
+     * Aggregate keys are sortable because paginate() selects them as columns.
+     */
+    private const SORTABLE = [
+        'name' => 'name',
+        'code' => 'code',
+        'country' => 'country',
+        'status' => 'status',
+        'orders_count' => 'orders_count',
+        'total_spent' => 'total_spent',
+        'last_order_at' => 'last_order_at',
+        'created_at' => 'created_at',
+    ];
+
     public function __construct(private DocumentNumberGenerator $numbers) {}
 
     /**
@@ -31,7 +46,12 @@ class CustomerService
             ->search($filters['search'] ?? null)
             ->when($filters['status'] ?? null, fn (Builder $query, string $status) => $query->where('status', $status))
             ->when($filters['country'] ?? null, fn (Builder $query, string $country) => $query->where('country', $country))
-            ->latest()
+            ->tap(fn (Builder $query) => QuerySorter::apply(
+                $query,
+                $filters['sort'] ?? null,
+                $filters['direction'] ?? null,
+                self::SORTABLE,
+            ))
             ->paginate($filters['per_page'] ?? 15)
             ->withQueryString();
     }

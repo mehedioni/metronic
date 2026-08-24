@@ -3,6 +3,7 @@
 use App\Core\Support\Permissions;
 use Modules\Inventory\Models\Customer;
 use Modules\Inventory\Models\Order;
+use Modules\Inventory\Models\Product;
 
 beforeEach(function () {
     $this->manager = userWithPermissions([
@@ -119,7 +120,7 @@ it('snapshots the customer contact details onto a new order', function () {
         Permissions::PRODUCTS_VIEW,
     ]);
 
-    $product = Modules\Inventory\Models\Product::factory()->create(['selling_price' => 25]);
+    $product = Product::factory()->create(['selling_price' => 25]);
 
     $this->actingAs($creator)->post('/inventory/orders', [
         'customer_id' => $customer->id,

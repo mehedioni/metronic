@@ -8,9 +8,22 @@ use Modules\Inventory\Exceptions\RestrictedDeletionException;
 use Modules\Inventory\Models\Product;
 use Modules\Inventory\Models\ProductSupplier;
 use Modules\Inventory\Models\ProductVariant;
+use Modules\Inventory\Support\QuerySorter;
 
 class ProductService
 {
+    /**
+     * Columns the product list may be ordered by.
+     */
+    private const SORTABLE = [
+        'name' => 'name',
+        'sku' => 'sku',
+        'status' => 'status',
+        'selling_price' => 'selling_price',
+        'cost_price' => 'cost_price',
+        'created_at' => 'created_at',
+    ];
+
     /**
      * @param  array{search?: string|null, category_id?: string|null, supplier_id?: string|null, status?: string|null, low_stock?: bool|null, per_page?: int|null}  $filters
      * @return LengthAwarePaginator<int, Product>
@@ -29,7 +42,12 @@ class ProductService
             ->when($filters['category_id'] ?? null, fn ($query, $category) => $query->where('category_id', $category))
             ->when($filters['status'] ?? null, fn ($query, $status) => $query->where('status', $status))
             ->when($filters['low_stock'] ?? false, fn ($query) => $query->lowStock())
-            ->latest()
+            ->tap(fn ($query) => QuerySorter::apply(
+                $query,
+                $filters['sort'] ?? null,
+                $filters['direction'] ?? null,
+                self::SORTABLE,
+            ))
             ->paginate($filters['per_page'] ?? 15)
             ->withQueryString();
     }

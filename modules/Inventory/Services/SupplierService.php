@@ -6,9 +6,19 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Modules\Inventory\Enums\RecordStatus;
 use Modules\Inventory\Exceptions\RestrictedDeletionException;
 use Modules\Inventory\Models\Supplier;
+use Modules\Inventory\Support\QuerySorter;
 
 class SupplierService
 {
+    private const SORTABLE = [
+        'company_name' => 'company_name',
+        'code' => 'code',
+        'contact_name' => 'contact_name',
+        'country' => 'country',
+        'status' => 'status',
+        'created_at' => 'created_at',
+    ];
+
     /**
      * @param  array{search?: string|null, status?: string|null, country?: string|null, per_page?: int|null}  $filters
      * @return LengthAwarePaginator<int, Supplier>
@@ -20,7 +30,12 @@ class SupplierService
             ->search($filters['search'] ?? null)
             ->when($filters['status'] ?? null, fn ($query, $status) => $query->where('status', $status))
             ->when($filters['country'] ?? null, fn ($query, $country) => $query->where('country', $country))
-            ->latest()
+            ->tap(fn ($query) => QuerySorter::apply(
+                $query,
+                $filters['sort'] ?? null,
+                $filters['direction'] ?? null,
+                self::SORTABLE,
+            ))
             ->paginate($filters['per_page'] ?? 15)
             ->withQueryString();
     }
