@@ -2,11 +2,11 @@
 
 namespace Modules\Inventory\Models;
 
-use App\Core\BaseUuidModel;
 use App\Core\Concerns\HasVariantKey;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\UsePolicy;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Modules\Inventory\Policies\InventoryItemPolicy;
 use Modules\Inventory\Support\StockableUnit;
@@ -20,7 +20,7 @@ use Modules\Inventory\Support\StockableUnit;
  */
 #[Fillable(['product_id', 'product_variant_id', 'quantity_on_hand', 'quantity_reserved'])]
 #[UsePolicy(InventoryItemPolicy::class)]
-class InventoryItem extends BaseUuidModel
+class InventoryItem extends Model
 {
     use HasVariantKey;
 

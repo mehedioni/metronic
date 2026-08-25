@@ -10,28 +10,28 @@ import { Select } from '@/components/ui/select';
 import { money } from '@/lib/format';
 
 interface CustomerOption {
-    id: string;
+    id: number;
     code: string;
     name: string;
     email: string | null;
 }
 
 interface VariantOption {
-    id: string;
+    id: number;
     sku: string;
     name: string;
     selling_price: string | null;
 }
 
 interface StockRow {
-    product_id: string;
-    product_variant_id: string | null;
+    product_id: number;
+    product_variant_id: number | null;
     quantity_on_hand: number;
     quantity_reserved: number;
 }
 
 interface ProductOption {
-    id: string;
+    id: number;
     name: string;
     sku: string | null;
     type: string;
@@ -72,8 +72,8 @@ const props = defineProps<{
     order?: Partial<OrderPayload> & {
         id?: string;
         items?: Array<{
-            product_id: string;
-            product_variant_id: string | null;
+            product_id: number;
+            product_variant_id: number | null;
             quantity: number;
             unit_price: string;
         }>;
@@ -102,8 +102,13 @@ const form = useForm<OrderPayload>({
     tax_total: props.order?.tax_total ?? '',
     notes: props.order?.notes ?? '',
     items: (props.order?.items ?? []).map((item) => ({
-        product_id: item.product_id,
-        product_variant_id: item.product_variant_id ?? '',
+        // Line ids are held as strings: that is what the selects bind to, and
+        // Laravel's "integer" rule accepts a numeric string on the way back.
+        product_id: String(item.product_id),
+        product_variant_id:
+            item.product_variant_id === null
+                ? ''
+                : String(item.product_variant_id),
         quantity: item.quantity,
         unit_price: item.unit_price,
     })),
@@ -119,7 +124,7 @@ const selectableStatuses = computed(() =>
 const products = computed(() => props.options.products ?? []);
 
 function productFor(id: string): ProductOption | undefined {
-    return products.value.find((product) => product.id === id);
+    return products.value.find((product) => String(product.id) === id);
 }
 
 function variantsFor(productId: string): VariantOption[] {
@@ -136,7 +141,10 @@ function availableFor(line: OrderLine): number | null {
 
     const rows = product.inventory_items ?? [];
     const matching = line.product_variant_id
-        ? rows.filter((row) => row.product_variant_id === line.product_variant_id)
+        ? rows.filter(
+              (row) =>
+                  String(row.product_variant_id) === line.product_variant_id,
+          )
         : rows;
 
     if (!matching.length) {
@@ -159,7 +167,7 @@ function catalogPrice(line: OrderLine): number {
 
     if (line.product_variant_id) {
         const variant = product.variants.find(
-            (candidate) => candidate.id === line.product_variant_id,
+            (candidate) => String(candidate.id) === line.product_variant_id,
         );
 
         if (variant?.selling_price !== null && variant?.selling_price !== undefined) {
@@ -214,7 +222,7 @@ watch(
         }
 
         const customer = (props.options.customers ?? []).find(
-            (candidate) => candidate.id === id,
+            (candidate) => String(candidate.id) === id,
         );
 
         if (customer) {

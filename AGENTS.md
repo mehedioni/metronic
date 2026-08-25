@@ -229,10 +229,14 @@ Vue components must have a single root element.
 
 Shared base classes reused by both `app/` and every module:
 
-- `BaseModel` — abstract Eloquent base with UUID primary keys (`HasUuids`)
-  and `SoftDeletes`. Use this for new domain models. `App\Models\User` is the
-  exception: it follows Laravel's default auth conventions (auto-increment
-  int id) since Fortify/Sanctum-style auth packages assume that.
+- `BaseModel` — abstract Eloquent base with `SoftDeletes`. Use this for new
+  domain aggregates. Keys are Laravel's default auto-incrementing bigints
+  everywhere, including `App\Models\User` and the Spatie tables, so every
+  foreign key is the same shape. Line items, pivots and the append-only ledger
+  extend Eloquent's `Model` directly — they need no soft deletes, because
+  their lifetime belongs to their parent record.
+  `products.uuid` is the one public identifier, for links and integrations
+  that should not expose a sequential key.
 - `BaseApiController` — abstract controller for JSON endpoints; pulls in the
   `ApiResponse` trait. Inertia page controllers extend the default
   `App\Http\Controllers\Controller` instead.

@@ -22,7 +22,7 @@ class StoreOrderRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'customer_id' => ['nullable', 'uuid', Rule::exists('customers', 'id')->whereNull('deleted_at')],
+            'customer_id' => ['nullable', 'integer', 'min:1', Rule::exists('customers', 'id')->whereNull('deleted_at')],
             'customer_name' => ['required_without:customer_id', 'string', 'max:255'],
             'customer_email' => ['nullable', 'email', 'max:255'],
             'customer_phone' => ['nullable', 'string', 'max:40'],
@@ -34,8 +34,8 @@ class StoreOrderRequest extends FormRequest
             'notes' => ['nullable', 'string', 'max:2000'],
 
             'items' => ['required', 'array', 'min:1'],
-            'items.*.product_id' => ['required', 'uuid', Rule::exists('products', 'id')->whereNull('deleted_at')],
-            'items.*.product_variant_id' => ['nullable', 'uuid', Rule::exists('product_variants', 'id')->whereNull('deleted_at')],
+            'items.*.product_id' => ['required', 'integer', 'min:1', Rule::exists('products', 'id')->whereNull('deleted_at')],
+            'items.*.product_variant_id' => ['nullable', 'integer', 'min:1', Rule::exists('product_variants', 'id')->whereNull('deleted_at')],
             'items.*.quantity' => ['required', 'integer', 'min:1'],
             'items.*.unit_price' => ['nullable', 'numeric', 'min:0'],
         ];

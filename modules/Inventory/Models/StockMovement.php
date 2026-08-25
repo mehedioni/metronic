@@ -2,11 +2,11 @@
 
 namespace Modules\Inventory\Models;
 
-use App\Core\BaseUuidModel;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\UsePolicy;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Modules\Inventory\Enums\StockMovementType;
 use Modules\Inventory\Policies\StockMovementPolicy;
@@ -26,7 +26,7 @@ use Modules\Inventory\Support\StockableUnit;
     'reference_id', 'reason', 'user_id',
 ])]
 #[UsePolicy(StockMovementPolicy::class)]
-class StockMovement extends BaseUuidModel
+class StockMovement extends Model
 {
     /**
      * Matches the microsecond precision of the timestamp columns so ordering

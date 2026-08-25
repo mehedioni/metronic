@@ -30,40 +30,30 @@ import stock from '@/routes/inventory/stock';
 import type { Paginated } from '@/types';
 
 interface StockRow {
-    id: string;
-    product_id: string;
-    product_variant_id: string | null;
+    id: number;
+    product_id: number;
+    product_variant_id: number | null;
     quantity_on_hand: number;
     quantity_reserved: number;
     updated_at: string;
     product: {
-        id: string;
+        id: number;
         name: string;
         sku: string | null;
         cost_price: string | number | null;
         selling_price: string | number | null;
         image_path: string | null;
         low_stock_threshold: number;
-        category: { id: string; name: string } | null;
-        primary_supplier: { id: string; company_name: string; code?: string } | null;
+        category: { id: number; name: string } | null;
     };
-    variant: { id: string; sku: string; name: string; selling_price?: string | number | null } | null;
-}
-
-interface StockSummary {
-    total_asset_value: number;
-    total_products: number;
-    in_stock: number;
-    low_stock: number;
-    out_of_stock: number;
+    variant: { id: number; sku: string; name: string } | null;
 }
 
 const props = defineProps<{
     items: Paginated<StockRow>;
     summary?: StockSummary;
     filters: Record<string, unknown>;
-    categories: Array<{ id: string; name: string }>;
-    suppliers?: Array<{ id: string; company_name: string }>;
+    categories: Array<{ id: number; name: string }>;
     movementTypes: string[];
 }>();
 
@@ -189,9 +179,11 @@ onUnmounted(() => {
 });
 
 function openAdjust(row: StockRow) {
-    activeRowMenu.value = null;
-    adjustForm.product_id = row.product_id;
-    adjustForm.product_variant_id = row.product_variant_id;
+    // Form fields carry strings: that is what an <input>/<select> round-trips,
+    // and Laravel's "integer" rule accepts a numeric string.
+    adjustForm.product_id = String(row.product_id);
+    adjustForm.product_variant_id =
+        row.product_variant_id === null ? null : String(row.product_variant_id);
     adjustForm.type = 'adjustment_increase';
     adjustForm.quantity = 1;
     adjustForm.reason = '';

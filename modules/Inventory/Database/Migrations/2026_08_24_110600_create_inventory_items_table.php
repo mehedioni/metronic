@@ -14,10 +14,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('inventory_items', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-            $table->foreignUuid('product_id')->constrained('products')->cascadeOnDelete();
-            $table->foreignUuid('product_variant_id')->nullable()->constrained('product_variants')->cascadeOnDelete();
-            $table->string('variant_key', 36)->default('');
+            $table->id();
+            $table->foreignId('product_id')->constrained('products')->cascadeOnDelete();
+            $table->foreignId('product_variant_id')->nullable()->constrained('product_variants')->cascadeOnDelete();
+            $table->string('variant_key', 20)->default('');
             $table->integer('quantity_on_hand')->default(0);
             $table->integer('quantity_reserved')->default(0);
             $table->timestamps();

@@ -47,11 +47,11 @@ class StockPlannerService
                 'product',
                 fn (Builder $product) => $product->search($term),
             ))
-            ->when($filters['category_id'] ?? null, fn (Builder $query, string $category) => $query->whereHas(
+            ->when($filters['category_id'] ?? null, fn (Builder $query, int|string $category) => $query->whereHas(
                 'product',
                 fn (Builder $product) => $product->where('category_id', $category),
             ))
-            ->when($filters['supplier_id'] ?? null, fn (Builder $query, string $supplier) => $query->whereHas(
+            ->when($filters['supplier_id'] ?? null, fn (Builder $query, int|string $supplier) => $query->whereHas(
                 'product',
                 fn (Builder $product) => $product->forSupplier($supplier),
             ))

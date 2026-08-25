@@ -9,13 +9,14 @@ import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 
 interface Option {
-    id: string;
+    id: number;
     name?: string;
     company_name?: string;
 }
 
 export interface VariantRow {
-    id?: string;
+    /** Present on a variant that already exists; absent on a new one. */
+    id?: number;
     sku: string;
     name: string;
     cost_price: string | number | null;

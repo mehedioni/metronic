@@ -17,7 +17,7 @@ import customers from '@/routes/inventory/customers';
 import orders from '@/routes/inventory/orders';
 
 interface Customer {
-    id: string;
+    id: number;
     code: string;
     name: string;
     email: string | null;
@@ -36,7 +36,7 @@ interface History {
     last_order_at: string | null;
     cancelled_orders_count: number;
     recent_orders: Array<{
-        id: string;
+        id: number;
         order_number: string;
         status: string;
         total: string;

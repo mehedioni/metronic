@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 
 interface Parent {
-    id: string;
+    id: number;
     name: string;
 }
 

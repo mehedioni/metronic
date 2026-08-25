@@ -2,9 +2,9 @@
 
 namespace Modules\Inventory\Models;
 
-use App\Core\BaseUuidModel;
 use App\Core\Concerns\HasVariantKey;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\Concerns\AsPivot;
 use Modules\Inventory\Support\StockableUnit;
@@ -18,7 +18,7 @@ use Modules\Inventory\Support\StockableUnit;
     'product_id', 'product_variant_id', 'supplier_id', 'supplier_sku',
     'unit_cost', 'minimum_order_quantity', 'lead_time_days', 'is_preferred',
 ])]
-class ProductSupplier extends BaseUuidModel
+class ProductSupplier extends Model
 {
     use AsPivot, HasVariantKey;
 

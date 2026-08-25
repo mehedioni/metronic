@@ -37,31 +37,20 @@ interface Plan {
 }
 
 interface PlannerRow {
-    id: string;
-    product_id: string;
-    product_variant_id: string | null;
+    id: number;
+    product_id: number;
     quantity_on_hand: number;
     quantity_reserved: number;
     updated_at?: string;
     plan: Plan;
-    product: {
-        id: string;
-        name: string;
-        sku: string | null;
-        description?: string | null;
-        cost_price?: string | number | null;
-        selling_price?: string | number | null;
-        image_path: string | null;
-        low_stock_threshold: number;
-        category?: { id: string; name: string } | null;
-    };
-    variant: { id: string; sku: string; name: string; selling_price?: string | number | null } | null;
+    product: { id: number; name: string; sku: string | null };
+    variant: { id: number; sku: string; name: string } | null;
 }
 
 const props = defineProps<{
     items: Paginated<PlannerRow>;
     filters: Record<string, unknown>;
-    categories: Array<{ id: string; name: string }>;
+    categories: Array<{ id: number; name: string }>;
     summary?: {
         units_tracked: number;
         below_target: number;

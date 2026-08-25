@@ -7,7 +7,7 @@ import CategoryForm from '../../components/CategoryForm.vue';
 
 const props = defineProps<{
     category: Record<string, any>;
-    parents: Array<{ id: string; name: string }>;
+    parents: Array<{ id: number; name: string }>;
     statuses: string[];
 }>();
 

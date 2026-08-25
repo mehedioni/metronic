@@ -37,7 +37,7 @@ import stockRoutes from '@/routes/inventory/stock';
 import type { Paginated } from '@/types';
 
 interface ReceiptRow {
-    id: string;
+    id: number;
     reference_number: string;
     source: string;
     status: string;
@@ -45,7 +45,7 @@ interface ReceiptRow {
     created_at?: string | null;
     items_count: number;
     items_sum_quantity: number | null;
-    supplier: { id: string; company_name: string } | null;
+    supplier: { id: number; company_name: string } | null;
     received_by: { id: number; name: string } | null;
     items?: Array<{
         id: string;
@@ -56,17 +56,17 @@ interface ReceiptRow {
 }
 
 interface ProductOption {
-    id: string;
+    id: number;
     name: string;
     sku: string | null;
-    variants: Array<{ id: string; sku: string; name: string }>;
+    variants: Array<{ id: number; sku: string; name: string }>;
 }
 
 const props = defineProps<{
     receipts: Paginated<ReceiptRow>;
     filters: Record<string, unknown>;
     options: {
-        suppliers?: Array<{ id: string; company_name: string }>;
+        suppliers?: Array<{ id: number; company_name: string }>;
         products?: ProductOption[];
         sources?: string[];
         statuses?: string[];
@@ -108,209 +108,18 @@ const breadcrumbs = [
     { label: 'Inbound Stock' },
 ];
 
-// Checkbox selection
-const selectedRowIds = ref<string[]>([]);
-const selectAll = computed({
-    get: () => rows.value.length > 0 && selectedRowIds.value.length === rows.value.length,
-    set: (val: boolean) => {
-        if (val) {
-            selectedRowIds.value = rows.value.map((r) => r.id);
-        } else {
-            selectedRowIds.value = [];
-        }
-    },
-});
-
-// Dropdowns state
-const dateMenuOpen = ref(false);
-const statusMenuOpen = ref(false);
-const supplierMenuOpen = ref(false);
-const statusSearchInput = ref('');
-const supplierSearchInput = ref('');
-const selectedStatuses = ref<string[]>([]);
-const selectedSuppliers = ref<string[]>([]);
-const activeRowAction = ref<string | null>(null);
-
-// Track Shipping Drawer State
-const trackingDrawerOpen = ref(false);
-const activeTrackingRow = ref<ReceiptRow | null>(null);
-
-// Dual Month Range Datepicker Logic (Matches Metronic inbound-stock.html)
-const monthNames = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December',
-];
-
-const calCurrentDate = ref(new Date(2026, 7, 1));
-const rangeStartDate = ref<Date | null>(new Date(2025, 10, 29));
-const rangeEndDate = ref<Date | null>(new Date(2026, 7, 24));
-const pickingRange = ref(false);
-
-function changeCalendarMonth(delta: number) {
-    const d = new Date(calCurrentDate.value);
-    d.setMonth(d.getMonth() + delta);
-    calCurrentDate.value = d;
-}
-
-function selectCalendarDate(year: number, month: number, day: number) {
-    const selected = new Date(year, month, day);
-    if (!pickingRange.value || !rangeStartDate.value) {
-        rangeStartDate.value = selected;
-        rangeEndDate.value = null;
-        pickingRange.value = true;
-    } else {
-        if (selected < rangeStartDate.value) {
-            rangeEndDate.value = rangeStartDate.value;
-            rangeStartDate.value = selected;
-        } else {
-            rangeEndDate.value = selected;
-        }
-        pickingRange.value = false;
-    }
-}
-
-function applyPresetRange(preset: 'today' | 'last30' | 'thisYear') {
-    const now = new Date();
-    if (preset === 'today') {
-        rangeStartDate.value = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        rangeEndDate.value = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    } else if (preset === 'last30') {
-        rangeEndDate.value = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        rangeStartDate.value = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 30);
-    } else if (preset === 'thisYear') {
-        rangeStartDate.value = new Date(now.getFullYear(), 0, 1);
-        rangeEndDate.value = new Date(now.getFullYear(), 11, 31);
-    }
-    calCurrentDate.value = new Date(rangeStartDate.value);
-    pickingRange.value = false;
-}
-
-const dateBtnLabel = computed(() => {
-    if (rangeStartDate.value && rangeEndDate.value) {
-        const sMonth = monthNames[rangeStartDate.value.getMonth()].substring(0, 3);
-        const eMonth = monthNames[rangeEndDate.value.getMonth()].substring(0, 3);
-        return `${sMonth} ${rangeStartDate.value.getDate()} - ${eMonth} ${rangeEndDate.value.getDate()}, ${rangeEndDate.value.getFullYear()}`;
-    } else if (rangeStartDate.value) {
-        const sMonth = monthNames[rangeStartDate.value.getMonth()].substring(0, 3);
-        return `${sMonth} ${rangeStartDate.value.getDate()}, ${rangeStartDate.value.getFullYear()}`;
-    }
-    return 'Nov 29 - Aug 24, 2026';
-});
-
-function getMonthGrid(year: number, month: number) {
-    const firstDayIndex = new Date(year, month, 1).getDay();
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-    const prevMonthDays = new Date(year, month, 0).getDate();
-
-    const leadingDays: number[] = [];
-    for (let x = firstDayIndex; x > 0; x--) {
-        leadingDays.push(prevMonthDays - x + 1);
-    }
-
-    const monthDays: number[] = [];
-    for (let i = 1; i <= daysInMonth; i++) {
-        monthDays.push(i);
-    }
-
-    return { year, month, leadingDays, monthDays };
-}
-
-const month1Grid = computed(() => {
-    const y = calCurrentDate.value.getFullYear();
-    const m = calCurrentDate.value.getMonth();
-    return getMonthGrid(y, m);
-});
-
-const month2Grid = computed(() => {
-    const m1Year = calCurrentDate.value.getFullYear();
-    const m1Month = calCurrentDate.value.getMonth();
-    const m2 = new Date(m1Year, m1Month + 1, 1);
-    return getMonthGrid(m2.getFullYear(), m2.getMonth());
-});
-
-function getDayCellClass(year: number, month: number, day: number) {
-    const currDate = new Date(year, month, day);
-    const currTime = currDate.getTime();
-    const startTime = rangeStartDate.value
-        ? new Date(rangeStartDate.value.getFullYear(), rangeStartDate.value.getMonth(), rangeStartDate.value.getDate()).getTime()
-        : null;
-    const endTime = rangeEndDate.value
-        ? new Date(rangeEndDate.value.getFullYear(), rangeEndDate.value.getMonth(), rangeEndDate.value.getDate()).getTime()
-        : null;
-
-    const isStart = startTime && currTime === startTime;
-    const isEnd = endTime && currTime === endTime;
-    const isMiddle = startTime && endTime && currTime > startTime && currTime < endTime;
-
-    const base = 'size-8 text-xs font-normal flex items-center justify-center cursor-pointer transition-colors relative ';
-
-    if (isStart && isEnd) {
-        return base + 'bg-zinc-950 text-white dark:bg-white dark:text-zinc-950 font-medium rounded-md';
-    } else if (isStart) {
-        return base + 'bg-zinc-950 text-white dark:bg-white dark:text-zinc-950 font-medium rounded-s-md rounded-e-none';
-    } else if (isEnd) {
-        return base + 'bg-zinc-950 text-white dark:bg-white dark:text-zinc-950 font-medium rounded-e-md rounded-s-none';
-    } else if (isMiddle) {
-        return base + 'bg-zinc-100 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100 rounded-none';
-    } else {
-        return base + 'text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-md';
-    }
-}
-
-function closeAllDropdowns() {
-    dateMenuOpen.value = false;
-    statusMenuOpen.value = false;
-    supplierMenuOpen.value = false;
-    activeRowAction.value = null;
-}
-
-function handleGlobalClick(e: MouseEvent) {
-    const target = e.target as HTMLElement;
-    if (!target.closest('.relative')) {
-        closeAllDropdowns();
-    }
-}
-
-onMounted(() => {
-    window.addEventListener('click', handleGlobalClick);
-});
-
-onUnmounted(() => {
-    window.removeEventListener('click', handleGlobalClick);
-});
-
-function toggleStatusSelection(status: string) {
-    const idx = selectedStatuses.value.indexOf(status);
-    if (idx > -1) {
-        selectedStatuses.value.splice(idx, 1);
-    } else {
-        selectedStatuses.value.push(status);
-    }
-    params.status = selectedStatuses.value.length > 0 ? selectedStatuses.value[0] : '';
-}
-
-function toggleSupplierSelection(id: string) {
-    const idx = selectedSuppliers.value.indexOf(id);
-    if (idx > -1) {
-        selectedSuppliers.value.splice(idx, 1);
-    } else {
-        selectedSuppliers.value.push(id);
-    }
-    params.supplier_id = selectedSuppliers.value.length > 0 ? selectedSuppliers.value[0] : '';
-}
-
-const statusBtnLabel = computed(() => {
-    if (selectedStatuses.value.length === 0) return 'Status';
-    return `Status (${selectedStatuses.value.length})`;
-});
-
-const supplierBtnLabel = computed(() => {
-    if (selectedSuppliers.value.length === 0) return 'Supplier';
-    return `Supplier (${selectedSuppliers.value.length})`;
-});
-
+/**
+ * Variants of the product chosen on a line, for its variant select.
+ *
+ * The line holds the id as a string, because that is what the select binds;
+ * the option carries the numeric key, so the two are compared as strings.
+ */
 function variantsFor(productId: string) {
-    return props.options.products?.find((p) => p.id === productId)?.variants ?? [];
+    return (
+        props.options.products?.find(
+            (product) => String(product.id) === productId,
+        )?.variants ?? []
+    );
 }
 
 function addLine() {

@@ -18,17 +18,17 @@ import orders from '@/routes/inventory/orders';
 import products from '@/routes/inventory/products';
 
 interface OrderItem {
-    id: string;
+    id: number;
     quantity: number;
     quantity_fulfilled: number;
     unit_price: string;
     line_total: string;
-    product: { id: string; name: string; sku: string | null };
-    variant: { id: string; sku: string; name: string } | null;
+    product: { id: number; name: string; sku: string | null };
+    variant: { id: number; sku: string; name: string } | null;
 }
 
 interface Order {
-    id: string;
+    id: number;
     order_number: string;
     customer_name: string;
     customer_email: string | null;
@@ -46,7 +46,7 @@ interface Order {
     cancelled_at: string | null;
     created_at: string;
     items: OrderItem[];
-    customer: { id: string; code: string; name: string; email: string | null } | null;
+    customer: { id: number; code: string; name: string; email: string | null } | null;
     created_by: { id: number; name: string } | null;
 }
 

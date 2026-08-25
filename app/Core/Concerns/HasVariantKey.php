@@ -28,7 +28,7 @@ trait HasVariantKey
         });
     }
 
-    public function setProductVariantIdAttribute(?string $value): void
+    public function setProductVariantIdAttribute(int|string|null $value): void
     {
         $this->attributes['product_variant_id'] = $value;
         $this->attributes['variant_key'] = $this->variantKeyFor($value);
@@ -38,7 +38,7 @@ trait HasVariantKey
      * Non-null mirror of a variant id: the id itself, or '' for a
      * product-wide row.
      */
-    private function variantKeyFor(?string $variantId): string
+    private function variantKeyFor(int|string|null $variantId): string
     {
         return (string) ($variantId ?? '');
     }

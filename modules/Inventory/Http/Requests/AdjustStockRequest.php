@@ -21,8 +21,8 @@ class AdjustStockRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'product_id' => ['required', 'uuid', Rule::exists('products', 'id')->whereNull('deleted_at')],
-            'product_variant_id' => ['nullable', 'uuid', Rule::exists('product_variants', 'id')->whereNull('deleted_at')],
+            'product_id' => ['required', 'integer', 'min:1', Rule::exists('products', 'id')->whereNull('deleted_at')],
+            'product_variant_id' => ['nullable', 'integer', 'min:1', Rule::exists('product_variants', 'id')->whereNull('deleted_at')],
             'type' => ['required', Rule::in(StockMovementType::manualValues())],
             'quantity' => ['required', 'integer', 'min:1'],
             'reason' => ['nullable', 'string', 'max:500'],

@@ -18,16 +18,16 @@ import products from '@/routes/inventory/products';
 import suppliers from '@/routes/inventory/suppliers';
 
 interface ReceiptItem {
-    id: string;
+    id: number;
     quantity: number;
     unit_cost: string | null;
     supplier_sku: string | null;
-    product: { id: string; name: string; sku: string | null };
-    variant: { id: string; sku: string; name: string } | null;
+    product: { id: number; name: string; sku: string | null };
+    variant: { id: number; sku: string; name: string } | null;
 }
 
 interface Receipt {
-    id: string;
+    id: number;
     reference_number: string;
     source: string;
     status: string;
@@ -37,7 +37,7 @@ interface Receipt {
     cancelled_at: string | null;
     created_at: string;
     items: ReceiptItem[];
-    supplier: { id: string; company_name: string } | null;
+    supplier: { id: number; company_name: string } | null;
     received_by: { id: number; name: string } | null;
 }
 

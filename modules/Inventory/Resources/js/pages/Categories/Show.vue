@@ -13,14 +13,14 @@ import categories from '@/routes/inventory/categories';
 import products from '@/routes/inventory/products';
 
 interface Category {
-    id: string;
+    id: number;
     name: string;
     slug: string;
     description: string | null;
     status: string;
     products_count: number;
-    parent: { id: string; name: string } | null;
-    children: Array<{ id: string; name: string }>;
+    parent: { id: number; name: string } | null;
+    children: Array<{ id: number; name: string }>;
 }
 
 const props = defineProps<{ category: Category }>();

@@ -56,15 +56,15 @@ interface Statistics {
         by_type: Record<string, number>;
     };
     low_stock_items: Array<{
-        id: string;
-        product_id: string;
+        id: number;
+        product_id: number;
         quantity_on_hand: number;
         quantity_reserved: number;
-        product: { id: string; name: string; sku: string | null; low_stock_threshold: number };
-        variant: { id: string; sku: string; name: string } | null;
+        product: { id: number; name: string; sku: string | null; low_stock_threshold: number };
+        variant: { id: number; sku: string; name: string } | null;
     }>;
     recent_orders: Array<{
-        id: string;
+        id: number;
         order_number: string;
         customer_name: string;
         status: string;
@@ -74,11 +74,11 @@ interface Statistics {
         created_at: string;
     }>;
     recent_movements: Array<{
-        id: string;
+        id: number;
         type: string;
         quantity: number;
         created_at: string;
-        product: { id: string; name: string } | null;
+        product: { id: number; name: string } | null;
         user: { id: number; name: string } | null;
     }>;
 }

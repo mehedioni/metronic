@@ -5,8 +5,8 @@
 ```
 app/
 ├── Core/                     shared building blocks (see AGENTS.md)
-│   ├── BaseModel             UUID + soft deletes  (domain aggregates)
-│   ├── BaseUuidModel         UUID, no soft deletes (pivots, line items, ledger)
+│   ├── BaseModel             soft deletes (domain aggregates); line items,
+│   │                         pivots and the ledger extend Eloquent's Model
 │   ├── BaseApiController     JSON controllers (ApiResponse envelope)
 │   ├── Concerns/HasVariantKey mirrors a nullable variant id into a non-null key
 │   └── Support/{Permissions,Roles}  permission catalogue and default roles

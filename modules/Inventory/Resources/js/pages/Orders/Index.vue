@@ -22,7 +22,7 @@ import orderRoutes from '@/routes/inventory/orders';
 import type { Paginated } from '@/types';
 
 interface OrderRow {
-    id: string;
+    id: number;
     order_number: string;
     customer_name: string;
     customer_email: string | null;
@@ -31,7 +31,7 @@ interface OrderRow {
     currency: string;
     items_count: number;
     created_at: string;
-    customer: { id: string; code: string; name: string } | null;
+    customer: { id: number; code: string; name: string } | null;
     created_by: { id: number; name: string } | null;
 }
 
@@ -40,7 +40,7 @@ const props = defineProps<{
     filters: Record<string, unknown>;
     options: {
         statuses?: string[];
-        customers?: Array<{ id: string; name: string }>;
+        customers?: Array<{ id: number; name: string }>;
     };
 }>();
 

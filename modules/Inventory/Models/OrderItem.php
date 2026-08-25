@@ -2,10 +2,10 @@
 
 namespace Modules\Inventory\Models;
 
-use App\Core\BaseUuidModel;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\UseFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Modules\Inventory\Database\Factories\OrderItemFactory;
 use Modules\Inventory\Support\StockableUnit;
@@ -15,7 +15,7 @@ use Modules\Inventory\Support\StockableUnit;
     'quantity_fulfilled', 'unit_price', 'unit_cost', 'line_total',
 ])]
 #[UseFactory(OrderItemFactory::class)]
-class OrderItem extends BaseUuidModel
+class OrderItem extends Model
 {
     /** @use HasFactory<OrderItemFactory> */
     use HasFactory;

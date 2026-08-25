@@ -82,7 +82,7 @@ class CategoryService
         $category->delete();
     }
 
-    private function assertParentIsNotCircular(Category $category, ?string $parentId): void
+    private function assertParentIsNotCircular(Category $category, int|string|null $parentId): void
     {
         if ($parentId === null) {
             return;

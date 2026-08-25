@@ -33,37 +33,26 @@ interface InventoryRow {
 }
 
 interface ProductRow {
-    id: string | number;
+    id: number;
     name: string;
     sku: string | null;
     status: string;
-    type?: string;
-    selling_price?: string | number | null;
-    price?: string;
-    rawPrice?: number;
-    cost_price?: string | number | null;
-    variants_count?: number;
-    low_stock_threshold?: number;
-    rating?: number | string;
-    created?: string;
-    updated?: string;
-    created_at?: string;
-    updated_at?: string;
-    created_formatted?: string;
-    updated_formatted?: string;
-    image?: string;
-    image_url?: string;
-    category?: { id?: string; name: string } | string | null;
-    primary_supplier?: { id?: string; company_name: string } | null;
-    inventory_items?: InventoryRow[];
+    type: string;
+    selling_price: string | null;
+    cost_price: string | null;
+    variants_count: number;
+    low_stock_threshold: number;
+    category: { id: number; name: string } | null;
+    primary_supplier: { id: number; company_name: string } | null;
+    inventory_items: InventoryRow[];
 }
 
 const props = defineProps<{
     products: Paginated<ProductRow>;
     filters: Record<string, unknown>;
-    options?: {
-        categories?: Array<{ id: string; name: string }>;
-        suppliers?: Array<{ id: string; company_name: string }>;
+    options: {
+        categories?: Array<{ id: number; name: string }>;
+        suppliers?: Array<{ id: number; company_name: string }>;
         statuses?: string[];
         types?: string[];
     };
