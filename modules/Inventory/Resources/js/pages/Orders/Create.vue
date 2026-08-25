@@ -1,35 +1,41 @@
 <script setup lang="ts">
-import { Head } from '@inertiajs/vue3';
-import PageHeader from '@/components/PageHeader.vue';
-import AppLayout from '@/layouts/AppLayout.vue';
-import orderRoutes from '@/routes/inventory/orders';
-import OrderForm from '../../components/OrderForm.vue';
+import type { Paginated } from '@/types';
+import Index from './Index.vue';
 
-const props = defineProps<{ options: Record<string, any> }>();
+interface OrderRow {
+    id: number;
+    order_number: string;
+    customer_name: string;
+    customer_email: string | null;
+    status: string;
+    total: string;
+    currency: string;
+    items_count: number;
+    created_at: string;
+    customer: { id: number; code: string; name: string } | null;
+    created_by: { id: number; name: string } | null;
+}
 
-const breadcrumbs = [
-    { label: 'Store Inventory' },
-    { label: 'Orders', href: orderRoutes.index.url() },
-    { label: 'Take order' },
-];
+const props = defineProps<{
+    orders: Paginated<OrderRow>;
+    filters: Record<string, unknown>;
+    counts?: {
+        all: number;
+        in_transit: number;
+        delivered: number;
+        returns: number;
+        canceled: number;
+    };
+    options: Record<string, any>;
+}>();
 </script>
 
 <template>
-    <Head title="Take order" />
-
-    <AppLayout :breadcrumbs="breadcrumbs">
-        <PageHeader
-            title="Take order"
-            description="Saving records the order and its lines. Stock is reserved later, when the order is confirmed."
-            :breadcrumbs="breadcrumbs"
-        />
-
-        <OrderForm
-            :options="props.options"
-            :action="orderRoutes.store.url()"
-            method="post"
-            submit-label="Create order"
-            :cancel-href="orderRoutes.index.url()"
-        />
-    </AppLayout>
+    <Index
+        :orders="props.orders"
+        :filters="props.filters"
+        :counts="props.counts"
+        :options="props.options"
+        :open-create-modal="true"
+    />
 </template>

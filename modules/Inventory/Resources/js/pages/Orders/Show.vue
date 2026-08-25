@@ -260,7 +260,7 @@ function cancel() {
                                             size="sm"
                                         >
                                             {{ item.quantity_fulfilled }} /
-                                            {{ item.quantity }}
+                                             {{ item.quantity }}
                                         </Badge>
                                     </td>
                                     <td class="px-5 py-3 text-end">
