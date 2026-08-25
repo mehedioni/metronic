@@ -10,6 +10,7 @@ use Modules\Inventory\Http\Controllers\InboundReceiptController;
 use Modules\Inventory\Http\Controllers\InventoryController;
 use Modules\Inventory\Http\Controllers\OrderController;
 use Modules\Inventory\Http\Controllers\ProductController;
+use Modules\Inventory\Http\Controllers\QuoteController;
 use Modules\Inventory\Http\Controllers\ReportController;
 use Modules\Inventory\Http\Controllers\StockMovementController;
 use Modules\Inventory\Http\Controllers\SupplierController;
@@ -85,6 +86,19 @@ Route::middleware(['auth'])->prefix('inventory')->name('inventory.')->group(func
     Route::get('reports/daily', [ReportController::class, 'daily'])
         ->middleware('permission:'.Permissions::REPORTS_VIEW)
         ->name('reports.daily');
+
+    // Quotes are orders in the configured quote status; the routes sit
+    // beside orders rather than nesting, because a quote becomes an order in
+    // place and keeps its own detail screen.
+    Route::get('quotes', [QuoteController::class, 'index'])
+        ->middleware('permission:'.Permissions::ORDERS_VIEW)
+        ->name('quotes.index');
+    Route::get('quotes/create', [QuoteController::class, 'create'])
+        ->middleware('permission:'.Permissions::ORDERS_CREATE)
+        ->name('quotes.create');
+    Route::post('quotes', [QuoteController::class, 'store'])
+        ->middleware('permission:'.Permissions::ORDERS_CREATE)
+        ->name('quotes.store');
 
     Route::resource('orders', OrderController::class)
         ->middleware('permission:'.Permissions::ORDERS_VIEW);

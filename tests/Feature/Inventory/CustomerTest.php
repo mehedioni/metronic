@@ -4,6 +4,7 @@ use App\Core\Support\Permissions;
 use Modules\Inventory\Models\Customer;
 use Modules\Inventory\Models\Order;
 use Modules\Inventory\Models\Product;
+use Modules\Inventory\Support\OrderStatuses;
 
 beforeEach(function () {
     $this->manager = userWithPermissions([
@@ -90,7 +91,7 @@ it('lists customers with spend aggregates summed from their orders', function ()
     Order::factory()->create([
         'customer_id' => $customer->id,
         'total' => 999,
-        'status' => 'cancelled',
+        'status_id' => OrderStatuses::key('cancelled')->id,
     ]);
 
     $this->actingAs($this->manager)

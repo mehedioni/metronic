@@ -38,7 +38,7 @@ const page = usePage<SharedData>();
             <slot />
         </Card>
 
-        <p class="text-[11px] text-muted-foreground">
+        <p class="text-2xs text-muted-foreground">
             {{ page.props.app.name }} — inventory management
         </p>
     </div>

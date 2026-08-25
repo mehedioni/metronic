@@ -4,12 +4,12 @@ namespace Modules\Inventory\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 use Modules\Inventory\Actions\CancelOrderAction;
 use Modules\Inventory\Actions\ConfirmOrderAction;
 use Modules\Inventory\Actions\FulfillOrderAction;
-use Modules\Inventory\Enums\OrderStatus;
 use Modules\Inventory\Http\Requests\CancelRequest;
 use Modules\Inventory\Http\Requests\FulfillOrderRequest;
 use Modules\Inventory\Http\Requests\ListRequest;
@@ -19,6 +19,8 @@ use Modules\Inventory\Models\Customer;
 use Modules\Inventory\Models\Order;
 use Modules\Inventory\Models\Product;
 use Modules\Inventory\Services\OrderService;
+use Modules\Inventory\Support\OrderStatus;
+use Modules\Inventory\Support\OrderStatuses;
 
 class OrderController extends Controller
 {
@@ -29,15 +31,12 @@ class OrderController extends Controller
         $this->authorize('viewAny', Order::class);
 
         return Inertia::render('Inventory::Orders/Index', [
-            'orders' => $this->orders->paginate($request->filters()),
+            'orders' => $this->orders->paginate($this->listFilters($request->filters())),
             'filters' => $request->filters(),
-            'counts' => [
-                'all' => Order::count(),
-                'in_transit' => Order::whereIn('status', ['confirmed', 'processing'])->count(),
-                'delivered' => Order::where('status', 'completed')->count(),
-                'returns' => Order::where('status', 'draft')->count(),
-                'canceled' => Order::where('status', 'cancelled')->count(),
-            ],
+            'counts' => $this->statusCounts(),
+            // Tabs cover the statuses this list actually shows, so there is no
+            // Quote tab that would always read zero.
+            'listStatuses' => $this->listStatuses(),
             'options' => $this->formOptions(),
         ]);
     }
@@ -47,15 +46,10 @@ class OrderController extends Controller
         $this->authorize('create', Order::class);
 
         return Inertia::render('Inventory::Orders/Create', [
-            'orders' => $this->orders->paginate($request->filters()),
+            'orders' => $this->orders->paginate($this->listFilters($request->filters())),
             'filters' => $request->filters(),
-            'counts' => [
-                'all' => Order::count(),
-                'in_transit' => Order::whereIn('status', ['confirmed', 'processing'])->count(),
-                'delivered' => Order::where('status', 'completed')->count(),
-                'returns' => Order::where('status', 'draft')->count(),
-                'canceled' => Order::where('status', 'cancelled')->count(),
-            ],
+            'counts' => $this->statusCounts(),
+            'listStatuses' => $this->listStatuses(),
             'options' => $this->formOptions(),
         ]);
     }
@@ -83,7 +77,7 @@ class OrderController extends Controller
                 'createdBy:id,name',
             ]),
             'allowedTransitions' => array_map(
-                fn (OrderStatus $status): string => $status->value,
+                fn (OrderStatus $status): string => $status->key,
                 $order->status->allowedTransitions(),
             ),
             'options' => $this->formOptions(),
@@ -102,7 +96,7 @@ class OrderController extends Controller
         if (! $order->status->isEditable()) {
             return redirect()
                 ->route('inventory.orders.show', $order)
-                ->with('error', "Order {$order->order_number} is {$order->status->value} and can no longer be edited.");
+                ->with('error', "Order {$order->order_number} is {$order->status->label} and can no longer be edited.");
         }
 
         return Inertia::render('Inventory::Orders/Edit', [
@@ -158,7 +152,7 @@ class OrderController extends Controller
 
         $updated = $fulfill->handle($order, $request->lines(), $request->user()->id);
 
-        return back()->with('success', $updated->status === OrderStatus::Completed
+        return back()->with('success', $updated->status->is('completed')
             ? 'Order fulfilled and stock deducted.'
             : 'Order partially fulfilled and stock deducted.');
     }
@@ -173,12 +167,71 @@ class OrderController extends Controller
     }
 
     /**
+     * Filters for the orders list: whatever was asked for, minus quotes.
+     *
+     * A quote is an order in the configured quote status, and it has its own
+     * screen — showing it here as well would double-count the same record in
+     * two lists.
+     *
+     * @param  array<string, mixed>  $filters
+     * @return array<string, mixed>
+     */
+    private function listFilters(array $filters): array
+    {
+        return [...$filters, 'without_status' => OrderStatuses::quote()->id];
+    }
+
+    /**
+     * The statuses this list can show — everything but the quote status.
+     *
+     * @return array<int, OrderStatus>
+     */
+    private function listStatuses(): array
+    {
+        $quote = OrderStatuses::quote();
+
+        return array_values(array_filter(
+            OrderStatuses::all(),
+            fn (OrderStatus $status): bool => ! $status->is($quote),
+        ));
+    }
+
+    /**
+     * One count per configured status, keyed by id, plus the total.
+     *
+     * Driven by the configuration rather than a hardcoded set of tabs, so
+     * adding a status in config/orders.php gives it a tab and a count without
+     * touching this controller.
+     *
+     * @return array<string, mixed>
+     */
+    private function statusCounts(): array
+    {
+        $byStatus = Order::query()
+            ->withoutStatus(OrderStatuses::quote())
+            ->select('status_id', DB::raw('count(*) as aggregate'))
+            ->groupBy('status_id')
+            ->pluck('aggregate', 'status_id');
+
+        $counts = ['all' => (int) $byStatus->sum()];
+
+        foreach ($this->listStatuses() as $status) {
+            $counts[(string) $status->id] = (int) ($byStatus[$status->id] ?? 0);
+        }
+
+        return $counts;
+    }
+
+    /**
      * @return array<string, mixed>
      */
     private function formOptions(): array
     {
         return [
-            'statuses' => OrderStatus::values(),
+            // The whole configured lifecycle for filters, and the subset a
+            // form may set for the status field.
+            'statuses' => OrderStatuses::all(),
+            'assignableStatuses' => OrderStatuses::assignable(),
             'customers' => Customer::query()
                 ->active()
                 ->select(['id', 'code', 'name', 'email'])

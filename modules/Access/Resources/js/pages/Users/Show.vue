@@ -149,7 +149,7 @@ function save() {
 
                             <p
                                 v-if="firstOf('role', 'roles')"
-                                class="text-[11px] text-danger"
+                                class="text-2xs text-danger"
                             >
                                 {{ firstOf('role', 'roles') }}
                             </p>
@@ -168,11 +168,11 @@ function save() {
                     <dl v-else class="grid gap-4 sm:grid-cols-2">
                         <div>
                             <dt class="text-xs text-muted-foreground">Email</dt>
-                            <dd class="text-[0.8125rem]">{{ user.email }}</dd>
+                            <dd class="text-2sm">{{ user.email }}</dd>
                         </div>
                         <div>
                             <dt class="text-xs text-muted-foreground">Roles</dt>
-                            <dd class="text-[0.8125rem]">
+                            <dd class="text-2sm">
                                 {{
                                     user.roles.map((role) => role.name).join(', ') ||
                                     'No role'
@@ -196,10 +196,10 @@ function save() {
                             :online="user.is_active"
                         />
                         <div class="min-w-0">
-                            <p class="truncate text-[0.8125rem] font-medium">
+                            <p class="truncate text-2sm font-medium">
                                 {{ user.name }}
                             </p>
-                            <p class="truncate text-[11px] text-muted-foreground">
+                            <p class="truncate text-2xs text-muted-foreground">
                                 {{ user.email }}
                             </p>
                         </div>
@@ -208,7 +208,7 @@ function save() {
                     <dl class="space-y-3">
                         <div class="flex justify-between gap-3">
                             <dt class="text-xs text-muted-foreground">Joined</dt>
-                            <dd class="text-[0.8125rem]">
+                            <dd class="text-2sm">
                                 {{ dateTime(user.created_at) }}
                             </dd>
                         </div>
@@ -216,7 +216,7 @@ function save() {
                             <dt class="text-xs text-muted-foreground">
                                 Email verified
                             </dt>
-                            <dd class="text-[0.8125rem]">
+                            <dd class="text-2sm">
                                 {{ dateTime(user.email_verified_at) }}
                             </dd>
                         </div>

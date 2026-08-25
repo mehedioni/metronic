@@ -17,7 +17,7 @@ class OrderService
     private const SORTABLE = [
         'order_number' => 'order_number',
         'customer_name' => 'customer_name',
-        'status' => 'status',
+        'status' => 'status_id',
         'total' => 'total',
         'created_at' => 'created_at',
     ];
@@ -25,29 +25,26 @@ class OrderService
     public function __construct(private DocumentNumberGenerator $numbers) {}
 
     /**
-     * @param  array{search?: string|null, status?: string|null, customer_id?: string|null, from?: string|null, to?: string|null, per_page?: int|null}  $filters
+     * @param  array{search?: string|null, status?: int|string|null, without_status?: int|string|null, customer_id?: int|null, from?: string|null, to?: string|null, per_page?: int|null}  $filters
      * @return LengthAwarePaginator<int, Order>
      */
     public function paginate(array $filters): LengthAwarePaginator
     {
         return Order::query()
-            ->with(['createdBy:id,name', 'customer:id,code,name,email'])
+            ->with([
+                'createdBy:id,name',
+                // Enough of the customer record for the detail panel to show
+                // who the order is for, beside the snapshot the order keeps.
+                'customer:id,code,name,email,phone,city,country,status',
+            ])
             ->withCount('items')
             ->search($filters['search'] ?? null)
             ->between($filters['from'] ?? null, $filters['to'] ?? null)
-            ->when($filters['status'] ?? null, function ($query, $status) {
-                if ($status === 'in_transit') {
-                    $query->whereIn('status', ['confirmed', 'processing']);
-                } elseif ($status === 'delivered') {
-                    $query->where('status', 'completed');
-                } elseif ($status === 'canceled' || $status === 'cancelled') {
-                    $query->where('status', 'cancelled');
-                } elseif ($status === 'returns') {
-                    $query->where('status', 'draft');
-                } else {
-                    $query->where('status', $status);
-                }
-            })
+            // Accepts a configured status id or key; the shipping-era aliases
+            // (in_transit, delivered, returns) named a lifecycle this system
+            // no longer has.
+            ->withStatus($filters['status'] ?? null)
+            ->withoutStatus($filters['without_status'] ?? null)
             ->when($filters['customer_id'] ?? null, fn ($query, $customerId) => $query->where('customer_id', $customerId))
             ->tap(fn ($query) => QuerySorter::apply(
                 $query,

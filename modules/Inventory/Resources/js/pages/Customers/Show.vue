@@ -136,10 +136,10 @@ function toggleStatus() {
                 </Card>
                 <Card class="p-5">
                     <p class="text-xs text-muted-foreground">Last order</p>
-                    <p class="mt-1 text-[0.9375rem] font-semibold">
+                    <p class="mt-1 text-base font-semibold">
                         {{ date(history.last_order_at) }}
                     </p>
-                    <p class="mt-0.5 text-[11px] text-muted-foreground">
+                    <p class="mt-0.5 text-2xs text-muted-foreground">
                         {{ number(history.cancelled_orders_count) }} cancelled
                     </p>
                 </Card>
@@ -162,7 +162,7 @@ function toggleStatus() {
                             <div v-if="history" class="overflow-x-auto">
                                 <table class="w-full text-xs">
                                     <thead
-                                        class="border-b border-border bg-muted/70 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground"
+                                        class="border-b border-border bg-muted/70 text-2xs font-semibold uppercase tracking-wider text-muted-foreground"
                                     >
                                         <tr>
                                             <th class="px-5 py-3 text-start">Order</th>
@@ -284,10 +284,10 @@ function toggleStatus() {
                     <div class="mb-4 flex items-center gap-3">
                         <Avatar :name="customer.name" class="size-10" />
                         <div class="min-w-0">
-                            <p class="truncate text-[0.8125rem] font-medium">
+                            <p class="truncate text-2sm font-medium">
                                 {{ customer.name }}
                             </p>
-                            <p class="truncate text-[11px] text-muted-foreground">
+                            <p class="truncate text-2xs text-muted-foreground">
                                 {{ customer.email ?? 'No email' }}
                             </p>
                         </div>
@@ -296,19 +296,19 @@ function toggleStatus() {
                     <dl class="space-y-3">
                         <div class="flex justify-between gap-3">
                             <dt class="text-xs text-muted-foreground">Phone</dt>
-                            <dd class="text-[0.8125rem]">
+                            <dd class="text-2sm">
                                 {{ customer.phone ?? '—' }}
                             </dd>
                         </div>
                         <div class="flex justify-between gap-3">
                             <dt class="text-xs text-muted-foreground">Address</dt>
-                            <dd class="text-end text-[0.8125rem]">
+                            <dd class="text-end text-2sm">
                                 {{ customer.address_line1 ?? '—' }}
                             </dd>
                         </div>
                         <div class="flex justify-between gap-3">
                             <dt class="text-xs text-muted-foreground">Location</dt>
-                            <dd class="text-[0.8125rem]">
+                            <dd class="text-2sm">
                                 {{
                                     [customer.city, customer.country]
                                         .filter(Boolean)
@@ -320,7 +320,7 @@ function toggleStatus() {
 
                     <div v-if="customer.notes" class="mt-4">
                         <p class="mb-1 text-xs text-muted-foreground">Notes</p>
-                        <p class="whitespace-pre-line text-[0.8125rem]">
+                        <p class="whitespace-pre-line text-2sm">
                             {{ customer.notes }}
                         </p>
                     </div>

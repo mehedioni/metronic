@@ -8,6 +8,7 @@ use Modules\Inventory\Models\Expense;
 use Modules\Inventory\Models\Order;
 use Modules\Inventory\Models\Product;
 use Modules\Inventory\Services\ReportService;
+use Modules\Inventory\Support\OrderStatuses;
 
 beforeEach(function () {
     $this->analyst = userWithPermissions([Permissions::REPORTS_VIEW]);
@@ -30,7 +31,7 @@ function soldOn(
     $order = Order::factory()->create([
         'customer_id' => $customer?->id,
         'customer_name' => $customer?->name ?? 'Walk-in',
-        'status' => $status,
+        'status_id' => OrderStatuses::key($status)->id,
         'subtotal' => $price * $quantity,
         'total' => $price * $quantity,
     ]);

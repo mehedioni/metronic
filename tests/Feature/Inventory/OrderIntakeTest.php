@@ -11,6 +11,7 @@ use Modules\Inventory\Models\Product;
 use Modules\Inventory\Models\ProductVariant;
 use Modules\Inventory\Models\StockMovement;
 use Modules\Inventory\Services\InventoryService;
+use Modules\Inventory\Support\OrderStatuses;
 use Modules\Inventory\Support\StockableUnit;
 
 beforeEach(function () {
@@ -55,7 +56,7 @@ it('takes an order for a customer and prices it from the catalogue', function ()
     $this->actingAs($this->clerk)
         ->post('/inventory/orders', [
             'customer_id' => $customer->id,
-            'status' => 'draft',
+            'status_id' => OrderStatuses::key('draft')->id,
             'items' => [['product_id' => $product->id, 'quantity' => 3]],
         ])
         ->assertSessionHasNoErrors();
@@ -63,7 +64,7 @@ it('takes an order for a customer and prices it from the catalogue', function ()
     $order = Order::query()->with('items')->firstOrFail();
     $line = $order->items->first();
 
-    expect($order->status->value)->toBe('draft')
+    expect($order->status->key)->toBe('draft')
         ->and($order->customer_id)->toBe($customer->id)
         // Contact details are snapshotted, so the order still reads correctly
         // after the customer record changes.
@@ -150,7 +151,7 @@ it('carries the line cost onto the fulfilment ledger row', function () {
     // Confirmation is reached from pending; a draft has to be moved on first.
     $this->actingAs($this->clerk)->post('/inventory/orders', [
         'customer_name' => 'Walk-in',
-        'status' => 'pending',
+        'status_id' => OrderStatuses::key('pending')->id,
         'items' => [['product_id' => $product->id, 'quantity' => 2]],
     ]);
 

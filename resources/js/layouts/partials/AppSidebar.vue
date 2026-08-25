@@ -44,7 +44,9 @@ function isCurrent(link: NavLink): boolean {
 
     if (linkParamEntries.length > 0) {
         const pageParams = new URLSearchParams(pageUrlObj.search);
-        return linkParamEntries.every(([key, val]) => pageParams.get(key) === val);
+        return linkParamEntries.every(
+            ([key, val]) => pageParams.get(key) === val,
+        );
     }
 
     const pageParams = new URLSearchParams(pageUrlObj.search);
@@ -116,12 +118,12 @@ function toggleGroup(id: string) {
             >
                 <p
                     v-if="section.heading && !collapsed"
-                    class="px-3 pb-2 text-[11px] font-bold tracking-wider text-zinc-400 uppercase dark:text-zinc-500"
+                    class="px-3 pb-2 text-2xs font-bold tracking-wider text-zinc-400 uppercase dark:text-zinc-500"
                 >
                     {{ section.heading }}
                 </p>
 
-                <div class="space-y-1">
+                <div class="space-y-3">
                     <div v-for="group in section.groups" :key="group.id">
                         <!-- Collapsed Rail Link -->
                         <Link
@@ -146,7 +148,7 @@ function toggleGroup(id: string) {
                                 type="button"
                                 :class="
                                     cn(
-                                        'group flex w-full cursor-pointer items-center justify-between rounded-lg px-3 py-2 text-xs transition-colors hover:text-blue-600 dark:hover:text-blue-500',
+                                        'group flex w-full cursor-pointer items-center justify-between rounded-lg px-3 py-2 text-2sm transition-colors hover:text-blue-600 dark:hover:text-blue-500',
                                         isGroupActive(group)
                                             ? 'bg-zinc-50 font-semibold text-zinc-900 dark:bg-zinc-800/50 dark:text-white'
                                             : 'font-medium text-zinc-900 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800',
@@ -168,8 +170,8 @@ function toggleGroup(id: string) {
                                     <span
                                         :class="
                                             isGroupActive(group)
-                                                ? 'text-xs font-semibold'
-                                                : 'text-xs font-medium'
+                                                ? 'text-2sm font-semibold'
+                                                : 'text-2sm font-medium'
                                         "
                                     >
                                         {{ group.label }}
@@ -177,7 +179,7 @@ function toggleGroup(id: string) {
                                 </span>
 
                                 <ChevronDownIcon
-                                    class="size-3.5 text-zinc-400 transition-transform transition-colors group-hover:text-blue-600 dark:group-hover:text-blue-500"
+                                    class="size-3.5 text-zinc-400 transition-colors transition-transform group-hover:text-blue-600 dark:group-hover:text-blue-500"
                                     :class="open[group.id] ? 'rotate-180' : ''"
                                 />
                             </button>
@@ -192,7 +194,7 @@ function toggleGroup(id: string) {
                                     :href="link.href"
                                     :class="
                                         cn(
-                                            'block rounded-md px-3 py-1.5 text-xs transition-colors',
+                                            'block rounded-md px-3 py-1.5 text-2sm transition-colors',
                                             isCurrent(link)
                                                 ? 'bg-blue-50 font-medium text-blue-600 dark:bg-blue-500/10 dark:text-blue-500'
                                                 : 'text-zinc-900 hover:bg-zinc-50 hover:text-blue-600 dark:text-zinc-400 dark:hover:bg-zinc-800/50 dark:hover:text-blue-500',

@@ -17,8 +17,8 @@ defineProps<{
 
         <slot />
 
-        <p v-if="error" class="text-[11px] text-danger">{{ error }}</p>
-        <p v-else-if="hint" class="text-[11px] text-muted-foreground">
+        <p v-if="error" class="text-2xs text-danger">{{ error }}</p>
+        <p v-else-if="hint" class="text-2xs text-muted-foreground">
             {{ hint }}
         </p>
     </div>

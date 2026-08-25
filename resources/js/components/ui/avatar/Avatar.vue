@@ -27,7 +27,7 @@ const initials = computed(() =>
         <span
             :class="
                 cn(
-                    'flex size-8 items-center justify-center overflow-hidden rounded-full border border-border bg-secondary text-[11px] font-semibold text-secondary-foreground',
+                    'flex size-8 items-center justify-center overflow-hidden rounded-full border border-border bg-secondary text-2xs font-semibold text-secondary-foreground',
                     props.class,
                 )
             "

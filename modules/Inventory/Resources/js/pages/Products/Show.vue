@@ -158,7 +158,7 @@ function destroy() {
                             <dl class="grid gap-4 sm:grid-cols-2">
                                 <div>
                                     <dt class="text-xs text-muted-foreground">Type</dt>
-                                    <dd class="text-[0.8125rem]">
+                                    <dd class="text-2sm">
                                         {{ humanize(product.type) }}
                                     </dd>
                                 </div>
@@ -166,7 +166,7 @@ function destroy() {
                                     <dt class="text-xs text-muted-foreground">
                                         Category
                                     </dt>
-                                    <dd class="text-[0.8125rem]">
+                                    <dd class="text-2sm">
                                         {{ product.category?.name ?? '—' }}
                                     </dd>
                                 </div>
@@ -174,7 +174,7 @@ function destroy() {
                                     <dt class="text-xs text-muted-foreground">
                                         Cost price
                                     </dt>
-                                    <dd class="text-[0.8125rem]">
+                                    <dd class="text-2sm">
                                         {{ money(product.cost_price) }}
                                     </dd>
                                 </div>
@@ -182,7 +182,7 @@ function destroy() {
                                     <dt class="text-xs text-muted-foreground">
                                         Selling price
                                     </dt>
-                                    <dd class="text-[0.8125rem]">
+                                    <dd class="text-2sm">
                                         {{ money(product.selling_price) }}
                                     </dd>
                                 </div>
@@ -190,7 +190,7 @@ function destroy() {
                                     <dt class="text-xs text-muted-foreground">
                                         Primary supplier
                                     </dt>
-                                    <dd class="text-[0.8125rem]">
+                                    <dd class="text-2sm">
                                         {{
                                             product.primary_supplier
                                                 ?.company_name ?? '—'
@@ -201,7 +201,7 @@ function destroy() {
                                     <dt class="text-xs text-muted-foreground">
                                         Low stock threshold
                                     </dt>
-                                    <dd class="text-[0.8125rem]">
+                                    <dd class="text-2sm">
                                         {{ number(product.low_stock_threshold) }}
                                     </dd>
                                 </div>
@@ -210,7 +210,7 @@ function destroy() {
                                         Public ID
                                     </dt>
                                     <dd
-                                        class="truncate font-mono text-[11px] text-muted-foreground"
+                                        class="truncate font-mono text-2xs text-muted-foreground"
                                         :title="product.uuid"
                                     >
                                         {{ product.uuid }}
@@ -223,7 +223,7 @@ function destroy() {
                                     Description
                                 </p>
                                 <p
-                                    class="whitespace-pre-line text-[0.8125rem] leading-relaxed"
+                                    class="whitespace-pre-line text-2sm leading-relaxed"
                                 >
                                     {{ product.description }}
                                 </p>
@@ -235,7 +235,7 @@ function destroy() {
                         <div class="overflow-x-auto">
                             <table class="w-full text-xs">
                                 <thead
-                                    class="border-b border-border bg-muted/70 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground"
+                                    class="border-b border-border bg-muted/70 text-2xs font-semibold uppercase tracking-wider text-muted-foreground"
                                 >
                                     <tr>
                                         <th class="px-5 py-3 text-start">SKU</th>
@@ -310,7 +310,7 @@ function destroy() {
                             <li
                                 v-for="supplier in product.suppliers"
                                 :key="supplier.id"
-                                class="flex items-center justify-between px-5 py-3 text-[0.8125rem]"
+                                class="flex items-center justify-between px-5 py-3 text-2sm"
                             >
                                 <span>{{ supplier.company_name }}</span>
                                 <Badge
@@ -358,7 +358,7 @@ function destroy() {
                         </div>
                         <div class="flex items-baseline justify-between">
                             <dt class="text-xs text-muted-foreground">Reserved</dt>
-                            <dd class="text-[0.8125rem]">
+                            <dd class="text-2sm">
                                 {{ number(reserved) }}
                             </dd>
                         </div>
@@ -368,7 +368,7 @@ function destroy() {
                             <dt class="text-xs text-muted-foreground">
                                 Available to promise
                             </dt>
-                            <dd class="text-[0.8125rem] font-semibold">
+                            <dd class="text-2sm font-semibold">
                                 {{ number(available) }}
                             </dd>
                         </div>
@@ -384,12 +384,12 @@ function destroy() {
             size="sm"
             @update:open="confirming = false"
         >
-            <p class="text-[0.8125rem] text-muted-foreground">
+            <p class="text-2sm text-muted-foreground">
                 A product that already carries stock history cannot be deleted —
                 the backend will refuse it and say so.
             </p>
 
-            <p v-if="firstOf('inventory')" class="mt-3 text-[11px] text-danger">
+            <p v-if="firstOf('inventory')" class="mt-3 text-2xs text-danger">
                 {{ firstOf('inventory') }}
             </p>
 

@@ -4,10 +4,10 @@ namespace Modules\Inventory\Actions;
 
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
-use Modules\Inventory\Enums\OrderStatus;
 use Modules\Inventory\Exceptions\InvalidStatusTransitionException;
 use Modules\Inventory\Models\Order;
 use Modules\Inventory\Services\InventoryService;
+use Modules\Inventory\Support\OrderStatuses;
 
 /**
  * Confirms an order and reserves stock for every line.
@@ -28,10 +28,12 @@ class ConfirmOrderAction
                 ->lockForUpdate()
                 ->firstOrFail();
 
-            if (! $locked->status->canTransitionTo(OrderStatus::Confirmed)) {
+            $confirmed = OrderStatuses::key('confirmed');
+
+            if (! $locked->status->canTransitionTo($confirmed)) {
                 throw InvalidStatusTransitionException::between(
-                    $locked->status->value,
-                    OrderStatus::Confirmed->value,
+                    $locked->status->key,
+                    $confirmed->key,
                 );
             }
 
@@ -42,7 +44,7 @@ class ConfirmOrderAction
             }
 
             $locked->forceFill([
-                'status' => OrderStatus::Confirmed,
+                'status_id' => $confirmed->id,
                 'confirmed_at' => Carbon::now(),
             ])->save();
 

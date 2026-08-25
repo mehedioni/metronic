@@ -72,7 +72,8 @@ Module pages are addressed `Module::Path/Name` (resolved in
 | `inventory.movements.index` | `Inventory::Movements/Index` | `movements`, `filters`, `types` |
 | `inventory.inbound.index` / `.show` | `Inventory::Inbound/Index` / `Show` | `receipts` / `receipt`, `allowedTransitions`, `options` |
 | `inventory.orders.index` / `.show` | `Inventory::Orders/Index` / `Show` | `orders` / `order`, `allowedTransitions`, `options` |
-| `inventory.orders.create` / `.edit` | `Inventory::Orders/Create` / `Edit` | `options` (customers, products with variants and stock, statuses), (`order`) |
+| `inventory.orders.create` / `.edit` | `Inventory::Orders/Create` / `Edit` | `options` (customers, products with variants and stock, `statuses`, `assignableStatuses`), (`order`) |
+| `inventory.quotes.index` / `.create` | `Inventory::Quotes/Index` / `Create` | `quotes` / —, `status`, `options` |
 | `inventory.expenses.index` | `Inventory::Expenses/Index` | `expenses`, `filters`, `categories`, `suppliers`, `summary` (deferred) |
 | `inventory.reports.daily` | `Inventory::Reports/Daily` | `report` (range, days, totals, meta), `filters`, `expensesByCategory` (deferred) |
 | `access.users.index` / `.show` | `Access::Users/Index` / `Show` | `users` / `user`, `roles` |
@@ -89,7 +90,8 @@ use it to render actions instead of re-deriving the rules in the frontend.
 | Adjust stock | `POST inventory.stock.adjust` |
 | Receive a receipt | `POST inventory.inbound.receive` |
 | Cancel a receipt | `POST inventory.inbound.cancel` |
-| Take an order | `POST inventory.orders.store` — `customer_id` **or** `customer_name`, plus `items[]` |
+| Take an order | `POST inventory.orders.store` — `customer_id` **or** `customer_name`, plus `items[]`; `status_id` may only be one of `assignableStatuses` |
+| Create a quote | `POST inventory.quotes.store` — same payload; the status is forced to the configured quote status |
 | Confirm an order | `POST inventory.orders.confirm` |
 | Fulfil an order | `POST inventory.orders.fulfill` — optional `lines[<order_item_id>]` for a partial handover; sending none fulfils everything outstanding |
 | Cancel an order | `POST inventory.orders.cancel` |
@@ -121,3 +123,20 @@ Run `php artisan wayfinder:generate --with-form --no-interaction` before
 
 `php artisan migrate:fresh --seed` seeds a demo catalogue, stock, receiving and
 sales history in `local`, so every screen has something to render.
+
+## Order statuses
+
+An order carries `status_id` plus an appended `status` object:
+
+```json
+{ "id": 1, "key": "draft", "label": "Quote", "variant": "neutral" }
+```
+
+Render `label`, colour the badge from `variant`, and branch on `key` — never on
+the label, which a store may rename in `config/orders.php`. The order list
+builds its tabs from `options.statuses` and filters by status id, so a status
+added in config appears with no frontend change.
+
+`Quotes` is the orders list narrowed to the configured quote status. A quote is
+the same record as an order: confirming one keeps its number, lines and
+history rather than copying it into something new.

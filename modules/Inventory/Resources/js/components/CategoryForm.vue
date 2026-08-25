@@ -25,7 +25,12 @@ const props = defineProps<{
     action: string;
     method?: 'post' | 'put';
     submitLabel?: string;
-    cancelHref: string;
+    /** Omit inside a drawer and listen for @cancel instead. */
+    cancelHref?: string;
+}>();
+
+const emit = defineEmits<{
+    cancel: [];
 }>();
 
 const form = useForm<CategoryPayload>({
@@ -108,9 +113,24 @@ function submit() {
         </FormSection>
 
         <div class="flex flex-wrap items-center justify-end gap-2">
-            <Button variant="outline" size="dense" as="a" :href="cancelHref"
-                >Cancel</Button
+            <Button
+                v-if="cancelHref"
+                variant="outline"
+                size="dense"
+                as="a"
+                :href="cancelHref"
             >
+                Cancel
+            </Button>
+            <Button
+                v-else
+                type="button"
+                variant="outline"
+                size="dense"
+                @click="emit('cancel')"
+            >
+                Cancel
+            </Button>
             <Button type="submit" size="dense" :disabled="form.processing">
                 {{ submitLabel ?? 'Save' }}
             </Button>

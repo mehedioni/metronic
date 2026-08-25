@@ -115,19 +115,19 @@ function toggleStatus() {
                                     <dt class="text-xs text-muted-foreground">
                                         Contact
                                     </dt>
-                                    <dd class="text-[0.8125rem]">
+                                    <dd class="text-2sm">
                                         {{ supplier.contact_name ?? '—' }}
                                     </dd>
                                 </div>
                                 <div>
                                     <dt class="text-xs text-muted-foreground">Email</dt>
-                                    <dd class="text-[0.8125rem]">
+                                    <dd class="text-2sm">
                                         {{ supplier.email ?? '—' }}
                                     </dd>
                                 </div>
                                 <div>
                                     <dt class="text-xs text-muted-foreground">Phone</dt>
-                                    <dd class="text-[0.8125rem]">
+                                    <dd class="text-2sm">
                                         {{ supplier.phone ?? '—' }}
                                     </dd>
                                 </div>
@@ -135,7 +135,7 @@ function toggleStatus() {
                                     <dt class="text-xs text-muted-foreground">
                                         Location
                                     </dt>
-                                    <dd class="text-[0.8125rem]">
+                                    <dd class="text-2sm">
                                         {{
                                             [supplier.city, supplier.country]
                                                 .filter(Boolean)
@@ -147,7 +147,7 @@ function toggleStatus() {
                                     <dt class="text-xs text-muted-foreground">
                                         Payment terms
                                     </dt>
-                                    <dd class="text-[0.8125rem]">
+                                    <dd class="text-2sm">
                                         {{ supplier.payment_terms ?? '—' }}
                                     </dd>
                                 </div>
@@ -155,7 +155,7 @@ function toggleStatus() {
                                     <dt class="text-xs text-muted-foreground">
                                         Website
                                     </dt>
-                                    <dd class="truncate text-[0.8125rem]">
+                                    <dd class="truncate text-2sm">
                                         {{ supplier.website ?? '—' }}
                                     </dd>
                                 </div>
@@ -164,7 +164,7 @@ function toggleStatus() {
                             <div v-if="supplier.notes" class="mt-5">
                                 <p class="mb-1 text-xs text-muted-foreground">Notes</p>
                                 <p
-                                    class="whitespace-pre-line text-[0.8125rem] leading-relaxed"
+                                    class="whitespace-pre-line text-2sm leading-relaxed"
                                 >
                                     {{ supplier.notes }}
                                 </p>
@@ -272,7 +272,7 @@ function toggleStatus() {
                                     <dt class="text-xs text-muted-foreground">
                                         Last received
                                     </dt>
-                                    <dd class="text-[0.8125rem]">
+                                    <dd class="text-2sm">
                                         {{ date(history.last_received_at) }}
                                     </dd>
                                 </div>
@@ -297,7 +297,7 @@ function toggleStatus() {
                             <li
                                 v-for="product in history.products_supplied"
                                 :key="product.id"
-                                class="px-5 py-2.5 text-[0.8125rem]"
+                                class="px-5 py-2.5 text-2sm"
                             >
                                 <Link
                                     :href="products.show.url(product.id)"
@@ -305,7 +305,7 @@ function toggleStatus() {
                                     >{{ product.name }}</Link
                                 >
                                 <span
-                                    class="ms-1 font-mono text-[11px] text-muted-foreground"
+                                    class="ms-1 font-mono text-2xs text-muted-foreground"
                                     >{{ product.sku }}</span
                                 >
                             </li>

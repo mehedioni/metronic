@@ -62,7 +62,7 @@ function logout() {
 
 <template>
     <header
-        class="sticky top-0 z-30 flex h-16 items-center justify-between gap-3 border-b border-dashed border-zinc-200/80 bg-white/95 px-4 backdrop-blur-md dark:border-zinc-800/80 dark:bg-[#121215]/95 lg:px-8"
+        class="sticky top-0 z-30 flex h-16 items-center justify-between gap-3 border-b border-dashed border-zinc-200/80 bg-white/95 px-4 backdrop-blur-md lg:px-8 dark:border-zinc-800/80 dark:bg-[#121215]/95"
     >
         <div class="flex min-w-0 items-center gap-2">
             <Button
@@ -106,7 +106,7 @@ function logout() {
                     <template #icon><SearchIcon /></template>
                     <template #suffix>
                         <kbd
-                            class="rounded border border-border bg-card px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground"
+                            class="rounded border border-border bg-card px-1.5 py-0.5 font-mono text-2xs text-muted-foreground"
                         >
                             ⌘ K
                         </kbd>
@@ -140,10 +140,10 @@ function logout() {
                 </template>
 
                 <div class="px-2.5 py-2">
-                    <p class="truncate text-[0.8125rem] font-medium">
+                    <p class="truncate text-2sm font-medium">
                         {{ page.props.auth.user.name }}
                     </p>
-                    <p class="truncate text-[11px] text-muted-foreground">
+                    <p class="truncate text-2xs text-muted-foreground">
                         {{ page.props.auth.user.email }}
                     </p>
                 </div>

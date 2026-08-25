@@ -9,7 +9,6 @@ import {
     Search,
     SlidersHorizontal,
     SquarePen,
-    Trash2,
 } from 'lucide-vue-next';
 import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { FormField, Textarea } from '@/components/form';
@@ -60,7 +59,7 @@ const props = defineProps<{
 const { can } = usePermissions();
 const { firstOf } = usePageErrors();
 
-const { params, loading, toggleSort, reset } = useTableQuery({
+const { params, toggleSort, reset } = useTableQuery({
     url: stock.index.url(),
     filters: props.filters,
     only: ['items', 'filters', 'summary'],
@@ -125,10 +124,6 @@ function getProductImage(item: StockRow, index: number): string {
 
 function available(row: StockRow): number {
     return row.quantity_on_hand - row.quantity_reserved;
-}
-
-function isLow(row: StockRow): boolean {
-    return row.quantity_on_hand > 0 && row.quantity_on_hand <= (row.product?.low_stock_threshold ?? 0);
 }
 
 function delta(row: StockRow): { text: string; isPos: boolean } {
@@ -236,7 +231,7 @@ const selectedSupplierName = computed(() => {
             <template #actions>
                 <Link
                     :href="stock.planner.url()"
-                    class="inline-flex h-8.5 items-center justify-center rounded-md bg-zinc-950 px-3.5 text-[0.8125rem] font-medium text-white shadow-xs transition-colors hover:bg-zinc-900 dark:bg-zinc-200 dark:text-zinc-950 dark:hover:bg-white"
+                    class="inline-flex h-8.5 items-center justify-center rounded-md bg-zinc-950 px-3.5 text-2sm font-medium text-white shadow-xs transition-colors hover:bg-zinc-900 dark:bg-zinc-200 dark:text-zinc-950 dark:hover:bg-white"
                 >
                     Stock Planner
                 </Link>
@@ -341,7 +336,7 @@ const selectedSupplierName = computed(() => {
                             v-model="params.search"
                             type="text"
                             placeholder="Search..."
-                            class="h-8.5 w-full rounded-md border border-zinc-200 bg-white ps-9 pe-3 text-[0.8125rem] text-zinc-900 placeholder-zinc-400 shadow-xs focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+                            class="h-8.5 w-full rounded-md border border-zinc-200 bg-white ps-9 pe-3 text-2sm text-zinc-900 placeholder-zinc-400 shadow-xs focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
                         />
                     </div>
 
@@ -349,7 +344,7 @@ const selectedSupplierName = computed(() => {
                     <div class="relative" @click.stop>
                         <button
                             type="button"
-                            class="inline-flex h-8.5 cursor-pointer items-center justify-center gap-1.5 rounded-md border border-zinc-200 bg-white px-3 text-[0.8125rem] font-medium text-zinc-700 shadow-xs hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700/60"
+                            class="inline-flex h-8.5 cursor-pointer items-center justify-center gap-1.5 rounded-md border border-zinc-200 bg-white px-3 text-2sm font-medium text-zinc-700 shadow-xs hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700/60"
                             @click="categoryMenuOpen = !categoryMenuOpen; supplierMenuOpen = false"
                         >
                             <span>{{ selectedCategoryName }}</span>
@@ -395,7 +390,7 @@ const selectedSupplierName = computed(() => {
                     <div v-if="props.suppliers && props.suppliers.length > 0" class="relative" @click.stop>
                         <button
                             type="button"
-                            class="inline-flex h-8.5 cursor-pointer items-center justify-center gap-1.5 rounded-md border border-zinc-200 bg-white px-3 text-[0.8125rem] font-medium text-zinc-700 shadow-xs hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700/60"
+                            class="inline-flex h-8.5 cursor-pointer items-center justify-center gap-1.5 rounded-md border border-zinc-200 bg-white px-3 text-2sm font-medium text-zinc-700 shadow-xs hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700/60"
                             @click="supplierMenuOpen = !supplierMenuOpen; categoryMenuOpen = false"
                         >
                             <span>{{ selectedSupplierName }}</span>
@@ -438,7 +433,7 @@ const selectedSupplierName = computed(() => {
                     </div>
 
                     <!-- Low Stock Checkbox Filter -->
-                    <label class="inline-flex h-8.5 cursor-pointer items-center gap-1.5 rounded-md border border-zinc-200 bg-white px-3 text-[0.8125rem] text-zinc-700 shadow-xs hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
+                    <label class="inline-flex h-8.5 cursor-pointer items-center gap-1.5 rounded-md border border-zinc-200 bg-white px-3 text-2sm text-zinc-700 shadow-xs hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
                         <input
                             v-model="params.low_stock"
                             type="checkbox"
@@ -461,7 +456,7 @@ const selectedSupplierName = computed(() => {
                 <!-- Action Button -->
                 <Link
                     :href="stock.planner.url()"
-                    class="inline-flex h-8.5 shrink-0 items-center justify-center rounded-md bg-zinc-950 px-3.5 text-[0.8125rem] font-medium text-white shadow-xs transition-colors hover:bg-zinc-900 dark:bg-zinc-200 dark:text-zinc-950 dark:hover:bg-white"
+                    class="inline-flex h-8.5 shrink-0 items-center justify-center rounded-md bg-zinc-950 px-3.5 text-2sm font-medium text-white shadow-xs transition-colors hover:bg-zinc-900 dark:bg-zinc-200 dark:text-zinc-950 dark:hover:bg-white"
                 >
                     Stock Planner
                 </Link>
@@ -471,7 +466,7 @@ const selectedSupplierName = computed(() => {
             <div class="min-h-[380px] overflow-x-auto">
                 <table class="w-full min-w-[1140px] table-fixed border-separate border-spacing-0 text-left align-middle text-sm">
                     <thead>
-                        <tr class="bg-zinc-50/50 text-[11px] font-semibold text-zinc-500 dark:bg-zinc-800/40 dark:text-zinc-400">
+                        <tr class="bg-zinc-50/50 text-2xs font-semibold text-zinc-500 dark:bg-zinc-800/40 dark:text-zinc-400">
                             <th class="h-10 w-[50px] border-e border-b border-zinc-200 px-4 text-start align-middle dark:border-zinc-800">
                                 <input
                                     v-model="selectAll"
@@ -566,8 +561,8 @@ const selectedSupplierName = computed(() => {
                                             {{ row.product.name }}
                                         </Link>
                                         <span class="inline-flex items-center gap-1 text-xs">
-                                            <span class="font-mono text-[11px] text-zinc-400 uppercase">SKU:</span>
-                                            <span class="font-mono text-[11px] font-medium text-zinc-700 dark:text-zinc-300">
+                                            <span class="font-mono text-2xs text-zinc-400 uppercase">SKU:</span>
+                                            <span class="font-mono text-2xs font-medium text-zinc-700 dark:text-zinc-300">
                                                 {{ row.variant?.sku ?? row.product.sku ?? '—' }}
                                             </span>
                                         </span>
@@ -759,7 +754,7 @@ const selectedSupplierName = computed(() => {
 
                 <p
                     v-if="firstOf('inventory', 'quantity')"
-                    class="text-[11px] text-danger"
+                    class="text-2xs text-danger"
                 >
                     {{ firstOf('inventory', 'quantity') }}
                 </p>

@@ -343,12 +343,12 @@ const statusValues = computed(() =>
                                 <div class="min-w-0">
                                     <Link
                                         :href="products.show.url(item.product_id)"
-                                        class="block truncate text-[0.8125rem] font-medium hover:underline"
+                                        class="block truncate text-2sm font-medium hover:underline"
                                     >
                                         {{ item.product.name }}
                                     </Link>
                                     <span
-                                        class="font-mono text-[11px] text-muted-foreground"
+                                        class="font-mono text-2xs text-muted-foreground"
                                     >
                                         {{ item.variant?.sku ?? item.product.sku ?? '—' }}
                                     </span>
@@ -404,18 +404,18 @@ const statusValues = computed(() =>
                                 <div class="min-w-0">
                                     <Link
                                         :href="orders.show.url(order.id)"
-                                        class="block truncate font-mono text-[0.8125rem] font-medium hover:underline"
+                                        class="block truncate font-mono text-2sm font-medium hover:underline"
                                     >
                                         {{ order.order_number }}
                                     </Link>
-                                    <span class="text-[11px] text-muted-foreground">
+                                    <span class="text-2xs text-muted-foreground">
                                         {{ order.customer_name }} ·
                                         {{ date(order.created_at) }}
                                     </span>
                                 </div>
 
                                 <div class="flex shrink-0 items-center gap-2">
-                                    <span class="text-[0.8125rem] font-medium">
+                                    <span class="text-2sm font-medium">
                                         {{ money(order.total, order.currency) }}
                                     </span>
                                     <StatusBadge :status="order.status" size="sm" />
@@ -446,10 +446,10 @@ const statusValues = computed(() =>
                                 class="flex items-center justify-between gap-3 px-5 py-3"
                             >
                                 <div class="min-w-0">
-                                    <p class="truncate text-[0.8125rem] font-medium">
+                                    <p class="truncate text-2sm font-medium">
                                         {{ movement.product?.name ?? '—' }}
                                     </p>
-                                    <span class="text-[11px] text-muted-foreground">
+                                    <span class="text-2xs text-muted-foreground">
                                         {{ humanize(movement.type) }} ·
                                         {{ date(movement.created_at) }}
                                     </span>

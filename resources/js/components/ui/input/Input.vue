@@ -26,7 +26,7 @@ defineEmits<{ 'update:modelValue': [value: string] }>();
             :value="modelValue ?? ''"
             :class="
                 cn(
-                    'h-8.5 w-full rounded-md border bg-background px-3 text-[0.8125rem] text-foreground shadow-xs transition-colors placeholder:text-muted-foreground focus:outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/30 disabled:cursor-not-allowed disabled:opacity-50',
+                    'h-8.5 w-full rounded-md border bg-background px-3 text-2sm text-foreground shadow-xs transition-colors placeholder:text-muted-foreground focus:outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/30 disabled:cursor-not-allowed disabled:opacity-50',
                     hasIcon && 'ps-9',
                     invalid ? 'border-danger' : 'border-input',
                     props.class,

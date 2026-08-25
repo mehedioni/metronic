@@ -56,7 +56,12 @@ const props = defineProps<{
     action: string;
     method?: 'post' | 'put';
     submitLabel?: string;
-    cancelHref: string;
+    /** Omit inside a drawer and listen for @cancel instead. */
+    cancelHref?: string;
+}>();
+
+const emit = defineEmits<{
+    cancel: [];
 }>();
 
 const form = useForm<ProductPayload>({
@@ -165,7 +170,7 @@ defineExpose({ form });
                         No variants to display.
                     </p>
 
-                    <p v-if="form.errors.variants" class="text-[11px] text-danger">
+                    <p v-if="form.errors.variants" class="text-2xs text-danger">
                         {{ form.errors.variants }}
                     </p>
 
@@ -324,12 +329,23 @@ defineExpose({ form });
 
         <div class="flex flex-wrap items-center justify-end gap-2">
             <Button
+                v-if="cancelHref"
                 variant="outline"
                 size="dense"
                 as="a"
                 :href="cancelHref"
-                >Cancel</Button
             >
+                Cancel
+            </Button>
+            <Button
+                v-else
+                type="button"
+                variant="outline"
+                size="dense"
+                @click="emit('cancel')"
+            >
+                Cancel
+            </Button>
             <Button type="submit" size="dense" :disabled="form.processing">
                 {{ submitLabel ?? 'Save' }}
             </Button>

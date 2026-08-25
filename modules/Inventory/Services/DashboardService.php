@@ -5,7 +5,6 @@ namespace Modules\Inventory\Services;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
-use Modules\Inventory\Enums\OrderStatus;
 use Modules\Inventory\Enums\RecordStatus;
 use Modules\Inventory\Models\Category;
 use Modules\Inventory\Models\InboundReceipt;
@@ -14,6 +13,7 @@ use Modules\Inventory\Models\Order;
 use Modules\Inventory\Models\Product;
 use Modules\Inventory\Models\StockMovement;
 use Modules\Inventory\Models\Supplier;
+use Modules\Inventory\Support\OrderStatuses;
 
 /**
  * Aggregates for the dashboard. Every figure is a database aggregate — no
@@ -91,7 +91,7 @@ class DashboardService
     private function revenueBetween(Carbon $from, Carbon $to): float
     {
         return (float) Order::query()
-            ->whereNot('status', OrderStatus::Cancelled)
+            ->billable()
             ->whereBetween('created_at', [$from, $to])
             ->sum('total');
     }
@@ -110,14 +110,14 @@ class DashboardService
 
         $rows = Order::query()
             ->selectRaw('date(created_at) as day, count(*) as orders, sum(total) as revenue')
-            ->whereNot('status', OrderStatus::Cancelled)
+            ->billable()
             ->where('created_at', '>=', $start)
             ->groupBy('day')
             ->pluck('revenue', 'day');
 
         $counts = Order::query()
             ->selectRaw('date(created_at) as day, count(*) as orders')
-            ->whereNot('status', OrderStatus::Cancelled)
+            ->billable()
             ->where('created_at', '>=', $start)
             ->groupBy('day')
             ->pluck('orders', 'day');
@@ -201,12 +201,21 @@ class DashboardService
      */
     private function ordersByStatus(): array
     {
-        return Order::query()
-            ->select('status', DB::raw('count(*) as aggregate'))
-            ->groupBy('status')
-            ->pluck('aggregate', 'status')
-            ->map(fn ($count): int => (int) $count)
-            ->all();
+        $counts = Order::query()
+            ->select('status_id', DB::raw('count(*) as aggregate'))
+            ->groupBy('status_id')
+            ->pluck('aggregate', 'status_id');
+
+        // Keyed by the configured label, so a relabelled status reads correctly
+        // here without touching this query.
+        $byLabel = [];
+
+        foreach ($counts as $statusId => $count) {
+            $status = OrderStatuses::tryFind((int) $statusId);
+            $byLabel[$status?->label ?? "#{$statusId}"] = (int) $count;
+        }
+
+        return $byLabel;
     }
 
     /**

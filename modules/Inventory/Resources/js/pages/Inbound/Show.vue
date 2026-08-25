@@ -149,7 +149,7 @@ function cancel() {
                 <div class="overflow-x-auto">
                     <table class="w-full text-xs">
                         <thead
-                            class="border-b border-border bg-muted/70 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground"
+                            class="border-b border-border bg-muted/70 text-2xs font-semibold uppercase tracking-wider text-muted-foreground"
                         >
                             <tr>
                                 <th class="px-5 py-3 text-start">Product</th>
@@ -168,7 +168,7 @@ function cancel() {
                                         >{{ item.product.name }}</Link
                                     >
                                     <span
-                                        class="block font-mono text-[11px] text-muted-foreground"
+                                        class="block font-mono text-2xs text-muted-foreground"
                                     >
                                         {{
                                             item.variant?.sku ??
@@ -205,7 +205,7 @@ function cancel() {
                 </div>
 
                 <div class="border-t border-border px-5 py-4">
-                    <dl class="ms-auto max-w-xs space-y-2 text-[0.8125rem]">
+                    <dl class="ms-auto max-w-xs space-y-2 text-2sm">
                         <div class="flex justify-between">
                             <dt class="text-muted-foreground">Units</dt>
                             <dd>{{ number(totalUnits) }}</dd>
@@ -228,7 +228,7 @@ function cancel() {
                         <dl class="space-y-3">
                             <div class="flex justify-between gap-3">
                                 <dt class="text-xs text-muted-foreground">Supplier</dt>
-                                <dd class="text-end text-[0.8125rem]">
+                                <dd class="text-end text-2sm">
                                     <Link
                                         v-if="receipt.supplier"
                                         :href="
@@ -242,7 +242,7 @@ function cancel() {
                             </div>
                             <div class="flex justify-between gap-3">
                                 <dt class="text-xs text-muted-foreground">Source</dt>
-                                <dd class="text-[0.8125rem]">
+                                <dd class="text-2sm">
                                     {{ humanize(receipt.source) }}
                                 </dd>
                             </div>
@@ -250,7 +250,7 @@ function cancel() {
                                 <dt class="text-xs text-muted-foreground">
                                     Received date
                                 </dt>
-                                <dd class="text-[0.8125rem]">
+                                <dd class="text-2sm">
                                     {{ date(receipt.received_date) }}
                                 </dd>
                             </div>
@@ -258,7 +258,7 @@ function cancel() {
                                 <dt class="text-xs text-muted-foreground">
                                     Received by
                                 </dt>
-                                <dd class="text-[0.8125rem]">
+                                <dd class="text-2sm">
                                     {{ receipt.received_by?.name ?? '—' }}
                                 </dd>
                             </div>
@@ -266,7 +266,7 @@ function cancel() {
 
                         <div v-if="receipt.notes" class="mt-4">
                             <p class="mb-1 text-xs text-muted-foreground">Notes</p>
-                            <p class="whitespace-pre-line text-[0.8125rem]">
+                            <p class="whitespace-pre-line text-2sm">
                                 {{ receipt.notes }}
                             </p>
                         </div>
@@ -289,10 +289,10 @@ function cancel() {
                                     class="mt-1 size-2 shrink-0 rounded-full bg-primary"
                                 />
                                 <div>
-                                    <p class="text-[0.8125rem] font-medium">
+                                    <p class="text-2sm font-medium">
                                         {{ entry.label }}
                                     </p>
-                                    <p class="text-[11px] text-muted-foreground">
+                                    <p class="text-2xs text-muted-foreground">
                                         {{ dateTime(entry.at) }}
                                     </p>
                                 </div>
@@ -310,12 +310,12 @@ function cancel() {
             size="sm"
             @update:open="receiving = $event"
         >
-            <p class="text-[0.8125rem] text-muted-foreground">
+            <p class="text-2sm text-muted-foreground">
                 Posting is recorded once — a repeat attempt is rejected rather
                 than adding the stock twice.
             </p>
 
-            <p v-if="firstOf('inventory', 'status')" class="mt-3 text-[11px] text-danger">
+            <p v-if="firstOf('inventory', 'status')" class="mt-3 text-2xs text-danger">
                 {{ firstOf('inventory', 'status') }}
             </p>
 
@@ -344,7 +344,7 @@ function cancel() {
                 <Textarea v-model="cancelForm.reason" :rows="3" />
             </FormField>
 
-            <p v-if="firstOf('inventory', 'status')" class="mt-3 text-[11px] text-danger">
+            <p v-if="firstOf('inventory', 'status')" class="mt-3 text-2xs text-danger">
                 {{ firstOf('inventory', 'status') }}
             </p>
 

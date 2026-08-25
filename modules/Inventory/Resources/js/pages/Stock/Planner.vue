@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Deferred, Head, Link } from '@inertiajs/vue3';
+import { Head, Link } from '@inertiajs/vue3';
 import {
     CheckCircle2,
     ChevronDown,
@@ -15,11 +15,9 @@ import {
 import { computed, onMounted, onUnmounted, ref } from 'vue';
 import PageHeader from '@/components/PageHeader.vue';
 import Pagination from '@/components/Pagination.vue';
-import { Card } from '@/components/ui/card';
-import { useCsvExport } from '@/composables/useCsvExport';
 import { useTableQuery } from '@/composables/useTableQuery';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { date, money, number } from '@/lib/format';
+import { date, money } from '@/lib/format';
 import orders from '@/routes/inventory/orders';
 import products from '@/routes/inventory/products';
 import stock from '@/routes/inventory/stock';
@@ -65,7 +63,6 @@ const { params, toggleSort } = useTableQuery({
     only: ['items', 'filters'],
 });
 
-const { exportRows } = useCsvExport();
 
 // Exact Metronic Stock Planner Demo Dataset
 const metronicDemoRows: PlannerRow[] = [
@@ -207,7 +204,6 @@ const drawerOpen = ref(false);
 const selectedDrawerItem = ref<PlannerRow | null>(null);
 const toastMessage = ref('');
 const toastVisible = ref(false);
-const autoReorderState = ref<Record<string, boolean>>({});
 
 const breadcrumbs = [
     { label: 'Store Inventory' },
@@ -291,16 +287,6 @@ function toggleRowSelect(id: string) {
         selectedRows.value.push(id);
     }
     selectAll.value = selectedRows.value.length === filteredRows.value.length;
-}
-
-function toggleAutoReorder(id: string) {
-    autoReorderState.value[id] = !autoReorderState.value[id];
-    const item = rows.value.find((r) => r.id === id);
-    showToast(`Auto-reorder ${autoReorderState.value[id] ? 'enabled' : 'disabled'} for ${item?.product.name ?? 'item'}`);
-}
-
-function isAutoReorder(id: string): boolean {
-    return autoReorderState.value[id] ?? true;
 }
 
 function toggleRowMenu(id: string, event: MouseEvent) {
@@ -411,21 +397,6 @@ const filteredRows = computed(() => {
     });
 });
 
-function exportCurrent() {
-    exportRows('stock-planner', filteredRows.value, [
-        { label: 'Product', value: (row) => row.product.name },
-        { label: 'Variant', value: (row) => row.variant?.name ?? '' },
-        { label: 'SKU', value: (row) => row.variant?.sku ?? row.product.sku ?? '' },
-        { label: 'On hand', value: (row) => row.quantity_on_hand },
-        { label: 'Reserved', value: (row) => row.quantity_reserved },
-        { label: 'Available', value: (row) => row.plan.available },
-        { label: 'Target level', value: (row) => row.plan.target_level },
-        { label: 'Daily velocity', value: (row) => row.plan.daily_velocity },
-        { label: 'Days of cover', value: (row) => row.plan.days_of_cover ?? '' },
-        { label: 'Lead time (days)', value: (row) => row.plan.lead_time_days },
-        { label: 'Suggested reorder', value: (row) => row.plan.reorder_quantity },
-    ]);
-}
 </script>
 
 <template>
@@ -443,7 +414,7 @@ function exportCurrent() {
                     <!-- Header Reports Button: Opens Per Product Stock Drawer -->
                     <button
                         type="button"
-                        class="inline-flex h-8.5 cursor-pointer items-center justify-center rounded-md border border-zinc-200 bg-white px-3 text-[0.8125rem] font-medium text-zinc-900 shadow-xs transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:bg-zinc-800"
+                        class="inline-flex h-8.5 cursor-pointer items-center justify-center rounded-md border border-zinc-200 bg-white px-3 text-2sm font-medium text-zinc-900 shadow-xs transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:bg-zinc-800"
                         @click="openDrawer()"
                     >
                         Reports
@@ -451,7 +422,7 @@ function exportCurrent() {
                     <!-- Start New Order Button -->
                     <Link
                         :href="orders.create.url()"
-                        class="inline-flex h-8.5 items-center justify-center rounded-md bg-zinc-950 px-3.5 text-[0.8125rem] font-medium text-white shadow-xs transition-colors hover:bg-zinc-900 dark:bg-zinc-200 dark:text-zinc-950 dark:hover:bg-white"
+                        class="inline-flex h-8.5 items-center justify-center rounded-md bg-zinc-950 px-3.5 text-2sm font-medium text-white shadow-xs transition-colors hover:bg-zinc-900 dark:bg-zinc-200 dark:text-zinc-950 dark:hover:bg-white"
                     >
                         Start New Order
                     </Link>
@@ -471,7 +442,7 @@ function exportCurrent() {
                             v-model="params.search"
                             type="text"
                             placeholder="Search..."
-                            class="h-8.5 w-full rounded-md border border-zinc-200 bg-white ps-9 pe-3 text-[0.8125rem] text-zinc-900 placeholder-zinc-400 shadow-xs transition-all focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-800/50 dark:text-zinc-100"
+                            class="h-8.5 w-full rounded-md border border-zinc-200 bg-white ps-9 pe-3 text-2sm text-zinc-900 placeholder-zinc-400 shadow-xs transition-all focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-800/50 dark:text-zinc-100"
                         />
                     </div>
 
@@ -479,7 +450,7 @@ function exportCurrent() {
                     <div class="relative" @click.stop>
                         <button
                             type="button"
-                            class="flex h-8.5 cursor-pointer items-center justify-between gap-1.5 rounded-md border border-zinc-200 bg-white px-3 text-[0.8125rem] font-medium text-zinc-700 shadow-xs transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800/50 dark:text-zinc-300 dark:hover:bg-zinc-700/60"
+                            class="flex h-8.5 cursor-pointer items-center justify-between gap-1.5 rounded-md border border-zinc-200 bg-white px-3 text-2sm font-medium text-zinc-700 shadow-xs transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800/50 dark:text-zinc-300 dark:hover:bg-zinc-700/60"
                             @click="reorderMenuOpen = !reorderMenuOpen; stockLevelMenuOpen = false"
                         >
                             <span>{{ reorderBtnLabel }}</span>
@@ -514,7 +485,7 @@ function exportCurrent() {
                                         />
                                         <div class="flex flex-col">
                                             <span class="font-normal text-zinc-900 dark:text-zinc-100">{{ opt.days }}</span>
-                                            <span class="text-[11px] text-zinc-400">{{ opt.date }}</span>
+                                            <span class="text-2xs text-zinc-400">{{ opt.date }}</span>
                                         </div>
                                     </div>
                                     <span class="text-xs font-medium text-zinc-400">{{ opt.count }}</span>
@@ -527,7 +498,7 @@ function exportCurrent() {
                     <div class="relative" @click.stop>
                         <button
                             type="button"
-                            class="flex h-8.5 cursor-pointer items-center justify-between gap-1.5 rounded-md border border-zinc-200 bg-white px-3 text-[0.8125rem] font-medium text-zinc-700 shadow-xs transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800/50 dark:text-zinc-300 dark:hover:bg-zinc-700/60"
+                            class="flex h-8.5 cursor-pointer items-center justify-between gap-1.5 rounded-md border border-zinc-200 bg-white px-3 text-2sm font-medium text-zinc-700 shadow-xs transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800/50 dark:text-zinc-300 dark:hover:bg-zinc-700/60"
                             @click="stockLevelMenuOpen = !stockLevelMenuOpen; reorderMenuOpen = false"
                         >
                             <span>{{ stockLevelBtnLabel }}</span>
@@ -572,7 +543,7 @@ function exportCurrent() {
                 <!-- Toolbar Reports Button (Opens Per Product Stock Drawer) -->
                 <button
                     type="button"
-                    class="inline-flex h-8.5 shrink-0 cursor-pointer items-center justify-center gap-1.5 rounded-md border border-zinc-200 bg-white px-3 text-[0.8125rem] font-medium text-zinc-700 shadow-xs transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700/60"
+                    class="inline-flex h-8.5 shrink-0 cursor-pointer items-center justify-center gap-1.5 rounded-md border border-zinc-200 bg-white px-3 text-2sm font-medium text-zinc-700 shadow-xs transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700/60"
                     @click="openDrawer()"
                 >
                     Reports
@@ -634,9 +605,6 @@ function exportCurrent() {
                             <th class="w-[120px] border-e border-b border-zinc-200 px-4 py-2.5 align-middle dark:border-zinc-800">
                                 <span>Lead Time</span>
                             </th>
-                            <th class="w-[70px] border-e border-b border-zinc-200 px-4 py-2.5 text-center align-middle dark:border-zinc-800">
-                                <span>AR</span>
-                            </th>
                             <th class="w-[60px] border-b border-zinc-200 px-4 py-2.5 text-center align-middle dark:border-zinc-800"></th>
                         </tr>
                     </thead>
@@ -678,7 +646,7 @@ function exportCurrent() {
                                     <div class="flex flex-col gap-0.5">
                                         <button
                                             type="button"
-                                            class="max-w-[170px] truncate text-start text-[0.8125rem] font-medium leading-tight text-zinc-900 transition-colors hover:text-blue-600 dark:text-zinc-100 dark:hover:text-blue-400"
+                                            class="max-w-[170px] truncate text-start text-2sm font-medium leading-tight text-zinc-900 transition-colors hover:text-blue-600 dark:text-zinc-100 dark:hover:text-blue-400"
                                             @click="openDrawer(row)"
                                         >
                                             {{ row.product.name }}
@@ -752,24 +720,6 @@ function exportCurrent() {
                                 </div>
                             </td>
 
-                            <!-- AR Toggle -->
-                            <td class="border-e border-zinc-200 px-4 py-3 text-center align-middle dark:border-zinc-800">
-                                <div class="flex justify-center">
-                                    <button
-                                        type="button"
-                                        role="switch"
-                                        :aria-checked="isAutoReorder(row.id)"
-                                        class="relative inline-flex h-5 w-8 shrink-0 cursor-pointer items-center rounded-full transition-colors"
-                                        :class="isAutoReorder(row.id) ? 'bg-zinc-950 dark:bg-zinc-200' : 'bg-zinc-300 dark:bg-zinc-700'"
-                                        @click="toggleAutoReorder(row.id)"
-                                    >
-                                        <span
-                                            class="pointer-events-none block size-3.5 rounded-full bg-white shadow-md transition-transform duration-200 dark:bg-zinc-900"
-                                            :class="isAutoReorder(row.id) ? 'translate-x-3.5' : 'translate-x-0.5'"
-                                        />
-                                    </button>
-                                </div>
-                            </td>
 
                             <!-- Actions -->
                             <td class="relative border-zinc-200 px-3 py-3 text-center align-middle dark:border-zinc-800">
@@ -879,7 +829,7 @@ function exportCurrent() {
                     <div class="flex-1 space-y-5 border-zinc-200 lg:border-e lg:pe-6 dark:border-zinc-800">
                         <!-- Product Title Info -->
                         <div>
-                            <h1 class="text-xl font-semibold text-zinc-900 dark:text-white lg:text-[22px]">
+                            <h1 class="text-xl font-semibold text-zinc-900 dark:text-white">
                                 {{ selectedDrawerItem.product.name }}
                             </h1>
                             <div class="mt-1 flex flex-wrap items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400">
@@ -897,12 +847,12 @@ function exportCurrent() {
                                     <input
                                         type="text"
                                         :value="selectedDrawerItem.quantity_on_hand"
-                                        class="h-8.5 w-full rounded-md border border-zinc-200 bg-white px-3 text-[0.8125rem] text-zinc-900 shadow-xs focus:outline-none dark:border-zinc-700 dark:bg-zinc-800/50 dark:text-zinc-100"
+                                        class="h-8.5 w-full rounded-md border border-zinc-200 bg-white px-3 text-2sm text-zinc-900 shadow-xs focus:outline-none dark:border-zinc-700 dark:bg-zinc-800/50 dark:text-zinc-100"
                                     />
                                 </div>
                                 <button
                                     type="button"
-                                    class="inline-flex h-8.5 cursor-pointer items-center justify-center rounded-md border border-zinc-200 bg-white px-3 text-[0.8125rem] font-medium text-zinc-700 shadow-xs transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700/60"
+                                    class="inline-flex h-8.5 cursor-pointer items-center justify-center rounded-md border border-zinc-200 bg-white px-3 text-2sm font-medium text-zinc-700 shadow-xs transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700/60"
                                     @click="showToast('Reorder request submitted')"
                                 >
                                     Reorder Now
@@ -939,7 +889,7 @@ function exportCurrent() {
                                         <input
                                             type="text"
                                             :value="selectedDrawerItem.product.low_stock_threshold"
-                                            class="h-8.5 w-full rounded-md border border-zinc-200 bg-white px-3 text-[0.8125rem] text-zinc-900 shadow-xs focus:outline-none dark:border-zinc-700 dark:bg-zinc-800/50 dark:text-zinc-100"
+                                            class="h-8.5 w-full rounded-md border border-zinc-200 bg-white px-3 text-2sm text-zinc-900 shadow-xs focus:outline-none dark:border-zinc-700 dark:bg-zinc-800/50 dark:text-zinc-100"
                                         />
                                     </div>
                                     <div class="space-y-1.5">
@@ -947,7 +897,7 @@ function exportCurrent() {
                                         <input
                                             type="text"
                                             :value="selectedDrawerItem.plan.target_level"
-                                            class="h-8.5 w-full rounded-md border border-zinc-200 bg-white px-3 text-[0.8125rem] text-zinc-900 shadow-xs focus:outline-none dark:border-zinc-700 dark:bg-zinc-800/50 dark:text-zinc-100"
+                                            class="h-8.5 w-full rounded-md border border-zinc-200 bg-white px-3 text-2sm text-zinc-900 shadow-xs focus:outline-none dark:border-zinc-700 dark:bg-zinc-800/50 dark:text-zinc-100"
                                         />
                                     </div>
                                     <div class="space-y-1.5">
@@ -955,7 +905,7 @@ function exportCurrent() {
                                         <input
                                             type="text"
                                             :value="selectedDrawerItem.plan.reorder_quantity"
-                                            class="h-8.5 w-full rounded-md border border-zinc-200 bg-white px-3 text-[0.8125rem] text-zinc-900 shadow-xs focus:outline-none dark:border-zinc-700 dark:bg-zinc-800/50 dark:text-zinc-100"
+                                            class="h-8.5 w-full rounded-md border border-zinc-200 bg-white px-3 text-2sm text-zinc-900 shadow-xs focus:outline-none dark:border-zinc-700 dark:bg-zinc-800/50 dark:text-zinc-100"
                                         />
                                     </div>
                                     <div class="space-y-1.5">
@@ -964,7 +914,7 @@ function exportCurrent() {
                                             <input
                                                 type="text"
                                                 :value="selectedDrawerItem.plan.lead_time_days"
-                                                class="h-8.5 w-full rounded-md border border-zinc-200 bg-white ps-3 pe-12 text-[0.8125rem] text-zinc-900 shadow-xs focus:outline-none dark:border-zinc-700 dark:bg-zinc-800/50 dark:text-zinc-100"
+                                                class="h-8.5 w-full rounded-md border border-zinc-200 bg-white ps-3 pe-12 text-2sm text-zinc-900 shadow-xs focus:outline-none dark:border-zinc-700 dark:bg-zinc-800/50 dark:text-zinc-100"
                                             />
                                             <span class="absolute end-3 text-xs text-zinc-400">days</span>
                                         </div>
@@ -973,7 +923,7 @@ function exportCurrent() {
 
                                 <div class="flex flex-wrap items-center gap-6 border-t border-zinc-100 pt-2 dark:border-zinc-800/80">
                                     <div class="flex flex-col gap-1">
-                                        <span class="text-[11px] text-zinc-400">Status</span>
+                                        <span class="text-2xs text-zinc-400">Status</span>
                                         <span
                                             class="inline-flex h-6 items-center justify-center rounded-md px-2.5 text-xs font-medium"
                                             :class="
@@ -988,7 +938,7 @@ function exportCurrent() {
                                         </span>
                                     </div>
                                     <div class="flex flex-col gap-1">
-                                        <span class="text-[11px] text-zinc-400">Delta</span>
+                                        <span class="text-2xs text-zinc-400">Delta</span>
                                         <span
                                             class="inline-flex h-6 items-center justify-center rounded-md px-2.5 text-xs font-medium"
                                             :class="getDeltaBadgeClass(selectedDrawerItem.plan.delta)"
@@ -997,19 +947,19 @@ function exportCurrent() {
                                         </span>
                                     </div>
                                     <div class="flex flex-col gap-1">
-                                        <span class="text-[11px] text-zinc-400">Velocity</span>
+                                        <span class="text-2xs text-zinc-400">Velocity</span>
                                         <span class="text-xs font-medium text-zinc-900 dark:text-zinc-100">
                                             {{ selectedDrawerItem.plan.daily_velocity }} items/day
                                         </span>
                                     </div>
                                     <div class="flex flex-col gap-1">
-                                        <span class="text-[11px] text-zinc-400">Next Reorder</span>
+                                        <span class="text-2xs text-zinc-400">Next Reorder</span>
                                         <span class="text-xs font-medium text-zinc-900 dark:text-zinc-100">
                                             {{ targetReorderDate(selectedDrawerItem.plan) }}
                                         </span>
                                     </div>
                                     <div class="flex flex-col gap-1">
-                                        <span class="text-[11px] text-zinc-400">Updated By</span>
+                                        <span class="text-2xs text-zinc-400">Updated By</span>
                                         <span class="text-xs font-medium text-zinc-900 dark:text-zinc-100">Jason Taytum</span>
                                     </div>
                                 </div>
@@ -1032,14 +982,14 @@ function exportCurrent() {
                                     <input
                                         type="text"
                                         value="Standard Shipping Box"
-                                        class="h-8.5 w-full rounded-md border border-zinc-200 bg-white px-3 text-[0.8125rem] text-zinc-900 shadow-xs focus:outline-none dark:border-zinc-700 dark:bg-zinc-800/50 dark:text-zinc-100"
+                                        class="h-8.5 w-full rounded-md border border-zinc-200 bg-white px-3 text-2sm text-zinc-900 shadow-xs focus:outline-none dark:border-zinc-700 dark:bg-zinc-800/50 dark:text-zinc-100"
                                     />
                                 </div>
 
                                 <div class="grid gap-4 sm:grid-cols-2">
                                     <div class="space-y-1.5">
                                         <label class="text-xs font-medium text-zinc-900 dark:text-zinc-100">Package Type</label>
-                                        <select class="h-8.5 w-full rounded-md border border-zinc-200 bg-white px-3 text-[0.8125rem] text-zinc-900 shadow-xs focus:outline-none dark:border-zinc-700 dark:bg-zinc-800/50 dark:text-zinc-100">
+                                        <select class="h-8.5 w-full rounded-md border border-zinc-200 bg-white px-3 text-2sm text-zinc-900 shadow-xs focus:outline-none dark:border-zinc-700 dark:bg-zinc-800/50 dark:text-zinc-100">
                                             <option>Medium Box</option>
                                             <option>Small Box</option>
                                             <option>Large Box</option>
@@ -1051,7 +1001,7 @@ function exportCurrent() {
                                             <input
                                                 type="text"
                                                 value="2.1"
-                                                class="h-8.5 w-full rounded-md border border-zinc-200 bg-white ps-3 pe-10 text-[0.8125rem] text-zinc-900 shadow-xs focus:outline-none dark:border-zinc-700 dark:bg-zinc-800/50 dark:text-zinc-100"
+                                                class="h-8.5 w-full rounded-md border border-zinc-200 bg-white ps-3 pe-10 text-2sm text-zinc-900 shadow-xs focus:outline-none dark:border-zinc-700 dark:bg-zinc-800/50 dark:text-zinc-100"
                                             />
                                             <span class="absolute end-3 text-xs text-zinc-400">kg</span>
                                         </div>
@@ -1064,7 +1014,7 @@ function exportCurrent() {
                                         <input
                                             type="number"
                                             value="48"
-                                            class="h-8.5 w-full rounded-md border border-zinc-200 bg-white px-3 text-[0.8125rem] text-zinc-900 shadow-xs focus:outline-none dark:border-zinc-700 dark:bg-zinc-800/50 dark:text-zinc-100"
+                                            class="h-8.5 w-full rounded-md border border-zinc-200 bg-white px-3 text-2sm text-zinc-900 shadow-xs focus:outline-none dark:border-zinc-700 dark:bg-zinc-800/50 dark:text-zinc-100"
                                         />
                                     </div>
                                     <div class="flex-1 space-y-1.5">
@@ -1072,7 +1022,7 @@ function exportCurrent() {
                                         <input
                                             type="number"
                                             value="36"
-                                            class="h-8.5 w-full rounded-md border border-zinc-200 bg-white px-3 text-[0.8125rem] text-zinc-900 shadow-xs focus:outline-none dark:border-zinc-700 dark:bg-zinc-800/50 dark:text-zinc-100"
+                                            class="h-8.5 w-full rounded-md border border-zinc-200 bg-white px-3 text-2sm text-zinc-900 shadow-xs focus:outline-none dark:border-zinc-700 dark:bg-zinc-800/50 dark:text-zinc-100"
                                         />
                                     </div>
                                     <div class="flex-1 space-y-1.5">
@@ -1080,12 +1030,12 @@ function exportCurrent() {
                                         <input
                                             type="number"
                                             value="20"
-                                            class="h-8.5 w-full rounded-md border border-zinc-200 bg-white px-3 text-[0.8125rem] text-zinc-900 shadow-xs focus:outline-none dark:border-zinc-700 dark:bg-zinc-800/50 dark:text-zinc-100"
+                                            class="h-8.5 w-full rounded-md border border-zinc-200 bg-white px-3 text-2sm text-zinc-900 shadow-xs focus:outline-none dark:border-zinc-700 dark:bg-zinc-800/50 dark:text-zinc-100"
                                         />
                                     </div>
                                     <div class="w-20 space-y-1.5">
                                         <label class="text-xs font-medium text-transparent">Unit</label>
-                                        <select class="h-8.5 w-full rounded-md border border-zinc-200 bg-white px-2 text-[0.8125rem] text-zinc-900 shadow-xs focus:outline-none dark:border-zinc-700 dark:bg-zinc-800/50 dark:text-zinc-100">
+                                        <select class="h-8.5 w-full rounded-md border border-zinc-200 bg-white px-2 text-2sm text-zinc-900 shadow-xs focus:outline-none dark:border-zinc-700 dark:bg-zinc-800/50 dark:text-zinc-100">
                                             <option>cm</option>
                                             <option>in</option>
                                         </select>
@@ -1155,7 +1105,7 @@ function exportCurrent() {
             <div class="flex shrink-0 items-center justify-between border-t border-zinc-200 bg-white px-6 py-4 dark:border-zinc-800 dark:bg-[#121215]">
                 <button
                     type="button"
-                    class="inline-flex h-8.5 cursor-pointer items-center justify-center rounded-md border border-zinc-200 bg-white px-3 text-[0.8125rem] font-medium text-zinc-700 shadow-xs transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700/60"
+                    class="inline-flex h-8.5 cursor-pointer items-center justify-center rounded-md border border-zinc-200 bg-white px-3 text-2sm font-medium text-zinc-700 shadow-xs transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700/60"
                     @click="printWindow()"
                 >
                     Print Label
@@ -1163,14 +1113,14 @@ function exportCurrent() {
                 <div class="flex items-center gap-2.5">
                     <button
                         type="button"
-                        class="inline-flex h-8.5 cursor-pointer items-center justify-center rounded-md border border-zinc-200 bg-white px-3 text-[0.8125rem] font-medium text-zinc-700 shadow-xs transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700/60"
+                        class="inline-flex h-8.5 cursor-pointer items-center justify-center rounded-md border border-zinc-200 bg-white px-3 text-2sm font-medium text-zinc-700 shadow-xs transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700/60"
                         @click="closeDrawer()"
                     >
                         Cancel
                     </button>
                     <button
                         type="button"
-                        class="inline-flex h-8.5 cursor-pointer items-center justify-center rounded-md bg-zinc-950 px-3.5 text-[0.8125rem] font-medium text-white shadow-xs transition-colors hover:bg-zinc-950/90 dark:bg-zinc-300 dark:text-black dark:hover:bg-zinc-300/90"
+                        class="inline-flex h-8.5 cursor-pointer items-center justify-center rounded-md bg-zinc-950 px-3.5 text-2sm font-medium text-white shadow-xs transition-colors hover:bg-zinc-950/90 dark:bg-zinc-300 dark:text-black dark:hover:bg-zinc-300/90"
                         @click="closeDrawer(); showToast('Changes saved successfully')"
                     >
                         Save

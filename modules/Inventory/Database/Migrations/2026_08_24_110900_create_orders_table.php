@@ -16,7 +16,9 @@ return new class extends Migration
             $table->string('customer_email')->nullable()->index();
             $table->string('customer_phone', 40)->nullable();
             $table->text('delivery_address')->nullable();
-            $table->string('status')->default('draft')->index();
+            // The configured status id, never its name — see config/orders.php.
+            // Relabelling a status must not rewrite a single order row.
+            $table->unsignedSmallInteger('status_id')->index();
             $table->decimal('subtotal', 12, 2)->default(0);
             $table->decimal('discount_total', 12, 2)->default(0);
             $table->decimal('tax_total', 12, 2)->default(0);

@@ -139,6 +139,24 @@ export const navigation: NavSection[] = [
                         href: '/inventory/orders',
                         permission: 'orders.view',
                     },
+                    {
+                        // Orders in the configured quote status. They are kept
+                        // out of the order list, so this is the only screen
+                        // that shows them.
+                        label: 'Quote List',
+                        href: '/inventory/quotes',
+                        permission: 'orders.view',
+                    },
+                    {
+                        label: 'Take Order',
+                        href: '/inventory/orders/create',
+                        permission: 'orders.create',
+                    },
+                    {
+                        label: 'New Quote',
+                        href: '/inventory/quotes/create',
+                        permission: 'orders.create',
+                    },
                 ],
             },
             {

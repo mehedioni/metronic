@@ -9,6 +9,13 @@ import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import { money } from '@/lib/format';
 
+interface StatusOption {
+    id: number;
+    key: string;
+    label: string;
+    variant: string;
+}
+
 interface CustomerOption {
     id: number;
     code: string;
@@ -53,7 +60,7 @@ export interface OrderPayload {
     customer_email: string;
     customer_phone: string;
     delivery_address: string;
-    status: string;
+    status_id: number | '';
     currency: string;
     discount_total: string | number | '';
     tax_total: string | number | '';
@@ -81,15 +88,20 @@ const props = defineProps<{
     options: {
         customers?: CustomerOption[];
         products?: ProductOption[];
-        statuses?: string[];
+        /** The whole configured lifecycle, for reference. */
+        statuses?: StatusOption[];
+        /** The subset a form may set — see config/orders.php. */
+        assignableStatuses?: StatusOption[];
     };
     action: string;
     method?: 'post' | 'put';
+    /** Screens that fix the status themselves (quotes) hide the field. */
+    hideStatus?: boolean;
     submitLabel?: string;
     cancelHref?: string;
 }>();
 
-const emit = defineEmits<{
+defineEmits<{
     cancel: [];
 }>();
 
@@ -100,7 +112,7 @@ const form = useForm<OrderPayload>({
     customer_phone: props.order?.customer_phone ?? '',
     delivery_address: props.order?.delivery_address ?? '',
     // A new order starts as a draft: nothing is reserved until it is confirmed.
-    status: props.order?.status ?? 'draft',
+    status_id: props.order?.status_id ?? '',
     currency: props.order?.currency ?? 'USD',
     discount_total: props.order?.discount_total ?? '',
     tax_total: props.order?.tax_total ?? '',
@@ -118,12 +130,11 @@ const form = useForm<OrderPayload>({
     })),
 });
 
-/** Only draft and pending are offered; the rest are reached through actions. */
-const selectableStatuses = computed(() =>
-    (props.options.statuses ?? []).filter((status) =>
-        ['draft', 'pending'].includes(status),
-    ),
-);
+/**
+ * Only the statuses config marks assignable are offered. Everything else is
+ * reached through an action that carries the stock effect with it.
+ */
+const selectableStatuses = computed(() => props.options.assignableStatuses ?? []);
 
 const products = computed(() => props.options.products ?? []);
 
@@ -293,7 +304,7 @@ if (!form.items.length) {
                         </Button>
                     </template>
 
-                    <p v-if="form.errors.items" class="text-[11px] text-danger">
+                    <p v-if="form.errors.items" class="text-2xs text-danger">
                         {{ form.errors.items }}
                     </p>
 
@@ -389,7 +400,7 @@ if (!form.items.length) {
 
                         <div
                             v-if="line.product_id"
-                            class="mt-2 flex flex-wrap items-center justify-between gap-2 border-t border-dashed border-border pt-2 text-[11px]"
+                            class="mt-2 flex flex-wrap items-center justify-between gap-2 border-t border-dashed border-border pt-2 text-2xs"
                         >
                             <span class="text-muted-foreground">
                                 Available to promise:
@@ -461,17 +472,18 @@ if (!form.items.length) {
 
                 <FormSection title="Order data">
                     <FormField
+                        v-if="!hideStatus"
                         label="Status"
-                        :error="form.errors.status"
+                        :error="form.errors.status_id"
                         hint="A draft reserves nothing. Stock is reserved only when the order is confirmed."
                     >
-                        <Select v-model="form.status">
+                        <Select v-model.number="form.status_id">
                             <option
                                 v-for="status in selectableStatuses"
-                                :key="status"
-                                :value="status"
+                                :key="status.id"
+                                :value="status.id"
                             >
-                                {{ status }}
+                                {{ status.label }}
                             </option>
                         </Select>
                     </FormField>
@@ -502,7 +514,7 @@ if (!form.items.length) {
                 </FormSection>
 
                 <FormSection title="Summary">
-                    <dl class="space-y-2 text-[0.8125rem]">
+                    <dl class="space-y-2 text-2sm">
                         <div class="flex justify-between">
                             <dt class="text-muted-foreground">Subtotal</dt>
                             <dd>{{ money(subtotal, form.currency) }}</dd>
@@ -529,7 +541,7 @@ if (!form.items.length) {
                         </div>
                     </dl>
 
-                    <p class="text-[11px] text-muted-foreground">
+                    <p class="text-2xs text-muted-foreground">
                         The backend recalculates these from the saved lines.
                     </p>
                 </FormSection>
@@ -538,7 +550,7 @@ if (!form.items.length) {
 
         <div
             v-if="oversold.length"
-            class="flex items-start gap-2.5 rounded-md border border-warning/20 bg-warning-soft px-4 py-3 text-[0.8125rem] text-warning"
+            class="flex items-start gap-2.5 rounded-md border border-warning/20 bg-warning-soft px-4 py-3 text-2sm text-warning"
         >
             <TriangleAlertIcon class="mt-px size-4 shrink-0" />
             <p>

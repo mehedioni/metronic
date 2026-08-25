@@ -10,7 +10,6 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Modules\Inventory\Database\Factories\CustomerFactory;
-use Modules\Inventory\Enums\OrderStatus;
 use Modules\Inventory\Enums\RecordStatus;
 use Modules\Inventory\Policies\CustomerPolicy;
 
@@ -52,7 +51,7 @@ class Customer extends BaseModel
      */
     public function billableOrders(): HasMany
     {
-        return $this->orders()->where('status', '!=', OrderStatus::Cancelled);
+        return $this->orders()->billable();
     }
 
     public function scopeActive(Builder $query): Builder

@@ -4,12 +4,12 @@ namespace Modules\Inventory\Actions;
 
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
-use Modules\Inventory\Enums\OrderStatus;
 use Modules\Inventory\Enums\StockMovementType;
 use Modules\Inventory\Exceptions\InvalidStatusTransitionException;
 use Modules\Inventory\Models\Order;
 use Modules\Inventory\Services\InventoryService;
 use Modules\Inventory\Support\MovementContext;
+use Modules\Inventory\Support\OrderStatuses;
 
 /**
  * Cancels an order and unwinds whatever inventory effect it still holds:
@@ -28,10 +28,12 @@ class CancelOrderAction
                 ->lockForUpdate()
                 ->firstOrFail();
 
+            $cancelled = OrderStatuses::key('cancelled');
+
             if (! $locked->status->isCancellable()) {
                 throw InvalidStatusTransitionException::between(
-                    $locked->status->value,
-                    OrderStatus::Cancelled->value,
+                    $locked->status->key,
+                    $cancelled->key,
                 );
             }
 
@@ -60,7 +62,7 @@ class CancelOrderAction
             }
 
             $locked->forceFill([
-                'status' => OrderStatus::Cancelled,
+                'status_id' => $cancelled->id,
                 'cancelled_at' => Carbon::now(),
                 'notes' => $reason ?? $locked->notes,
             ])->save();

@@ -24,7 +24,7 @@ defineProps<{
                 <TooltipContent
                     :side="side ?? 'top'"
                     :side-offset="6"
-                    class="z-50 rounded-md border border-border bg-popover px-2 py-1 text-[11px] font-medium text-popover-foreground shadow-md data-[state=delayed-open]:animate-in data-[state=delayed-open]:fade-in-0"
+                    class="z-50 rounded-md border border-border bg-popover px-2 py-1 text-2xs font-medium text-popover-foreground shadow-md data-[state=delayed-open]:animate-in data-[state=delayed-open]:fade-in-0"
                 >
                     {{ text }}
                 </TooltipContent>

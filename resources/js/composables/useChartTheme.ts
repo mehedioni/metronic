@@ -50,7 +50,12 @@ export function useChartTheme() {
 
         return {
             chart: {
-                fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif',
+                // Read the stack off the design token rather than naming a
+                // font here, so the charts cannot drift from the rest of the UI.
+                fontFamily: token(
+                    '--font-sans',
+                    'ui-sans-serif, system-ui, sans-serif',
+                ),
                 toolbar: { show: false },
                 zoom: { enabled: false },
                 background: 'transparent',

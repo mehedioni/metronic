@@ -2,12 +2,20 @@
 import type { Paginated } from '@/types';
 import Index from './Index.vue';
 
+interface OrderStatus {
+    id: number;
+    key: string;
+    label: string;
+    variant: 'neutral' | 'success' | 'warning' | 'danger' | 'info' | 'outline' | 'solid';
+}
+
 interface OrderRow {
     id: number;
     order_number: string;
     customer_name: string;
     customer_email: string | null;
-    status: string;
+    customer_phone: string | null;
+    status: OrderStatus;
     total: string;
     currency: string;
     items_count: number;
@@ -16,16 +24,15 @@ interface OrderRow {
     created_by: { id: number; name: string } | null;
 }
 
+/**
+ * Taking an order opens the order list with its create panel already showing,
+ * so the route is linkable without duplicating the list.
+ */
 const props = defineProps<{
     orders: Paginated<OrderRow>;
     filters: Record<string, unknown>;
-    counts?: {
-        all: number;
-        in_transit: number;
-        delivered: number;
-        returns: number;
-        canceled: number;
-    };
+    counts?: Record<string, number>;
+    listStatuses?: OrderStatus[];
     options: Record<string, any>;
 }>();
 </script>
@@ -35,6 +42,7 @@ const props = defineProps<{
         :orders="props.orders"
         :filters="props.filters"
         :counts="props.counts"
+        :list-statuses="props.listStatuses"
         :options="props.options"
         :open-create-modal="true"
     />

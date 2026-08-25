@@ -85,7 +85,7 @@ defineExpose({ selection });
             <table class="w-full border-collapse text-start text-xs">
                 <thead>
                     <tr
-                        class="border-b border-border bg-muted/70 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground"
+                        class="border-b border-border bg-muted/70 text-2xs font-semibold uppercase tracking-wider text-muted-foreground"
                     >
                         <th v-if="selectable" class="w-10 px-4 py-3.5 text-center">
                             <div class="flex justify-center">

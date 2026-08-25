@@ -4,7 +4,6 @@ import { BanIcon, CheckIcon, PackageCheckIcon, PencilIcon } from 'lucide-vue-nex
 import { computed, reactive, ref } from 'vue';
 import { FormField, Textarea } from '@/components/form';
 import PageHeader from '@/components/PageHeader.vue';
-import StatusBadge from '@/components/StatusBadge.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -34,7 +33,12 @@ interface Order {
     customer_email: string | null;
     customer_phone: string | null;
     delivery_address: string | null;
-    status: string;
+    status: {
+        id: number;
+        key: string;
+        label: string;
+        variant: string;
+    };
     subtotal: string;
     discount_total: string;
     tax_total: string;
@@ -99,7 +103,7 @@ const canCancel = computed(
 
 /** Lines are frozen once the order reserves stock; OrderStatus decides. */
 const canEdit = computed(
-    () => can('orders.update') && ['draft', 'pending'].includes(props.order.status),
+    () => can('orders.update') && ['draft', 'pending'].includes(props.order.status.key),
 );
 
 const breadcrumbs = computed(() => [
@@ -153,7 +157,7 @@ function cancel() {
             :breadcrumbs="breadcrumbs"
         >
             <template #actions>
-                <StatusBadge :status="order.status" />
+                <Badge :variant="order.status.variant">{{ order.status.label }}</Badge>
 
                 <Button
                     v-if="canEdit"
@@ -213,7 +217,7 @@ function cancel() {
                     <div class="overflow-x-auto">
                         <table class="w-full text-xs">
                             <thead
-                                class="border-b border-border bg-muted/70 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground"
+                                class="border-b border-border bg-muted/70 text-2xs font-semibold uppercase tracking-wider text-muted-foreground"
                             >
                                 <tr>
                                     <th class="px-5 py-3 text-start">Product</th>
@@ -232,7 +236,7 @@ function cancel() {
                                             >{{ item.product.name }}</Link
                                         >
                                         <span
-                                            class="block font-mono text-[11px] text-muted-foreground"
+                                            class="block font-mono text-2xs text-muted-foreground"
                                         >
                                             {{
                                                 item.variant?.sku ??
@@ -275,7 +279,7 @@ function cancel() {
                     </div>
 
                     <div class="border-t border-border px-5 py-4">
-                        <dl class="ms-auto max-w-xs space-y-2 text-[0.8125rem]">
+                        <dl class="ms-auto max-w-xs space-y-2 text-2sm">
                             <div class="flex justify-between">
                                 <dt class="text-muted-foreground">Subtotal</dt>
                                 <dd>{{ money(order.subtotal, order.currency) }}</dd>
@@ -305,7 +309,7 @@ function cancel() {
                         <template #title><CardTitle>Notes</CardTitle></template>
                     </CardHeader>
                     <CardContent>
-                        <p class="whitespace-pre-line text-[0.8125rem]">
+                        <p class="whitespace-pre-line text-2sm">
                             {{ order.notes }}
                         </p>
                     </CardContent>
@@ -319,7 +323,7 @@ function cancel() {
                     </CardHeader>
 
                     <CardContent>
-                        <p class="text-[0.8125rem] font-medium">
+                        <p class="text-2sm font-medium">
                             <Link
                                 v-if="order.customer"
                                 :href="customers.show.url(order.customer.id)"
@@ -328,7 +332,7 @@ function cancel() {
                             >
                             <span v-else>{{ order.customer_name }}</span>
                         </p>
-                        <p class="text-[11px] text-muted-foreground">
+                        <p class="text-2xs text-muted-foreground">
                             {{
                                 order.customer
                                     ? order.customer.code
@@ -339,13 +343,13 @@ function cancel() {
                         <dl class="mt-4 space-y-3">
                             <div class="flex justify-between gap-3">
                                 <dt class="text-xs text-muted-foreground">Email</dt>
-                                <dd class="truncate text-[0.8125rem]">
+                                <dd class="truncate text-2sm">
                                     {{ order.customer_email ?? '—' }}
                                 </dd>
                             </div>
                             <div class="flex justify-between gap-3">
                                 <dt class="text-xs text-muted-foreground">Phone</dt>
-                                <dd class="text-[0.8125rem]">
+                                <dd class="text-2sm">
                                     {{ order.customer_phone ?? '—' }}
                                 </dd>
                             </div>
@@ -353,7 +357,7 @@ function cancel() {
                                 <dt class="text-xs text-muted-foreground">
                                     Delivery address
                                 </dt>
-                                <dd class="mt-1 whitespace-pre-line text-[0.8125rem]">
+                                <dd class="mt-1 whitespace-pre-line text-2sm">
                                     {{ order.delivery_address }}
                                 </dd>
                             </div>
@@ -382,10 +386,10 @@ function cancel() {
                                     class="mt-1 size-2 shrink-0 rounded-full bg-primary"
                                 />
                                 <div class="min-w-0">
-                                    <p class="text-[0.8125rem] font-medium">
+                                    <p class="text-2sm font-medium">
                                         {{ entry.label }}
                                     </p>
-                                    <p class="text-[11px] text-muted-foreground">
+                                    <p class="text-2xs text-muted-foreground">
                                         {{ dateTime(entry.at) }}
                                     </p>
                                 </div>
@@ -394,7 +398,7 @@ function cancel() {
 
                         <p
                             v-if="order.created_by"
-                            class="mt-4 border-t border-dashed border-border pt-3 text-[11px] text-muted-foreground"
+                            class="mt-4 border-t border-dashed border-border pt-3 text-2xs text-muted-foreground"
                         >
                             Created by {{ order.created_by.name }}
                         </p>
@@ -416,10 +420,10 @@ function cancel() {
                     class="flex items-center gap-3"
                 >
                     <div class="min-w-0 flex-1">
-                        <p class="truncate text-[0.8125rem] font-medium">
+                        <p class="truncate text-2sm font-medium">
                             {{ item.product.name }}
                         </p>
-                        <p class="text-[11px] text-muted-foreground">
+                        <p class="text-2xs text-muted-foreground">
                             {{ item.quantity - item.quantity_fulfilled }} outstanding
                         </p>
                     </div>
@@ -436,7 +440,7 @@ function cancel() {
                 <p
                     v-for="(error, field) in fulfillForm.errors"
                     :key="field"
-                    class="text-[11px] text-danger"
+                    class="text-2xs text-danger"
                 >
                     {{ error }}
                 </p>

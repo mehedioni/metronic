@@ -18,7 +18,7 @@ defineEmits<{ select: [event: Event] }>();
         :disabled="disabled"
         :class="
             cn(
-                'flex cursor-pointer select-none items-center gap-2 rounded-md px-2.5 py-1.5 text-[0.8125rem] outline-none data-[highlighted]:bg-accent data-[disabled]:pointer-events-none data-[highlighted]:text-accent-foreground data-[disabled]:opacity-50 [&_svg]:size-3.5 [&_svg]:shrink-0 [&_svg]:text-muted-foreground',
+                'flex cursor-pointer select-none items-center gap-2 rounded-md px-2.5 py-1.5 text-2sm outline-none data-[highlighted]:bg-accent data-[disabled]:pointer-events-none data-[highlighted]:text-accent-foreground data-[disabled]:opacity-50 [&_svg]:size-3.5 [&_svg]:shrink-0 [&_svg]:text-muted-foreground',
                 destructive &&
                     'text-danger data-[highlighted]:bg-danger-soft data-[highlighted]:text-danger [&_svg]:text-danger',
                 props.class,

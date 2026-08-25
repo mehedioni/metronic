@@ -1,11 +1,8 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
 import {
-    Check,
-    CheckCircle2,
     ChevronDown,
     ChevronsUpDown,
-    Circle,
     Eye,
     FileSpreadsheet,
     Image as ImageIcon,
@@ -17,7 +14,6 @@ import {
     SquareMinus,
     SquarePlus,
     Trash2,
-    Truck,
     Upload,
     X,
 } from 'lucide-vue-next';
@@ -27,41 +23,65 @@ import DateRangePicker from '@/components/ui/DateRangePicker.vue';
 import { Drawer } from '@/components/ui/drawer';
 import { Dropdown } from '@/components/ui/dropdown';
 import { useCsvExport } from '@/composables/useCsvExport';
-import { usePermissions } from '@/composables/usePermissions';
 import { useTableQuery } from '@/composables/useTableQuery';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { date, money, number } from '@/lib/format';
+import customers from '@/routes/inventory/customers';
 import orderRoutes from '@/routes/inventory/orders';
 import stockRoutes from '@/routes/inventory/stock';
 import type { Paginated } from '@/types';
 import OrderForm from '../../components/OrderForm.vue';
+
+interface OrderStatus {
+    id: number;
+    key: string;
+    label: string;
+    variant: 'neutral' | 'success' | 'warning' | 'danger' | 'info' | 'outline' | 'solid';
+}
 
 interface OrderRow {
     id: number;
     order_number: string;
     customer_name: string;
     customer_email: string | null;
-    status: string;
+    customer_phone: string | null;
+    /** Appended by the Order model from config/orders.php. */
+    status: OrderStatus;
+    delivery_address: string | null;
+    subtotal: string;
+    discount_total: string;
+    tax_total: string;
     total: string;
     currency: string;
     items_count: number;
     created_at: string;
-    customer: { id: number; code: string; name: string } | null;
+    customer: {
+        id: number;
+        code: string;
+        name: string;
+        email: string | null;
+        phone: string | null;
+        city: string | null;
+        country: string | null;
+    } | null;
     created_by: { id: number; name: string } | null;
 }
 
 const props = defineProps<{
     orders: Paginated<OrderRow>;
     filters: Record<string, unknown>;
-    counts?: {
-        all: number;
-        in_transit: number;
-        delivered: number;
-        returns: number;
-        canceled: number;
-    };
+    /** Total plus one count per listed status, keyed by status id. */
+    counts?: Record<string, number>;
+    /**
+     * The statuses this list shows — the configured lifecycle minus the quote
+     * status, which has its own screen.
+     */
+    listStatuses?: OrderStatus[];
     options: {
-        statuses?: string[];
+        /** The configured lifecycle, in order. */
+        statuses?: OrderStatus[];
+        /** The subset a form may set. */
+        assignableStatuses?: OrderStatus[];
         customers?: Array<{ id: number; name: string }>;
         products?: Array<{ id: number; name: string; selling_price: string; type: string }>;
     };
@@ -69,10 +89,9 @@ const props = defineProps<{
     initialViewingOrder?: OrderRow | null;
 }>();
 
-const { can } = usePermissions();
 const { exportRows } = useCsvExport();
 
-const { params, toggleSort, reset } = useTableQuery({
+const { params, toggleSort } = useTableQuery({
     url: orderRoutes.index.url(),
     filters: props.filters,
     only: ['orders', 'filters', 'counts'],
@@ -99,52 +118,31 @@ const activeTab = computed({
     },
 });
 
+/**
+ * One tab per status this list shows, so adding or relabelling a status in
+ * config/orders.php changes the tabs without touching this page. The tab key
+ * is the status id, which is what the list filters on. Quotes are absent
+ * because they have their own screen.
+ */
 const tabs = computed(() => [
-    { key: 'all', label: 'All', count: props.counts?.all ?? props.orders.total ?? 435 },
-    { key: 'in_transit', label: 'In Transit', count: props.counts?.in_transit ?? 153 },
-    { key: 'delivered', label: 'Delivered', count: props.counts?.delivered ?? 26 },
-    { key: 'returns', label: 'Returns', count: props.counts?.returns ?? 185 },
-    { key: 'canceled', label: 'Canceled', count: props.counts?.canceled ?? 49 },
+    {
+        key: 'all',
+        label: 'All',
+        count: props.counts?.all ?? props.orders.total,
+    },
+    ...(props.listStatuses ?? props.options.statuses ?? []).map((status) => ({
+        key: String(status.id),
+        label: status.label,
+        count: props.counts?.[String(status.id)] ?? 0,
+    })),
 ]);
 
 function selectTab(tabKey: string) {
     activeTab.value = tabKey;
 }
 
-function getOrderCode(row: OrderRow, idx: number) {
-    if (row.order_number && row.order_number.startsWith('SO-')) {
-        return row.order_number;
-    }
-    const prefixes = ['SO-TX-', 'SO-CA-', 'SO-NY-', 'SO-FL-', 'SO-WA-'];
-    return `${prefixes[idx % prefixes.length]}${4580 + row.id * 3}`;
-}
-
-function getPaymentStatus(status: string, idx: number) {
-    const s = (status || '').toLowerCase();
-    if (s === 'completed' || s === 'paid' || idx % 4 === 0) return 'Paid';
-    if (s === 'pending' || idx % 4 === 1) return 'Pending';
-    if (s === 'processing' || idx % 4 === 2) return 'Paid';
-    return 'Failed';
-}
-
-function getDeliveryStatus(status: string, idx: number) {
-    const s = (status || '').toLowerCase();
-    if (s === 'shipped' || idx % 5 === 0) return 'Shipped';
-    if (s === 'processing' || idx % 5 === 1) return 'Processing';
-    if (s === 'delivered' || idx % 5 === 2) return 'Delivered';
-    if (s === 'on_hold' || idx % 5 === 3) return 'On Hold';
-    return 'Canceled';
-}
-
-function getCarrierInfo(idx: number) {
-    const carriers = [
-        { name: 'UPS Global', code: 'UPS' },
-        { name: 'FedEx Standard', code: 'FEDEX' },
-        { name: 'PostNL', code: 'POSTNL' },
-        { name: 'DHL Express', code: 'DHL' },
-        { name: 'In-Store Pickup', code: 'PICKUP' },
-    ];
-    return carriers[idx % carriers.length];
+function getOrderCode(row: OrderRow) {
+    return row.order_number;
 }
 
 function toggleExpandRow(id: number) {
@@ -212,7 +210,7 @@ function exportCurrent() {
         { label: 'Date', value: (row) => date(row.created_at) },
         { label: 'Customer', value: (row) => row.customer_name },
         { label: 'Total', value: (row) => money(row.total, row.currency) },
-        { label: 'Status', value: (row) => row.status },
+        { label: 'Status', value: (row) => row.status.label },
     ]);
 }
 </script>
@@ -314,7 +312,7 @@ function exportCurrent() {
                         >
                             <span>{{ tab.label }}</span>
                             <span
-                                class="rounded-full px-1.5 py-0.2 text-[10px] font-semibold"
+                                class="rounded-full px-1.5 py-0.2 text-2xs font-semibold"
                                 :class="
                                     activeTab === tab.key
                                         ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300'
@@ -349,7 +347,7 @@ function exportCurrent() {
                 <!-- Table Container -->
                 <div class="min-h-[380px] overflow-x-auto">
                     <table class="w-full text-left text-xs text-zinc-600 dark:text-zinc-400">
-                        <thead class="border-b border-zinc-200 bg-zinc-50/50 text-[11px] font-medium uppercase tracking-wider text-zinc-400 dark:border-zinc-800 dark:bg-zinc-900/40 dark:text-zinc-400">
+                        <thead class="border-b border-zinc-200 bg-zinc-50/50 text-2xs font-medium uppercase tracking-wider text-zinc-400 dark:border-zinc-800 dark:bg-zinc-900/40 dark:text-zinc-400">
                             <tr>
                                 <th class="w-10 px-4 py-3 text-center">
                                     <input
@@ -384,24 +382,14 @@ function exportCurrent() {
                                     </button>
                                 </th>
                                 <th class="px-4 py-3 select-none">
-                                    <button type="button" class="inline-flex items-center gap-1 hover:text-zinc-900 dark:hover:text-white" @click="toggleSort('status')">
-                                        <span>Payment Status</span>
-                                        <ChevronsUpDown class="size-3 opacity-60" />
-                                    </button>
-                                </th>
-                                <th class="px-4 py-3 select-none">
                                     <button type="button" class="inline-flex items-center gap-1 hover:text-zinc-900 dark:hover:text-white">
                                         <span>Items</span>
                                         <ChevronsUpDown class="size-3 opacity-60" />
                                     </button>
                                 </th>
-                                <th class="px-4 py-3 select-none">
-                                    <button type="button" class="inline-flex items-center gap-1 hover:text-zinc-900 dark:hover:text-white">
-                                        <span>Delivery Status</span>
-                                        <ChevronsUpDown class="size-3 opacity-60" />
-                                    </button>
-                                </th>
-                                <th class="px-4 py-3">Carrier</th>
+                                    <th class="px-4 py-3 select-none">
+                                        <span>Status</span>
+                                    </th>
                                 <th class="px-4 py-3 text-center">Actions</th>
                             </tr>
                         </thead>
@@ -411,7 +399,7 @@ function exportCurrent() {
                                     No orders found.
                                 </td>
                             </tr>
-                            <template v-for="(row, idx) in rows" :key="row.id">
+                            <template v-for="row in rows" :key="row.id">
                                 <tr
                                     class="transition-colors hover:bg-zinc-50/60 dark:hover:bg-zinc-800/30"
                                     :class="expandedRows.includes(row.id) ? 'bg-zinc-50/80 dark:bg-zinc-900/50' : ''"
@@ -433,18 +421,26 @@ function exportCurrent() {
                                             class="cursor-pointer font-semibold text-blue-600 hover:underline dark:text-blue-400"
                                             @click="openDetailsModal(row)"
                                         >
-                                            {{ getOrderCode(row, idx) }}
+                                            {{ getOrderCode(row) }}
                                         </button>
                                     </td>
 
                                     <!-- Date -->
                                     <td class="px-4 py-3.5 text-zinc-700 dark:text-zinc-300">
-                                        {{ date(row.created_at) || '18 Aug, 2025' }}
+                                        {{ date(row.created_at) }}
                                     </td>
 
                                     <!-- Customer -->
-                                    <td class="px-4 py-3.5 font-medium text-zinc-900 dark:text-white">
-                                        {{ row.customer_name }}
+                                    <td class="px-4 py-3.5">
+                                        <span class="font-medium text-zinc-900 dark:text-white">
+                                            {{ row.customer_name }}
+                                        </span>
+                                        <span class="block text-2xs text-zinc-500 dark:text-zinc-400">
+                                            {{ row.customer_phone ?? '—' }}
+                                            <template v-if="row.customer_email">
+                                                · {{ row.customer_email }}
+                                            </template>
+                                        </span>
                                     </td>
 
                                     <!-- Total -->
@@ -452,54 +448,21 @@ function exportCurrent() {
                                         {{ money(row.total, row.currency) }}
                                     </td>
 
-                                    <!-- Payment Status -->
-                                    <td class="px-4 py-3.5">
-                                        <span
-                                            class="inline-flex items-center rounded-md px-2 py-0.5 text-[11px] font-medium"
-                                            :class="
-                                                getPaymentStatus(row.status, idx) === 'Paid'
-                                                    ? 'border border-emerald-200/60 bg-emerald-50 text-emerald-700 dark:border-emerald-800/60 dark:bg-emerald-950/50 dark:text-emerald-400'
-                                                    : getPaymentStatus(row.status, idx) === 'Pending'
-                                                    ? 'border border-purple-200/60 bg-purple-50 text-purple-700 dark:border-purple-800/60 dark:bg-purple-950/50 dark:text-purple-400'
-                                                    : 'border border-rose-200/60 bg-rose-50 text-rose-700 dark:border-rose-800/60 dark:bg-rose-950/50 dark:text-rose-400'
-                                            "
-                                        >
-                                            {{ getPaymentStatus(row.status, idx) }}
-                                        </span>
-                                    </td>
 
                                     <!-- Items -->
                                     <td class="px-4 py-3.5 text-zinc-600 dark:text-zinc-400">
-                                        {{ row.items_count || 2 }} items
+                                        {{ row.items_count }} items
                                     </td>
 
-                                    <!-- Delivery Status -->
+                                    <!-- Status: the configured label and badge
+                                         colour travel with the order. -->
                                     <td class="px-4 py-3.5">
-                                        <span
-                                            class="inline-flex items-center rounded-md px-2.5 py-0.5 text-[11px] font-medium"
-                                            :class="
-                                                getDeliveryStatus(row.status, idx) === 'Shipped'
-                                                    ? 'border border-blue-200/60 bg-blue-50 text-blue-700 dark:border-blue-800/60 dark:bg-blue-950/50 dark:text-blue-400'
-                                                    : getDeliveryStatus(row.status, idx) === 'Delivered'
-                                                    ? 'border border-emerald-200/60 bg-emerald-50 text-emerald-700 dark:border-emerald-800/60 dark:bg-emerald-950/50 dark:text-emerald-400'
-                                                    : getDeliveryStatus(row.status, idx) === 'Processing'
-                                                    ? 'border border-purple-200/60 bg-purple-50 text-purple-700 dark:border-purple-800/60 dark:bg-purple-950/50 dark:text-purple-400'
-                                                    : getDeliveryStatus(row.status, idx) === 'On Hold'
-                                                    ? 'border border-zinc-200 bg-zinc-100 text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300'
-                                                    : 'border border-rose-200/60 bg-rose-50 text-rose-700 dark:border-rose-800/60 dark:bg-rose-950/50 dark:text-rose-400'
-                                            "
-                                        >
-                                            {{ getDeliveryStatus(row.status, idx) }}
-                                        </span>
+                                        <Badge :variant="row.status.variant" size="sm">
+                                            {{ row.status.label }}
+                                        </Badge>
                                     </td>
 
-                                    <!-- Carrier -->
-                                    <td class="px-4 py-3.5">
-                                        <div class="inline-flex items-center gap-1.5 rounded-md border border-zinc-200 bg-white px-2.5 py-1 text-xs font-medium text-zinc-800 shadow-xs dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200">
-                                            <Truck class="size-3.5 text-zinc-500" />
-                                            <span>{{ getCarrierInfo(idx).name }}</span>
-                                        </div>
-                                    </td>
+
 
                                     <!-- Actions Column with Expand Child Row + 3-Dots Dropdown -->
                                     <td class="relative px-4 py-3.5 text-center">
@@ -579,7 +542,7 @@ function exportCurrent() {
                                         <div class="bg-zinc-50/60 p-4 dark:bg-zinc-900/30 lg:p-6">
                                             <div class="overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-xs dark:border-zinc-800 dark:bg-[#121215]">
                                                 <table class="w-full text-left text-xs text-zinc-600 dark:text-zinc-400">
-                                                    <thead class="border-b border-zinc-200 bg-zinc-50 text-[11px] font-medium text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900/60 dark:text-zinc-400">
+                                                    <thead class="border-b border-zinc-200 bg-zinc-50 text-2xs font-medium text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900/60 dark:text-zinc-400">
                                                         <tr>
                                                             <th class="px-4 py-2.5">Product Info</th>
                                                             <th class="px-4 py-2.5">Category</th>
@@ -600,21 +563,21 @@ function exportCurrent() {
                                                                     </div>
                                                                     <div>
                                                                         <span class="block font-medium text-zinc-900 dark:text-white">Air Max 270 React Eng...</span>
-                                                                        <span class="text-[11px] text-zinc-400">SKU: <span class="font-medium text-zinc-600 dark:text-zinc-400">WM-8421</span></span>
+                                                                        <span class="text-2xs text-zinc-400">SKU: <span class="font-medium text-zinc-600 dark:text-zinc-400">WM-8421</span></span>
                                                                     </div>
                                                                 </div>
                                                             </td>
                                                             <td class="px-4 py-3 text-zinc-700 dark:text-zinc-300">Sneakers</td>
                                                             <td class="px-4 py-3 font-medium text-zinc-900 dark:text-white">$83.00</td>
                                                             <td class="px-4 py-3">
-                                                                <span class="inline-flex items-center rounded-md border border-emerald-200/60 bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700 dark:border-emerald-800/60 dark:bg-emerald-950/50 dark:text-emerald-400">Fast Moving</span>
+                                                                <span class="inline-flex items-center rounded-md border border-emerald-200/60 bg-emerald-50 px-2 py-0.5 text-2xs font-medium text-emerald-700 dark:border-emerald-800/60 dark:bg-emerald-950/50 dark:text-emerald-400">Fast Moving</span>
                                                             </td>
                                                             <td class="px-4 py-3 text-zinc-700 dark:text-zinc-300">92</td>
                                                             <td class="px-4 py-3 text-zinc-700 dark:text-zinc-300">5</td>
                                                             <td class="px-4 py-3 text-zinc-700 dark:text-zinc-300">110</td>
                                                             <td class="px-4 py-3">
                                                                 <div class="flex items-center gap-1.5">
-                                                                    <div class="flex size-4 items-center justify-center rounded bg-rose-500 text-[9px] font-bold text-white">S</div>
+                                                                    <div class="flex size-4 items-center justify-center rounded bg-rose-500 text-2xs font-bold text-white">S</div>
                                                                     <span class="font-medium text-zinc-800 dark:text-zinc-200">SwiftStock</span>
                                                                 </div>
                                                             </td>
@@ -627,21 +590,21 @@ function exportCurrent() {
                                                                     </div>
                                                                     <div>
                                                                         <span class="block font-medium text-zinc-900 dark:text-white">Trail Runner Z2</span>
-                                                                        <span class="text-[11px] text-zinc-400">SKU: <span class="font-medium text-zinc-600 dark:text-zinc-400">UC-3990</span></span>
+                                                                        <span class="text-2xs text-zinc-400">SKU: <span class="font-medium text-zinc-600 dark:text-zinc-400">UC-3990</span></span>
                                                                     </div>
                                                                 </div>
                                                             </td>
                                                             <td class="px-4 py-3 text-zinc-700 dark:text-zinc-300">Boots</td>
                                                             <td class="px-4 py-3 font-medium text-zinc-900 dark:text-white">$145.00</td>
                                                             <td class="px-4 py-3">
-                                                                <span class="inline-flex items-center rounded-md border border-blue-200/60 bg-blue-50 px-2 py-0.5 text-[11px] font-medium text-blue-700 dark:border-blue-800/60 dark:bg-blue-950/50 dark:text-blue-400">Normal</span>
+                                                                <span class="inline-flex items-center rounded-md border border-blue-200/60 bg-blue-50 px-2 py-0.5 text-2xs font-medium text-blue-700 dark:border-blue-800/60 dark:bg-blue-950/50 dark:text-blue-400">Normal</span>
                                                             </td>
                                                             <td class="px-4 py-3 text-zinc-700 dark:text-zinc-300">45</td>
                                                             <td class="px-4 py-3 text-zinc-700 dark:text-zinc-300">2</td>
                                                             <td class="px-4 py-3 text-zinc-700 dark:text-zinc-300">50</td>
                                                             <td class="px-4 py-3">
                                                                 <div class="flex items-center gap-1.5">
-                                                                    <div class="flex size-4 items-center justify-center rounded bg-blue-500 text-[9px] font-bold text-white">N</div>
+                                                                    <div class="flex size-4 items-center justify-center rounded bg-blue-500 text-2xs font-bold text-white">N</div>
                                                                     <span class="font-medium text-zinc-800 dark:text-zinc-200">Nike Direct</span>
                                                                 </div>
                                                             </td>
@@ -720,10 +683,10 @@ function exportCurrent() {
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-zinc-200 dark:border-zinc-800 px-5 py-4 bg-zinc-50/30 dark:bg-zinc-900/20">
                     <div class="flex flex-col gap-2">
                         <div class="flex items-center gap-2.5">
-                            <span class="text-lg lg:text-[22px] font-semibold text-zinc-900 dark:text-white leading-none">
+                            <span class="text-lg font-semibold text-zinc-900 dark:text-white leading-none">
                                 Order: {{ getOrderCode(viewingOrder, 0) }}
                             </span>
-                            <span class="inline-flex items-center justify-center font-medium rounded-sm px-2 py-0.5 text-[11px] text-emerald-700 bg-emerald-50 dark:bg-emerald-950/50 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/60">
+                            <span class="inline-flex items-center justify-center font-medium rounded-sm px-2 py-0.5 text-2xs text-emerald-700 bg-emerald-50 dark:bg-emerald-950/50 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/60">
                                 Shipped
                             </span>
                         </div>
@@ -744,18 +707,6 @@ function exportCurrent() {
                         >
                             Delete
                         </button>
-                        <button
-                            type="button"
-                            class="cursor-pointer inline-flex items-center justify-center rounded-md border border-zinc-200 bg-white px-3 h-8.5 text-xs font-medium text-zinc-700 shadow-xs hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800 transition-colors"
-                        >
-                            Order Tracking
-                        </button>
-                        <button
-                            type="button"
-                            class="cursor-pointer inline-flex items-center justify-center rounded-md bg-zinc-950 px-3 h-8.5 text-xs font-medium text-white shadow-xs hover:bg-zinc-800 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-100 transition-colors"
-                        >
-                            View Shipping Label
-                        </button>
                     </div>
                 </div>
 
@@ -764,6 +715,76 @@ function exportCurrent() {
                     <div class="flex flex-wrap lg:flex-nowrap gap-5">
                         <!-- Left Main Column (grow lg:border-e lg:pe-5 space-y-5) -->
                         <div class="grow lg:border-e border-zinc-200 dark:border-zinc-800 lg:pe-5 space-y-5">
+                            <!-- Card 0: Customer -->
+                            <div class="flex flex-col overflow-hidden rounded-md border border-zinc-200 bg-white text-card-foreground shadow-xs dark:border-zinc-800 dark:bg-[#121215]">
+                                <div class="flex min-h-[34px] items-center justify-between border-b border-zinc-200 bg-zinc-50/70 px-5 py-2 dark:border-zinc-800 dark:bg-zinc-900/40">
+                                    <h3 class="text-xs font-semibold tracking-tight text-zinc-900 dark:text-white">Customer</h3>
+                                    <Link
+                                        v-if="viewingOrder.customer"
+                                        :href="customers.show.url(viewingOrder.customer.id)"
+                                        class="text-xs font-medium text-blue-600 hover:underline dark:text-blue-400"
+                                    >
+                                        Open record
+                                    </Link>
+                                    <span v-else class="text-2xs text-zinc-400">Walk-in — no record</span>
+                                </div>
+
+                                <div class="p-5">
+                                    <div class="flex items-start gap-3.5">
+                                        <Avatar :name="viewingOrder.customer_name" class="size-10" />
+
+                                        <div class="min-w-0 flex-1">
+                                            <p class="text-xs font-semibold text-zinc-900 dark:text-white">
+                                                {{ viewingOrder.customer_name }}
+                                            </p>
+                                            <p
+                                                v-if="viewingOrder.customer"
+                                                class="font-mono text-2xs text-zinc-400"
+                                            >
+                                                {{ viewingOrder.customer.code }}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <!-- The order keeps its own copy of the contact
+                                         details, so this reads as it did when the
+                                         order was placed. -->
+                                    <dl class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                        <div>
+                                            <dt class="text-2xs text-zinc-400">Email</dt>
+                                            <dd class="truncate text-xs text-zinc-900 dark:text-white">
+                                                {{ viewingOrder.customer_email ?? '—' }}
+                                            </dd>
+                                        </div>
+                                        <div>
+                                            <dt class="text-2xs text-zinc-400">Phone</dt>
+                                            <dd class="text-xs text-zinc-900 dark:text-white">
+                                                {{ viewingOrder.customer_phone ?? '—' }}
+                                            </dd>
+                                        </div>
+                                        <div v-if="viewingOrder.customer">
+                                            <dt class="text-2xs text-zinc-400">Location</dt>
+                                            <dd class="text-xs text-zinc-900 dark:text-white">
+                                                {{
+                                                    [
+                                                        viewingOrder.customer.city,
+                                                        viewingOrder.customer.country,
+                                                    ]
+                                                        .filter(Boolean)
+                                                        .join(', ') || '—'
+                                                }}
+                                            </dd>
+                                        </div>
+                                        <div v-if="viewingOrder.delivery_address" class="sm:col-span-2">
+                                            <dt class="text-2xs text-zinc-400">Delivery address</dt>
+                                            <dd class="whitespace-pre-line text-xs text-zinc-900 dark:text-white">
+                                                {{ viewingOrder.delivery_address }}
+                                            </dd>
+                                        </div>
+                                    </dl>
+                                </div>
+                            </div>
+
                             <!-- Card 1: Order Data -->
                             <div class="flex flex-col text-card-foreground bg-white dark:bg-[#121215] border border-zinc-200 dark:border-zinc-800 shadow-xs rounded-md overflow-hidden">
                                 <div class="flex items-center justify-between px-5 py-2 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-900/40 min-h-[34px]">
@@ -773,19 +794,11 @@ function exportCurrent() {
                                     <div class="flex items-start flex-wrap lg:gap-10 gap-5">
                                         <div class="flex flex-col gap-1">
                                             <span class="text-xs font-normal text-zinc-400">Items</span>
-                                            <span class="text-xs font-medium text-zinc-900 dark:text-white">{{ viewingOrder.items_count || 2 }} Items</span>
+                                            <span class="text-xs font-medium text-zinc-900 dark:text-white">{{ viewingOrder.items_count }} Items</span>
                                         </div>
                                         <div class="flex flex-col gap-1">
                                             <span class="text-xs font-normal text-zinc-400">Total Price</span>
                                             <span class="text-xs font-medium text-zinc-900 dark:text-white">{{ money(viewingOrder.total, viewingOrder.currency) }}</span>
-                                        </div>
-                                        <div class="flex flex-col gap-1">
-                                            <span class="text-xs font-normal text-zinc-400">Shipping Priority</span>
-                                            <span class="text-xs font-medium text-zinc-900 dark:text-white">High</span>
-                                        </div>
-                                        <div class="flex flex-col gap-1">
-                                            <span class="text-xs font-normal text-zinc-400">Delivery Method</span>
-                                            <span class="text-xs font-medium text-zinc-900 dark:text-white">Express Delivery</span>
                                         </div>
                                     </div>
                                 </div>
@@ -805,7 +818,7 @@ function exportCurrent() {
                                             </div>
                                             <div class="flex flex-col justify-center gap-1">
                                                 <span class="text-xs font-medium text-zinc-900 dark:text-white">Nike Air Max 270 React SE</span>
-                                                <div class="flex items-center gap-2 text-[11px] text-zinc-500">
+                                                <div class="flex items-center gap-2 text-2xs text-zinc-500">
                                                     <span>SKU: <strong class="font-medium text-zinc-700 dark:text-zinc-300">WM-8421</strong></span>
                                                     <span class="size-1 rounded-full bg-zinc-400"></span>
                                                     <span>Color <strong class="font-medium text-zinc-700 dark:text-zinc-300">Beige</strong></span>
@@ -813,10 +826,10 @@ function exportCurrent() {
                                             </div>
                                         </div>
                                         <div class="flex flex-col text-end gap-1">
-                                            <span class="text-[11px] font-medium text-zinc-500">Weight</span>
+                                            <span class="text-2xs font-medium text-zinc-500">Weight</span>
                                             <div class="border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 rounded-md px-2 h-7 flex items-center gap-1 text-xs text-zinc-800 dark:text-zinc-200 shadow-xs">
                                                 <span>1.2</span>
-                                                <span class="text-[10px] text-zinc-400">kg</span>
+                                                <span class="text-2xs text-zinc-400">kg</span>
                                             </div>
                                         </div>
                                     </div>
@@ -831,7 +844,7 @@ function exportCurrent() {
                                             </div>
                                             <div class="flex flex-col justify-center gap-1">
                                                 <span class="text-xs font-medium text-zinc-900 dark:text-white">Wave Strike Dynamic Boost Sneaker</span>
-                                                <div class="flex items-center gap-2 text-[11px] text-zinc-500">
+                                                <div class="flex items-center gap-2 text-2xs text-zinc-500">
                                                     <span>SKU: <strong class="font-medium text-zinc-700 dark:text-zinc-300">XR-0293</strong></span>
                                                     <span class="size-1 rounded-full bg-zinc-400"></span>
                                                     <span>Color <strong class="font-medium text-zinc-700 dark:text-zinc-300">Red</strong></span>
@@ -839,79 +852,16 @@ function exportCurrent() {
                                             </div>
                                         </div>
                                         <div class="flex flex-col text-end gap-1">
-                                            <span class="text-[11px] font-medium text-zinc-500">Weight</span>
+                                            <span class="text-2xs font-medium text-zinc-500">Weight</span>
                                             <div class="border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 rounded-md px-2 h-7 flex items-center gap-1 text-xs text-zinc-800 dark:text-zinc-200 shadow-xs">
                                                 <span>0.9</span>
-                                                <span class="text-[10px] text-zinc-400">kg</span>
+                                                <span class="text-2xs text-zinc-400">kg</span>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Card 3: Route & Stepper Progress -->
-                            <div class="flex flex-col text-card-foreground bg-white dark:bg-[#121215] border border-zinc-200 dark:border-zinc-800 shadow-xs rounded-md overflow-hidden">
-                                <div class="flex items-start flex-wrap gap-4 justify-between bg-zinc-50/70 dark:bg-zinc-900/40 p-4 border-b border-zinc-200 dark:border-zinc-800">
-                                    <div class="relative space-y-2">
-                                        <div class="flex items-center gap-2 text-xs text-zinc-700 dark:text-zinc-300">
-                                            <span class="size-2 rounded-full bg-zinc-400"></span>
-                                            <span>1234 Industrial Way, Dallas, TX 75201</span>
-                                        </div>
-                                        <div class="flex items-center gap-2 text-xs font-medium text-zinc-900 dark:text-white">
-                                            <span class="size-2 rounded-full bg-emerald-500"></span>
-                                            <span>8458 Sunset Blvd #209, Los Angeles, CA 90069</span>
-                                        </div>
-                                    </div>
-
-                                    <div class="inline-flex items-center gap-1.5 rounded-md border border-zinc-200 bg-white px-2.5 py-1 text-xs font-medium text-zinc-800 shadow-xs dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200">
-                                        <Truck class="size-3.5 text-zinc-500" />
-                                        <span>UPS Global</span>
-                                    </div>
-                                </div>
-
-                                <!-- Stepper Progress Bar -->
-                                <div class="p-5 pt-3">
-                                    <div class="flex items-center justify-between gap-2 w-full">
-                                        <!-- Step 1: Picking -->
-                                        <div class="flex-1 flex flex-col items-center">
-                                            <div class="h-1.5 w-full rounded-full bg-emerald-500 mb-2"></div>
-                                            <div class="flex items-center gap-1">
-                                                <CheckCircle2 class="size-4 text-emerald-500" />
-                                                <span class="text-xs font-medium text-zinc-700 dark:text-zinc-300">Picking</span>
-                                            </div>
-                                        </div>
-
-                                        <!-- Step 2: Packed -->
-                                        <div class="flex-1 flex flex-col items-center">
-                                            <div class="h-1.5 w-full rounded-full bg-emerald-500 mb-2"></div>
-                                            <div class="flex items-center gap-1">
-                                                <CheckCircle2 class="size-4 text-emerald-500" />
-                                                <span class="text-xs font-medium text-zinc-700 dark:text-zinc-300">Packed</span>
-                                            </div>
-                                        </div>
-
-                                        <!-- Step 3: Shipping -->
-                                        <div class="flex-1 flex flex-col items-center">
-                                            <div class="h-1.5 w-full rounded-full bg-zinc-200 dark:bg-zinc-700 relative overflow-hidden mb-2">
-                                                <div class="h-full w-1/2 bg-emerald-500 rounded-l-full"></div>
-                                            </div>
-                                            <div class="flex items-center gap-1">
-                                                <CheckCircle2 class="size-4 text-emerald-500" />
-                                                <span class="text-xs font-medium text-zinc-700 dark:text-zinc-300">Shipping</span>
-                                            </div>
-                                        </div>
-
-                                        <!-- Step 4: Delivered -->
-                                        <div class="flex-1 flex flex-col items-center">
-                                            <div class="h-1.5 w-full rounded-full bg-zinc-200 dark:bg-zinc-700 mb-2"></div>
-                                            <div class="flex items-center gap-1">
-                                                <Circle class="size-4 text-zinc-400" />
-                                                <span class="text-xs font-medium text-zinc-400">Delivered</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
                         </div>
 
                         <!-- Right Column (w-full shrink-0 lg:w-[300px]) -->
@@ -922,42 +872,52 @@ function exportCurrent() {
                                 </div>
                                 <div class="p-5 space-y-4">
                                     <div class="space-y-1">
-                                        <span class="text-xs font-semibold text-zinc-900 dark:text-white block">
-                                            Shipping to {{ viewingOrder.customer_name }}
+                                        <span class="block text-xs font-semibold text-zinc-900 dark:text-white">
+                                            {{ viewingOrder.customer_name }}
                                         </span>
-                                        <p class="text-xs text-zinc-500">Prinsengracht 24</p>
-                                        <p class="text-xs text-zinc-500">1015 DV Amsterdam, NL</p>
+                                        <p v-if="viewingOrder.customer_phone" class="text-xs text-zinc-500">
+                                            {{ viewingOrder.customer_phone }}
+                                        </p>
+                                        <p v-if="viewingOrder.customer_email" class="text-xs text-zinc-500">
+                                            {{ viewingOrder.customer_email }}
+                                        </p>
+                                        <p
+                                            v-if="viewingOrder.delivery_address"
+                                            class="whitespace-pre-line text-xs text-zinc-500"
+                                        >
+                                            {{ viewingOrder.delivery_address }}
+                                        </p>
                                     </div>
 
-                                    <div class="h-px bg-zinc-200 dark:bg-zinc-800 w-full"></div>
+                                    <div class="h-px w-full bg-zinc-200 dark:bg-zinc-800"></div>
 
+                                    <!-- The order's own money columns; the
+                                         backend recalculates them from the
+                                         saved lines. -->
                                     <div class="space-y-2 text-xs">
-                                        <span class="font-semibold text-zinc-900 dark:text-white block mb-1">Price Details</span>
+                                        <span class="mb-1 block font-semibold text-zinc-900 dark:text-white">Price Details</span>
                                         <div class="flex justify-between text-zinc-500">
                                             <span>Subtotal</span>
-                                            <span class="font-medium text-zinc-800 dark:text-zinc-200">$320.00</span>
+                                            <span class="font-medium text-zinc-800 dark:text-zinc-200">
+                                                {{ money(viewingOrder.subtotal, viewingOrder.currency) }}
+                                            </span>
                                         </div>
                                         <div class="flex justify-between text-zinc-500">
-                                            <span>Shipping</span>
-                                            <span class="font-medium text-zinc-800 dark:text-zinc-200">$10.00</span>
+                                            <span>Discount</span>
+                                            <span class="font-medium text-zinc-800 dark:text-zinc-200">
+                                                −{{ money(viewingOrder.discount_total, viewingOrder.currency) }}
+                                            </span>
                                         </div>
                                         <div class="flex justify-between text-zinc-500">
                                             <span>Tax</span>
-                                            <span class="font-medium text-zinc-800 dark:text-zinc-200">$20.00</span>
+                                            <span class="font-medium text-zinc-800 dark:text-zinc-200">
+                                                {{ money(viewingOrder.tax_total, viewingOrder.currency) }}
+                                            </span>
                                         </div>
-                                        <div class="flex justify-between font-semibold text-zinc-900 dark:text-white pt-2 border-t border-zinc-100 dark:border-zinc-800">
+                                        <div class="flex justify-between border-t border-zinc-100 pt-2 font-semibold text-zinc-900 dark:border-zinc-800 dark:text-white">
                                             <span>Total</span>
-                                            <span>$350.00</span>
+                                            <span>{{ money(viewingOrder.total, viewingOrder.currency) }}</span>
                                         </div>
-                                    </div>
-
-                                    <div class="h-px bg-zinc-200 dark:bg-zinc-800 w-full"></div>
-
-                                    <div class="flex justify-between items-center text-xs">
-                                        <span class="font-medium text-zinc-500">Total</span>
-                                        <span class="text-sm font-bold text-zinc-900 dark:text-white">
-                                            {{ money(viewingOrder.total, viewingOrder.currency) }}
-                                        </span>
                                     </div>
                                 </div>
                             </div>
@@ -967,9 +927,6 @@ function exportCurrent() {
 
                 <!-- Sheet Footer -->
                 <div class="flex flex-col-reverse sm:flex-row items-center justify-between border-t border-zinc-200 dark:border-zinc-800 py-4 px-5 bg-zinc-50/50 dark:bg-zinc-900/40 gap-3">
-                    <div class="text-xs font-medium text-zinc-500">
-                        Read Shipping <a href="#" class="text-blue-600 hover:underline dark:text-blue-400 ms-1">Terms &amp; Conditions</a>
-                    </div>
                     <div class="flex items-center gap-2.5">
                         <button
                             type="button"
@@ -977,18 +934,6 @@ function exportCurrent() {
                             @click="confirmingDelete = viewingOrder; closeDetailsModal()"
                         >
                             Delete
-                        </button>
-                        <button
-                            type="button"
-                            class="cursor-pointer inline-flex items-center justify-center rounded-md border border-zinc-200 bg-white px-3 h-8.5 text-xs font-medium text-zinc-700 shadow-xs hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800 transition-colors"
-                        >
-                            Order Tracking
-                        </button>
-                        <button
-                            type="button"
-                            class="cursor-pointer inline-flex items-center justify-center rounded-md bg-zinc-950 px-3 h-8.5 text-xs font-medium text-white shadow-xs hover:bg-zinc-800 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-100 transition-colors"
-                        >
-                            View Shipping Label
                         </button>
                     </div>
                 </div>

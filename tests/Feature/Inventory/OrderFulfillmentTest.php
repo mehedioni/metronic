@@ -11,6 +11,7 @@ use Modules\Inventory\Models\Order;
 use Modules\Inventory\Models\Product;
 use Modules\Inventory\Models\StockMovement;
 use Modules\Inventory\Services\InventoryService;
+use Modules\Inventory\Support\OrderStatuses;
 use Modules\Inventory\Support\StockableUnit;
 
 /**
@@ -47,7 +48,7 @@ it('reserves stock when an order is confirmed', function () {
 
     $item = app(InventoryService::class)->itemFor(new StockableUnit($product->id));
 
-    expect($order->refresh()->status->value)->toBe('confirmed')
+    expect($order->refresh()->status->key)->toBe('confirmed')
         ->and($item->quantity_on_hand)->toBe(10)
         ->and($item->quantity_reserved)->toBe(4)
         ->and($item->availableQuantity())->toBe(6)
@@ -85,7 +86,7 @@ it('deducts stock and releases the reservation when an order is fulfilled', func
 
     expect($item->quantity_on_hand)->toBe(6)
         ->and($item->quantity_reserved)->toBe(0)
-        ->and($order->refresh()->status->value)->toBe('completed')
+        ->and($order->refresh()->status->key)->toBe('completed')
         ->and($order->refresh()->completed_at)->not->toBeNull()
         ->and($order->items->first()->refresh()->quantity_fulfilled)->toBe(4);
 
@@ -128,7 +129,7 @@ it('moves a partially fulfilled order to processing and keeps the rest reserved'
 
     $item = app(InventoryService::class)->itemFor(new StockableUnit($product->id));
 
-    expect($order->refresh()->status->value)->toBe('processing')
+    expect($order->refresh()->status->key)->toBe('processing')
         ->and($item->quantity_on_hand)->toBe(8)
         ->and($item->quantity_reserved)->toBe(3)
         ->and($line->refresh()->quantity_fulfilled)->toBe(2)
@@ -147,7 +148,7 @@ it('completes the order once the remaining lines are fulfilled', function () {
 
     $item = app(InventoryService::class)->itemFor(new StockableUnit($product->id));
 
-    expect($order->refresh()->status->value)->toBe('completed')
+    expect($order->refresh()->status->key)->toBe('completed')
         ->and($item->quantity_on_hand)->toBe(5)
         ->and($item->quantity_reserved)->toBe(0)
         ->and($line->refresh()->quantity_fulfilled)->toBe(5);
@@ -176,7 +177,7 @@ it('returns fulfilled units to stock when a partly fulfilled order is cancelled'
 
     $item = app(InventoryService::class)->itemFor(new StockableUnit($product->id));
 
-    expect($order->refresh()->status->value)->toBe('cancelled')
+    expect($order->refresh()->status->key)->toBe('cancelled')
         ->and($item->quantity_on_hand)->toBe(10)
         ->and($item->quantity_reserved)->toBe(0)
         ->and($line->refresh()->quantity_fulfilled)->toBe(0);
@@ -185,11 +186,11 @@ it('returns fulfilled units to stock when a partly fulfilled order is cancelled'
 it('fulfils an order that is already processing', function () {
     [$product, $order] = orderWithStock(10, 4);
     app(ConfirmOrderAction::class)->handle($order);
-    $order->refresh()->forceFill(['status' => 'processing'])->save();
+    $order->refresh()->forceFill(['status_id' => OrderStatuses::key('processing')->id])->save();
 
     app(FulfillOrderAction::class)->handle($order->refresh());
 
-    expect($order->refresh()->status->value)->toBe('completed')
+    expect($order->refresh()->status->key)->toBe('completed')
         ->and(app(InventoryService::class)->onHandQuantity(new StockableUnit($product->id)))->toBe(6);
 });
 
@@ -201,7 +202,7 @@ it('releases the reservation when a confirmed order is cancelled', function () {
 
     $item = app(InventoryService::class)->itemFor(new StockableUnit($product->id));
 
-    expect($order->refresh()->status->value)->toBe('cancelled')
+    expect($order->refresh()->status->key)->toBe('cancelled')
         ->and($item->quantity_reserved)->toBe(0)
         ->and($item->quantity_on_hand)->toBe(10);
 });

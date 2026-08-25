@@ -99,7 +99,7 @@ const breadcrumbs = [
                         :key="permission"
                         class="flex flex-wrap items-center justify-between gap-2 px-5 py-2.5"
                     >
-                        <code class="font-mono text-[11px]">{{ permission }}</code>
+                        <code class="font-mono text-2xs">{{ permission }}</code>
 
                         <span class="flex flex-wrap gap-1">
                             <Link
@@ -113,7 +113,7 @@ const breadcrumbs = [
                             </Link>
                             <span
                                 v-if="!(rolesByPermission[permission] ?? []).length"
-                                class="text-[11px] text-muted-foreground"
+                                class="text-2xs text-muted-foreground"
                                 >No role</span
                             >
                         </span>

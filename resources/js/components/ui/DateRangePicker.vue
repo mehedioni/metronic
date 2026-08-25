@@ -306,7 +306,7 @@ function apply() {
                             </div>
 
                             <!-- Weekday Names -->
-                            <div class="mb-1 grid grid-cols-7 text-center text-[10px] font-medium text-zinc-400">
+                            <div class="mb-1 grid grid-cols-7 text-center text-2xs font-medium text-zinc-400">
                                 <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
                             </div>
 
@@ -330,7 +330,7 @@ function apply() {
 
                                     <button
                                         type="button"
-                                        class="relative z-10 mx-auto flex size-7 cursor-pointer items-center justify-center rounded-md text-[11px] font-medium transition-colors"
+                                        class="relative z-10 mx-auto flex size-7 cursor-pointer items-center justify-center rounded-md text-2xs font-medium transition-colors"
                                         :class="[
                                             !day.isCurrentMonth ? 'text-zinc-300 dark:text-zinc-600' : 'text-zinc-700 dark:text-zinc-300',
                                             isStartDate(day.date, tempStart) || isEndDate(day.date, tempEnd)
@@ -364,7 +364,7 @@ function apply() {
                             </div>
 
                             <!-- Weekday Names -->
-                            <div class="mb-1 grid grid-cols-7 text-center text-[10px] font-medium text-zinc-400">
+                            <div class="mb-1 grid grid-cols-7 text-center text-2xs font-medium text-zinc-400">
                                 <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
                             </div>
 
@@ -388,7 +388,7 @@ function apply() {
 
                                     <button
                                         type="button"
-                                        class="relative z-10 mx-auto flex size-7 cursor-pointer items-center justify-center rounded-md text-[11px] font-medium transition-colors"
+                                        class="relative z-10 mx-auto flex size-7 cursor-pointer items-center justify-center rounded-md text-2xs font-medium transition-colors"
                                         :class="[
                                             !day.isCurrentMonth ? 'text-zinc-300 dark:text-zinc-600' : 'text-zinc-700 dark:text-zinc-300',
                                             isStartDate(day.date, tempStart) || isEndDate(day.date, tempEnd)

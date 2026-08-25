@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, Link, router, useForm } from '@inertiajs/vue3';
+import { Head, router, useForm } from '@inertiajs/vue3';
 import {
     Activity,
     ChevronsUpDown,
@@ -16,7 +16,6 @@ import {
     Shield,
     Sparkles,
     SquarePen,
-    Star,
     Trash,
     X,
     Zap,
@@ -26,9 +25,10 @@ import Pagination from '@/components/Pagination.vue';
 import { Drawer } from '@/components/ui/drawer';
 import { useTableQuery } from '@/composables/useTableQuery';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { money, number } from '@/lib/format';
+import { number } from '@/lib/format';
 import categoryRoutes from '@/routes/inventory/categories';
 import type { Paginated } from '@/types';
+import CategoryForm from '../../components/CategoryForm.vue';
 
 interface CategoryRow {
     id: number;
@@ -49,7 +49,7 @@ const props = defineProps<{
     initialViewingCategory?: CategoryRow | null;
 }>();
 
-const { params, toggleSort, reset } = useTableQuery({
+const { params, toggleSort } = useTableQuery({
     url: categoryRoutes.index.url(),
     filters: props.filters,
     only: ['categories', 'filters'],
@@ -61,14 +61,6 @@ const confirmingDelete = ref<CategoryRow | null>(null);
 const createDrawerOpen = ref(props.openCreateModal ?? false);
 const viewingCategory = ref<CategoryRow | null>(props.initialViewingCategory ?? null);
 const editingCategory = ref<CategoryRow | null>(null);
-
-const form = useForm({
-    name: '',
-    slug: '',
-    description: '',
-    parent_id: '',
-    status: 'active',
-});
 
 const detailsForm = useForm({
     name: '',
@@ -88,34 +80,16 @@ function getCategoryIcon(name: string, idx: number) {
     return icons[idx % icons.length];
 }
 
-function getCategoryCode(id: number, slug: string) {
-    const prefix = slug ? slug.substring(0, 2).toUpperCase() : 'WM';
-    const num = 8400 + id * 17;
-    return `${prefix}-${num}`;
-}
-
-function getCategoryEarnings(count: number, id: number) {
-    const amount = (count * 150 + id * 382.5) % 120000 + 498.75;
-    return money(amount);
-}
-
-function openCreateModal() {
-    form.reset();
-    form.clearErrors();
+function openCreateDrawer() {
     editingCategory.value = null;
     viewingCategory.value = null;
     createDrawerOpen.value = true;
 }
 
+
 function openEditModal(cat: CategoryRow) {
     editingCategory.value = cat;
     viewingCategory.value = null;
-    form.name = cat.name;
-    form.slug = cat.slug;
-    form.description = cat.description ?? '';
-    form.parent_id = cat.parent ? String(cat.parent.id) : '';
-    form.status = (cat.status ?? 'active').toLowerCase();
-    form.clearErrors();
     createDrawerOpen.value = true;
 }
 
@@ -128,29 +102,16 @@ function openDetailsModal(cat: CategoryRow) {
     detailsForm.status = (cat.status ?? 'active').toLowerCase();
 }
 
+
 function closeCreateModal() {
     createDrawerOpen.value = false;
     editingCategory.value = null;
-    form.reset();
 }
 
 function closeDetailsModal() {
     viewingCategory.value = null;
 }
 
-function submitCategory() {
-    if (editingCategory.value) {
-        form.put(categoryRoutes.update.url(editingCategory.value.id), {
-            preserveScroll: true,
-            onSuccess: () => closeCreateModal(),
-        });
-    } else {
-        form.post(categoryRoutes.store.url(), {
-            preserveScroll: true,
-            onSuccess: () => closeCreateModal(),
-        });
-    }
-}
 
 function saveDetailsCategory() {
     if (!viewingCategory.value) return;
@@ -192,17 +153,6 @@ function toggleRowSelect(id: number) {
     }
 }
 
-// Featured state
-const featuredMap = ref<Record<number, boolean>>({});
-function isFeatured(id: number, idx: number) {
-    if (featuredMap.value[id] !== undefined) {
-        return featuredMap.value[id];
-    }
-    return idx % 2 === 0;
-}
-function toggleFeatured(id: number, idx: number) {
-    featuredMap.value[id] = !isFeatured(id, idx);
-}
 </script>
 
 <template>
@@ -220,8 +170,8 @@ function toggleFeatured(id: number, idx: number) {
                 </div>
                 <button
                     type="button"
-                    class="inline-flex h-8.5 cursor-pointer items-center justify-center gap-1.5 rounded-md bg-zinc-950 px-3 text-[0.8125rem] font-medium text-white shadow-xs transition-colors hover:bg-zinc-900 dark:bg-zinc-200 dark:text-zinc-950 dark:hover:bg-white"
-                    @click="openCreateModal"
+                    class="inline-flex h-8.5 cursor-pointer items-center justify-center gap-1.5 rounded-md bg-zinc-950 px-3 text-2sm font-medium text-white shadow-xs transition-colors hover:bg-zinc-900 dark:bg-zinc-200 dark:text-zinc-950 dark:hover:bg-white"
+                    @click="openCreateDrawer"
                 >
                     <Plus class="size-4" />
                     <span>Add Category</span>
@@ -250,7 +200,7 @@ function toggleFeatured(id: number, idx: number) {
                 <div class="min-h-[380px] overflow-x-auto">
                     <table class="w-full table-fixed border-separate border-spacing-0 text-left align-middle text-sm">
                         <thead>
-                            <tr class="bg-zinc-50/50 text-[11px] font-semibold text-zinc-500 dark:bg-zinc-800/40 dark:text-zinc-400">
+                            <tr class="bg-zinc-50/50 text-2xs font-semibold text-zinc-500 dark:bg-zinc-800/40 dark:text-zinc-400">
                                 <th class="h-10 w-[50px] border-e border-b border-zinc-200 px-4 text-start align-middle dark:border-zinc-800">
                                     <input
                                         v-model="selectAll"
@@ -279,15 +229,6 @@ function toggleFeatured(id: number, idx: number) {
                                         <ChevronsUpDown class="size-3 opacity-60" />
                                     </button>
                                 </th>
-                                <th class="h-10 w-[160px] border-e border-b border-zinc-200 px-4 text-start align-middle whitespace-nowrap select-none dark:border-zinc-800">
-                                    <button
-                                        type="button"
-                                        class="-ms-2 inline-flex h-7 w-full cursor-pointer items-center justify-between gap-1.5 rounded-md px-2 text-xs font-normal text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-white"
-                                    >
-                                        <span>Total Earnings</span>
-                                        <ChevronsUpDown class="size-3 opacity-60" />
-                                    </button>
-                                </th>
                                 <th class="h-10 w-[120px] border-e border-b border-zinc-200 px-4 text-start align-middle whitespace-nowrap select-none dark:border-zinc-800">
                                     <button
                                         type="button"
@@ -297,9 +238,6 @@ function toggleFeatured(id: number, idx: number) {
                                         <span>Status</span>
                                         <ChevronsUpDown class="size-3 opacity-60" />
                                     </button>
-                                </th>
-                                <th class="h-10 w-[110px] border-e border-b border-zinc-200 px-4 text-center align-middle whitespace-nowrap select-none dark:border-zinc-800">
-                                    <span class="text-xs font-normal text-zinc-600 dark:text-zinc-400">Featured</span>
                                 </th>
                                 <th class="h-10 w-[110px] border-b border-zinc-200 px-4 text-center align-middle dark:border-zinc-800"></th>
                             </tr>
@@ -340,7 +278,6 @@ function toggleFeatured(id: number, idx: number) {
                                                 {{ row.name }}
                                             </button>
                                             <span class="text-xs text-zinc-400">
-                                                Category ID: <span class="text-xs font-medium text-zinc-700 dark:text-zinc-300">{{ getCategoryCode(row.id, row.slug) }}</span>
                                             </span>
                                         </div>
                                     </div>
@@ -351,10 +288,6 @@ function toggleFeatured(id: number, idx: number) {
                                     {{ row.products_count }}
                                 </td>
 
-                                <!-- Total Earnings -->
-                                <td class="border-e border-b border-zinc-200 px-4 py-3 text-start align-middle text-sm font-normal text-zinc-900 dark:border-zinc-800 dark:text-white">
-                                    {{ getCategoryEarnings(row.products_count, row.id) }}
-                                </td>
 
                                 <!-- Status Badge -->
                                 <td class="border-e border-b border-zinc-200 px-4 py-3 text-start align-middle dark:border-zinc-800">
@@ -370,17 +303,6 @@ function toggleFeatured(id: number, idx: number) {
                                     </span>
                                 </td>
 
-                                <!-- Featured Checkbox -->
-                                <td class="border-e border-b border-zinc-200 px-4 py-3 text-center align-middle dark:border-zinc-800">
-                                    <div class="flex justify-center">
-                                        <input
-                                            type="checkbox"
-                                            :checked="isFeatured(row.id, idx)"
-                                            class="size-4.5 cursor-pointer rounded border-zinc-300 text-blue-600 focus:ring-0 dark:border-zinc-700"
-                                            @change="toggleFeatured(row.id, idx)"
-                                        />
-                                    </div>
-                                </td>
 
                                 <!-- Actions -->
                                 <td class="border-b border-zinc-200 px-4 py-3 text-center align-middle dark:border-zinc-800">
@@ -478,7 +400,7 @@ function toggleFeatured(id: number, idx: number) {
                     <div class="flex items-center gap-2.5">
                         <span class="text-xl font-bold tracking-tight text-zinc-900 dark:text-white">{{ viewingCategory.name }}</span>
                         <span
-                            class="inline-flex items-center rounded-sm border px-2 py-0.5 text-[11px] font-medium"
+                            class="inline-flex items-center rounded-sm border px-2 py-0.5 text-2xs font-medium"
                             :class="
                                 viewingCategory.status === 'active' || viewingCategory.status === 'Active'
                                     ? 'border-emerald-200/60 bg-emerald-50 text-emerald-700 dark:border-emerald-800/60 dark:bg-emerald-950/60 dark:text-emerald-400'
@@ -490,7 +412,7 @@ function toggleFeatured(id: number, idx: number) {
                     </div>
                     <div class="flex flex-wrap items-center gap-2 text-xs text-zinc-500">
                         <span>{{ viewingCategory.name }}</span>
-                        <span class="font-medium text-zinc-800 dark:text-zinc-300">{{ getCategoryCode(viewingCategory.id, viewingCategory.slug) }}</span>
+                        <span class="font-medium text-zinc-800 dark:text-zinc-300">{{ viewingCategory.slug }}</span>
                         <span class="size-1 rounded-full bg-zinc-300 dark:bg-zinc-600"></span>
                         <span>Created <strong class="font-medium text-zinc-800 dark:text-zinc-300">16 Jan, 2025</strong></span>
                         <span class="size-1 rounded-full bg-zinc-300 dark:bg-zinc-600"></span>
@@ -528,112 +450,8 @@ function toggleFeatured(id: number, idx: number) {
                 <div class="grid grid-cols-1 gap-6 items-start lg:grid-cols-12">
                     <!-- Left 7 Columns -->
                     <div class="space-y-6 lg:col-span-7">
-                        <!-- Metrics Card -->
-                        <div class="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-[#151518]">
-                            <div class="mb-3 text-xs font-medium text-zinc-500">Metrics</div>
-                            <div class="grid grid-cols-5 divide-x divide-zinc-100 text-center dark:divide-zinc-800/80">
-                                <div class="px-1">
-                                    <div class="text-[11px] text-zinc-400">Total Qty</div>
-                                    <div class="mt-1 text-sm font-bold text-zinc-900 dark:text-white">{{ viewingCategory.products_count || 78 }}</div>
-                                </div>
-                                <div class="px-1">
-                                    <div class="text-[11px] text-zinc-400">Earning</div>
-                                    <div class="mt-1 text-sm font-bold text-zinc-900 dark:text-white">{{ getCategoryEarnings(viewingCategory.products_count, viewingCategory.id) }}</div>
-                                </div>
-                                <div class="px-1">
-                                    <div class="text-[11px] text-zinc-400">Return Rate</div>
-                                    <div class="mt-1 text-sm font-bold text-emerald-600 dark:text-emerald-400">+1.3%</div>
-                                </div>
-                                <div class="px-1">
-                                    <div class="text-[11px] text-zinc-400">Avg. Margin</div>
-                                    <div class="mt-1 text-sm font-bold text-zinc-900 dark:text-white">38%</div>
-                                </div>
-                                <div class="px-1">
-                                    <div class="text-[11px] text-zinc-400">Avg. Rating</div>
-                                    <div class="mt-1 inline-flex items-center gap-1 rounded bg-amber-50 px-1.5 py-0.5 text-xs font-bold text-amber-600 dark:bg-amber-950/40">
-                                        <Star class="size-3 fill-amber-500 text-amber-500" />
-                                        <span>5.0</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
 
-                        <!-- Analytics Card -->
-                        <div class="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-[#151518]">
-                            <div class="mb-3 text-xs font-medium text-zinc-500">Analytics</div>
-                            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                                <div class="space-y-2 rounded-lg border border-zinc-200/70 bg-zinc-50/70 p-3 dark:border-zinc-800 dark:bg-zinc-900/40">
-                                    <div class="text-xs text-zinc-500">Avg. Product Price</div>
-                                    <div class="flex items-center gap-2">
-                                        <span class="text-lg font-bold text-zinc-900 dark:text-white">$96.23</span>
-                                        <span class="inline-flex items-center rounded bg-emerald-50 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400">↗ 3.5%</span>
-                                    </div>
-                                    <div class="h-12 w-full pt-2">
-                                        <svg viewBox="0 0 200 45" class="h-full w-full fill-none stroke-blue-500" stroke-width="2">
-                                            <path d="M0,35 C30,32 50,22 80,25 C110,28 140,15 170,18 C185,19 195,8 200,6" />
-                                        </svg>
-                                    </div>
-                                </div>
-                                <div class="space-y-2 rounded-lg border border-zinc-200/70 bg-zinc-50/70 p-3 dark:border-zinc-800 dark:bg-zinc-900/40">
-                                    <div class="text-xs text-zinc-500">Category Product Sales</div>
-                                    <div class="flex items-center gap-2">
-                                        <span class="text-lg font-bold text-zinc-900 dark:text-white">12,346</span>
-                                        <span class="inline-flex items-center rounded bg-emerald-50 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400">↗ 4%</span>
-                                        <span class="ms-auto text-xs text-zinc-400">$243,784.02</span>
-                                    </div>
-                                    <div class="h-12 w-full pt-2">
-                                        <svg viewBox="0 0 200 45" class="h-full w-full fill-none stroke-indigo-500" stroke-width="2">
-                                            <path d="M0,38 C25,12 45,15 70,25 C95,35 125,28 150,20 C175,12 190,14 200,10" />
-                                        </svg>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
 
-                        <!-- Category Items Table -->
-                        <div class="overflow-hidden rounded-lg border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-[#151518]">
-                            <div class="flex items-center justify-between border-b border-zinc-200 p-4 dark:border-zinc-800">
-                                <span class="text-xs font-medium text-zinc-900 dark:text-white">Category Items</span>
-                                <button type="button" class="text-xs font-medium text-blue-600 hover:underline dark:text-blue-400">Select All</button>
-                            </div>
-                            <div class="overflow-x-auto">
-                                <table class="w-full text-left text-xs text-zinc-600 dark:text-zinc-400">
-                                    <thead class="border-b border-zinc-200 bg-zinc-50/50 text-[11px] font-medium text-zinc-400 dark:border-zinc-800 dark:bg-zinc-900/40">
-                                        <tr>
-                                            <th class="px-4 py-2.5">Product Info</th>
-                                            <th class="px-4 py-2.5">Total Sales</th>
-                                            <th class="px-4 py-2.5 text-end">Last Moved</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="divide-y divide-zinc-200 dark:divide-zinc-800">
-                                        <tr class="hover:bg-zinc-50/50 dark:hover:bg-zinc-800/20">
-                                            <td class="px-4 py-2.5">
-                                                <div class="font-medium text-zinc-900 dark:text-white">Air Max 270 React Eng...</div>
-                                                <div class="text-[10px] text-zinc-400">sku: WM-8421</div>
-                                            </td>
-                                            <td class="px-4 py-2.5 font-medium text-zinc-800 dark:text-zinc-200">$4,283.00</td>
-                                            <td class="px-4 py-2.5 text-end text-zinc-500">18 Aug, 2025</td>
-                                        </tr>
-                                        <tr class="hover:bg-zinc-50/50 dark:hover:bg-zinc-800/20">
-                                            <td class="px-4 py-2.5">
-                                                <div class="font-medium text-zinc-900 dark:text-white">Trail Runner Z2</div>
-                                                <div class="text-[10px] text-zinc-400">sku: UC-3990</div>
-                                            </td>
-                                            <td class="px-4 py-2.5 font-medium text-zinc-800 dark:text-zinc-200">$923.00</td>
-                                            <td class="px-4 py-2.5 text-end text-zinc-500">17 Aug, 2025</td>
-                                        </tr>
-                                        <tr class="hover:bg-zinc-50/50 dark:hover:bg-zinc-800/20">
-                                            <td class="px-4 py-2.5">
-                                                <div class="font-medium text-zinc-900 dark:text-white">Urban Flex Knit Low...</div>
-                                                <div class="text-[10px] text-zinc-400">sku: KB-8820</div>
-                                            </td>
-                                            <td class="px-4 py-2.5 font-medium text-zinc-800 dark:text-zinc-200">$1,097.50</td>
-                                            <td class="px-4 py-2.5 text-end text-zinc-500">15 Aug, 2025</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
                     </div>
 
                     <!-- Right 5 Columns -->
@@ -690,115 +508,39 @@ function toggleFeatured(id: number, idx: number) {
         </div>
 
         <!-- ADD / EDIT CATEGORY MODAL DRAWER (500px Sheet Modal 1:1 matching reference create-category.html) -->
-        <div
-            v-if="createDrawerOpen"
-            id="create-category-backdrop"
-            class="fixed inset-0 z-40 bg-black/40 backdrop-blur-xs transition-opacity duration-300"
-            @click="closeCreateModal"
-        />
-
-        <div
-            id="create-category-modal"
-            class="fixed inset-5 start-auto z-50 flex h-auto max-w-[calc(100vw-40px)] w-full flex-col overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-2xl transition-all duration-300 ease-in-out dark:border-zinc-800 dark:bg-[#121215] lg:w-[500px]"
-            :class="createDrawerOpen ? 'translate-x-0' : 'translate-x-full pointer-events-none opacity-0'"
+        <!--
+            Category intake uses the shared Drawer, exactly as "Take order"
+            does: one panel implementation, so the inset, slide animation,
+            focus trap, escape key and scroll lock behave the same everywhere.
+            CategoryForm renders the columns the categories table actually has
+            — including the parent and slug this panel used to omit.
+        -->
+        <Drawer
+            :open="createDrawerOpen"
+            :title="editingCategory ? 'Edit category' : 'Add category'"
+            description="A category groups products. Nesting one under a parent builds the tree the catalogue is browsed by."
+            @update:open="!$event ? closeCreateModal() : null"
         >
-            <!-- Modal Header -->
-            <div class="flex items-center justify-between border-b border-zinc-200 px-6 py-4 dark:border-zinc-800">
-                <h2 class="text-base font-medium text-zinc-900 dark:text-white">
-                    {{ editingCategory ? 'Edit Category' : 'Add Category' }}
-                </h2>
-                <button
-                    type="button"
-                    class="cursor-pointer rounded-sm p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
-                    @click="closeCreateModal"
-                >
-                    <X class="size-4" />
-                </button>
+            <div class="py-2">
+                <!-- Re-keyed per record so the form re-initialises when the
+                     drawer switches between creating and editing. -->
+                <CategoryForm
+                    :key="editingCategory?.id ?? 'new'"
+                    :category="editingCategory ?? undefined"
+                    :parents="props.parents"
+                    :statuses="props.statuses"
+                    :action="
+                        editingCategory
+                            ? categoryRoutes.update.url(editingCategory.id)
+                            : categoryRoutes.store.url()
+                    "
+                    :method="editingCategory ? 'put' : 'post'"
+                    :submit-label="editingCategory ? 'Save changes' : 'Create category'"
+                    @cancel="closeCreateModal"
+                />
             </div>
+        </Drawer>
 
-            <!-- Modal Body -->
-            <form class="flex flex-1 flex-col overflow-hidden" @submit.prevent="submitCategory">
-                <div class="flex-1 space-y-5 overflow-y-auto p-6">
-                    <!-- Upload Box -->
-                    <div class="relative flex h-[200px] w-full items-center justify-center rounded-lg border border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900/50">
-                        <div class="flex flex-col items-center justify-center gap-2">
-                            <ImageIcon class="size-9 text-zinc-400" />
-                        </div>
-                        <input id="category-image-upload" type="file" class="hidden" accept="image/*" />
-                        <label for="category-image-upload" class="absolute right-3 bottom-3 cursor-pointer">
-                            <span class="inline-flex items-center gap-1 rounded-md border border-zinc-200 bg-white px-3 py-1 text-xs font-medium text-zinc-700 shadow-xs transition-colors hover:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700">
-                                Upload
-                            </span>
-                        </label>
-                    </div>
-
-                    <!-- Category Name -->
-                    <div class="space-y-1.5">
-                        <label class="text-xs font-medium text-zinc-700 dark:text-zinc-300">Category Name</label>
-                        <input
-                            v-model="form.name"
-                            type="text"
-                            placeholder="Category Name"
-                            class="h-8.5 w-full rounded-md border border-zinc-200 bg-white px-3 text-xs text-zinc-900 focus:ring-1 focus:ring-zinc-400 focus:outline-none dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-100"
-                            required
-                        />
-                        <p v-if="form.errors.name" class="text-[11px] text-rose-500">{{ form.errors.name }}</p>
-                    </div>
-
-                    <!-- Status -->
-                    <div class="space-y-1.5">
-                        <label class="text-xs font-medium text-zinc-700 dark:text-zinc-300">Status</label>
-                        <select
-                            v-model="form.status"
-                            class="h-8.5 w-full rounded-md border border-zinc-200 bg-white px-3 text-xs text-zinc-700 focus:ring-1 focus:ring-zinc-400 focus:outline-none dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300"
-                        >
-                            <option value="" disabled>Select Status</option>
-                            <option value="active">Active</option>
-                            <option value="inactive">Inactive</option>
-                        </select>
-                    </div>
-
-                    <!-- Description -->
-                    <div class="space-y-1.5">
-                        <label class="text-xs font-medium text-zinc-700 dark:text-zinc-300">Description</label>
-                        <textarea
-                            v-model="form.description"
-                            rows="4"
-                            placeholder="Category Description"
-                            class="w-full rounded-md border border-zinc-200 bg-white p-3 text-xs text-zinc-700 focus:ring-1 focus:ring-zinc-400 focus:outline-none dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300"
-                        />
-                    </div>
-
-                    <!-- Featured Checkbox -->
-                    <div class="flex items-center gap-2 pt-1">
-                        <input
-                            id="featured-checkbox"
-                            type="checkbox"
-                            class="size-4 cursor-pointer rounded border-zinc-300 text-blue-600 focus:ring-0 dark:border-zinc-700"
-                        />
-                        <label for="featured-checkbox" class="cursor-pointer text-xs font-medium text-zinc-700 dark:text-zinc-300">Featured</label>
-                    </div>
-                </div>
-
-                <!-- Modal Footer -->
-                <div class="flex shrink-0 items-center justify-end gap-3 border-t border-zinc-200 bg-zinc-50/40 px-6 py-4 dark:border-zinc-800 dark:bg-zinc-900/30">
-                    <button
-                        type="button"
-                        class="cursor-pointer rounded-md px-3.5 py-1.5 text-xs font-medium text-zinc-700 transition-colors hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
-                        @click="closeCreateModal"
-                    >
-                        Close
-                    </button>
-                    <button
-                        type="submit"
-                        :disabled="form.processing"
-                        class="cursor-pointer rounded-md bg-zinc-950 px-4 py-1.5 text-xs font-medium text-white shadow-xs transition-colors hover:bg-zinc-800 disabled:opacity-50 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-100"
-                    >
-                        {{ editingCategory ? 'Save Changes' : 'Create' }}
-                    </button>
-                </div>
-            </form>
-        </div>
 
         <!-- Delete Confirmation Drawer -->
         <Drawer

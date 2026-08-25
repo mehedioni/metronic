@@ -4,7 +4,6 @@ namespace Modules\Inventory\Services;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
-use Modules\Inventory\Enums\OrderStatus;
 use Modules\Inventory\Models\Expense;
 use Modules\Inventory\Models\Order;
 
@@ -189,7 +188,7 @@ class ReportService
     private function ordersInRange(Carbon $from, Carbon $to, array $filters): Builder
     {
         return Order::query()
-            ->whereNot('orders.status', OrderStatus::Cancelled)
+            ->billable()
             ->whereBetween('orders.created_at', [$from->copy()->startOfDay(), $to->copy()->endOfDay()])
             ->when(
                 $filters['customer_id'] ?? null,

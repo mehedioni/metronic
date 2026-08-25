@@ -82,11 +82,36 @@ form — `order_out` and `receipt_reversal` are system-driven only.
 
 ## Order lifecycle and its inventory effects
 
+The lifecycle is **configuration**, not an enum: see `config/orders.php`.
+Orders store `status_id`, never a name, so relabelling a status does not
+rewrite a single row. The shipped default is:
+
 ```
 draft ──► pending ──► confirmed ──► processing ──► completed
-   │          │            │             │
-   └──────────┴────────────┴─────────────┴──► cancelled
+(Quote)      │            │             │
+   └─────────┴────────────┴─────────────┴──► cancelled
 ```
+
+Each status declares what it *means*, because the inventory effects are bound
+to those meanings rather than to its name:
+
+| Flag | Effect |
+| --- | --- |
+| `editable` | lines and totals may still change |
+| `holds_reservation` | stock is reserved while the order sits here |
+| `fulfillable` | the order may be handed over from here, deducting on-hand stock |
+| `cancellable` | the order may still be cancelled |
+| `void` | the order was called off; revenue, margin and customer spend exclude it |
+| `transitions` | statuses it may move to, by key |
+
+`Modules\Inventory\Support\OrderStatuses` resolves the configuration —
+`key()`, `find()`, `resolve()` (id, key or object), `assignable()`,
+`billableIds()`. `$order->status` hands back the value object carrying those
+flags, and serialises to `{id, key, label, variant}` for the frontend.
+
+Adding a status is a config edit: it gains a tab, a count and a filter with no
+code change. Ids are permanent — reusing one for a different meaning would
+silently restate every historical order.
 
 - Intake (`OrderService::create`): records the order and its lines and has
   **no** inventory effect. A line with no `unit_price` is priced from the

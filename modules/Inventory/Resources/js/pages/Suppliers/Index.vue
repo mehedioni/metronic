@@ -198,7 +198,7 @@ function exportCurrent() {
                 </template>
 
                 <template #cell-code="{ row }">
-                    <span class="font-mono text-[11px] text-muted-foreground">{{
+                    <span class="font-mono text-2xs text-muted-foreground">{{
                         row.code
                     }}</span>
                 </template>
@@ -321,12 +321,12 @@ function exportCurrent() {
             size="sm"
             @update:open="confirming = null"
         >
-            <p class="text-[0.8125rem] text-muted-foreground">
+            <p class="text-2sm text-muted-foreground">
                 A supplier with receiving history is never deleted — deactivate
                 it instead, so the history keeps resolving.
             </p>
 
-            <p v-if="firstOf('inventory')" class="mt-3 text-[11px] text-danger">
+            <p v-if="firstOf('inventory')" class="mt-3 text-2xs text-danger">
                 {{ firstOf('inventory') }}
             </p>
 

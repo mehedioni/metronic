@@ -30,7 +30,7 @@ watch(
     >
         <div
             v-if="success"
-            class="pointer-events-auto flex max-w-md items-start gap-2.5 rounded-lg border border-success/20 bg-success-soft px-4 py-3 text-[0.8125rem] text-success shadow-lg"
+            class="pointer-events-auto flex max-w-md items-start gap-2.5 rounded-lg border border-success/20 bg-success-soft px-4 py-3 text-2sm text-success shadow-lg"
         >
             <CheckCircle2Icon class="mt-px size-4 shrink-0" />
             <p class="flex-1">{{ success }}</p>
@@ -46,7 +46,7 @@ watch(
 
         <div
             v-if="error"
-            class="pointer-events-auto flex max-w-md items-start gap-2.5 rounded-lg border border-danger/20 bg-danger-soft px-4 py-3 text-[0.8125rem] text-danger shadow-lg"
+            class="pointer-events-auto flex max-w-md items-start gap-2.5 rounded-lg border border-danger/20 bg-danger-soft px-4 py-3 text-2sm text-danger shadow-lg"
         >
             <TriangleAlertIcon class="mt-px size-4 shrink-0" />
             <p class="flex-1">{{ error }}</p>

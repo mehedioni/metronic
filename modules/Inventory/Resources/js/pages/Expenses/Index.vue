@@ -297,7 +297,7 @@ function exportCurrent() {
                 </template>
 
                 <template #cell-reference="{ row }">
-                    <span class="font-mono text-[11px] text-muted-foreground">{{
+                    <span class="font-mono text-2xs text-muted-foreground">{{
                         row.reference ?? '—'
                     }}</span>
                 </template>
@@ -453,7 +453,7 @@ function exportCurrent() {
             size="sm"
             @update:open="confirming = null"
         >
-            <p class="text-[0.8125rem] text-muted-foreground">
+            <p class="text-2sm text-muted-foreground">
                 Nothing depends on an expense, so it is removed outright. The
                 profit report for
                 {{ confirming ? date(confirming.spent_on) : 'that day' }} will

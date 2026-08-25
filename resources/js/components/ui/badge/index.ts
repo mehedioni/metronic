@@ -25,7 +25,7 @@ export const badgeVariants = cva(
                 solid: 'border-transparent bg-primary text-primary-foreground',
             },
             size: {
-                sm: 'px-1.5 py-0.5 text-[11px]',
+                sm: 'px-1.5 py-0.5 text-2xs',
                 default: 'px-2 py-0.5 text-xs',
                 lg: 'px-2.5 py-1 text-xs',
             },

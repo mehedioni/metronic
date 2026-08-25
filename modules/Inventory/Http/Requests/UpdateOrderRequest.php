@@ -5,9 +5,9 @@ namespace Modules\Inventory\Http\Requests;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
-use Modules\Inventory\Enums\OrderStatus;
 use Modules\Inventory\Enums\ProductStatus;
 use Modules\Inventory\Models\Product;
+use Modules\Inventory\Support\OrderStatuses;
 
 class UpdateOrderRequest extends FormRequest
 {
@@ -27,7 +27,9 @@ class UpdateOrderRequest extends FormRequest
             'customer_email' => ['nullable', 'email', 'max:255'],
             'customer_phone' => ['nullable', 'string', 'max:40'],
             'delivery_address' => ['nullable', 'string', 'max:1000'],
-            'status' => ['nullable', Rule::in([OrderStatus::Draft->value, OrderStatus::Pending->value])],
+            // Only the statuses a form may set; the rest are reached
+            // through an action that carries the stock effect with it.
+            'status_id' => ['nullable', 'integer', Rule::in(OrderStatuses::assignableIds())],
             'discount_total' => ['nullable', 'numeric', 'min:0'],
             'tax_total' => ['nullable', 'numeric', 'min:0'],
             'currency' => ['nullable', 'string', 'size:3'],

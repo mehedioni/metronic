@@ -5,11 +5,11 @@ namespace Modules\Inventory\Services;
 use App\Core\Support\QuerySorter;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
-use Modules\Inventory\Enums\OrderStatus;
 use Modules\Inventory\Enums\RecordStatus;
 use Modules\Inventory\Exceptions\RestrictedDeletionException;
 use Modules\Inventory\Models\Customer;
 use Modules\Inventory\Support\DocumentNumberGenerator;
+use Modules\Inventory\Support\OrderStatuses;
 
 class CustomerService
 {
@@ -118,7 +118,7 @@ class CustomerService
             'average_order_value' => $ordersCount > 0 ? round($totalSpent / $ordersCount, 2) : 0.0,
             'last_order_at' => (clone $billable)->max('created_at'),
             'cancelled_orders_count' => $customer->orders()
-                ->where('status', OrderStatus::Cancelled)
+                ->whereIn('status_id', OrderStatuses::voidIds())
                 ->count(),
             'recent_orders' => $customer->orders()
                 ->withCount('items')

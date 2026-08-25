@@ -212,7 +212,7 @@ function exportCurrent() {
                 @sort="toggleSort"
             >
                 <template #cell-code="{ row }">
-                    <span class="font-mono text-[11px] font-semibold">{{
+                    <span class="font-mono text-2xs font-semibold">{{
                         row.code
                     }}</span>
                 </template>
@@ -227,7 +227,7 @@ function exportCurrent() {
                                 >{{ row.name }}</Link
                             >
                             <span
-                                class="block truncate text-[11px] text-muted-foreground"
+                                class="block truncate text-2xs text-muted-foreground"
                                 >{{ row.email ?? 'No email' }}</span
                             >
                         </span>
@@ -355,12 +355,12 @@ function exportCurrent() {
             size="sm"
             @update:open="confirming = null"
         >
-            <p class="text-[0.8125rem] text-muted-foreground">
+            <p class="text-2sm text-muted-foreground">
                 A customer with orders is never deleted — deactivate them
                 instead, so those orders keep resolving to a customer.
             </p>
 
-            <p v-if="firstOf('inventory')" class="mt-3 text-[11px] text-danger">
+            <p v-if="firstOf('inventory')" class="mt-3 text-2xs text-danger">
                 {{ firstOf('inventory') }}
             </p>
 

@@ -229,7 +229,7 @@ function destroy() {
                         <label
                             v-for="permission in permissions"
                             :key="permission"
-                            class="flex h-8.5 items-center gap-2 rounded-md border border-input px-3 text-[11px] shadow-xs"
+                            class="flex h-8.5 items-center gap-2 rounded-md border border-input px-3 text-2xs shadow-xs"
                         >
                             <input
                                 v-model="form.permissions"
@@ -243,7 +243,7 @@ function destroy() {
 
                 <p
                     v-if="form.errors.permissions || firstOf('role', 'permission')"
-                    class="text-[11px] text-danger"
+                    class="text-2xs text-danger"
                 >
                     {{ form.errors.permissions ?? firstOf('role', 'permission') }}
                 </p>
@@ -265,11 +265,11 @@ function destroy() {
             size="sm"
             @update:open="confirming = null"
         >
-            <p class="text-[0.8125rem] text-muted-foreground">
+            <p class="text-2sm text-muted-foreground">
                 Users holding this role lose the permissions it bundles.
             </p>
 
-            <p v-if="firstOf('role')" class="mt-3 text-[11px] text-danger">
+            <p v-if="firstOf('role')" class="mt-3 text-2xs text-danger">
                 {{ firstOf('role') }}
             </p>
 

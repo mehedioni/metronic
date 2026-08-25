@@ -4,13 +4,13 @@ namespace Modules\Inventory\Actions;
 
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
-use Modules\Inventory\Enums\OrderStatus;
 use Modules\Inventory\Exceptions\AlreadyProcessedException;
 use Modules\Inventory\Exceptions\InvalidStatusTransitionException;
 use Modules\Inventory\Models\Order;
 use Modules\Inventory\Models\OrderItem;
 use Modules\Inventory\Services\InventoryService;
 use Modules\Inventory\Support\MovementContext;
+use Modules\Inventory\Support\OrderStatuses;
 
 /**
  * Hands order lines over to the customer: deducts on-hand stock for the
@@ -42,14 +42,16 @@ class FulfillOrderAction
                 ->lockForUpdate()
                 ->firstOrFail();
 
-            if ($locked->status === OrderStatus::Completed) {
+            $completed = OrderStatuses::key('completed');
+
+            if ($locked->status->is($completed)) {
                 throw AlreadyProcessedException::for("Order {$locked->order_number}");
             }
 
             if (! $locked->status->isFulfillable()) {
                 throw InvalidStatusTransitionException::between(
-                    $locked->status->value,
-                    OrderStatus::Completed->value,
+                    $locked->status->key,
+                    $completed->key,
                 );
             }
 
@@ -126,16 +128,16 @@ class FulfillOrderAction
         $order->load('items');
 
         $target = $order->isFullyFulfilled()
-            ? OrderStatus::Completed
-            : OrderStatus::Processing;
+            ? OrderStatuses::key('completed')
+            : OrderStatuses::key('processing');
 
-        if ($order->status === $target || ! $order->status->canTransitionTo($target)) {
+        if ($order->status->is($target) || ! $order->status->canTransitionTo($target)) {
             return;
         }
 
         $order->forceFill([
-            'status' => $target,
-            'completed_at' => $target === OrderStatus::Completed ? Carbon::now() : null,
+            'status_id' => $target->id,
+            'completed_at' => $target->is('completed') ? Carbon::now() : null,
         ])->save();
     }
 }

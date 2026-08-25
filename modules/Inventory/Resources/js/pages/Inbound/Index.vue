@@ -2,35 +2,27 @@
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import {
     Calendar as CalendarIcon,
-    CheckCircle2,
     ChevronDown,
     ChevronLeft,
     ChevronRight,
     ChevronsUpDown,
-    Circle,
     EllipsisVertical,
-    MapPin,
     Pencil,
     PlusIcon,
     Search,
     Settings,
     Trash2,
-    Truck,
-    X,
 } from 'lucide-vue-next';
-import { computed, onMounted, onUnmounted, ref } from 'vue';
+import { computed, ref } from 'vue';
 import { FormField, FormSection } from '@/components/form';
-import Pagination from '@/components/Pagination.vue';
 import { Button } from '@/components/ui/button';
 import { Drawer } from '@/components/ui/drawer';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
-import { useCsvExport } from '@/composables/useCsvExport';
 import { usePageErrors } from '@/composables/usePageErrors';
-import { usePermissions } from '@/composables/usePermissions';
 import { useTableQuery } from '@/composables/useTableQuery';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { date, money, number } from '@/lib/format';
+import { date, number } from '@/lib/format';
 import { humanize } from '@/lib/status';
 import inbound from '@/routes/inventory/inbound';
 import stockRoutes from '@/routes/inventory/stock';
@@ -73,11 +65,9 @@ const props = defineProps<{
     };
 }>();
 
-const { can } = usePermissions();
 const { firstOf } = usePageErrors();
-const { exportRows } = useCsvExport();
 
-const { params, loading, toggleSort, sortState, reset } = useTableQuery({
+const { params, loading, toggleSort } = useTableQuery({
     url: inbound.index.url(),
     filters: props.filters,
     only: ['receipts', 'filters'],
@@ -142,17 +132,6 @@ function create() {
             creating.value = false;
         },
     });
-}
-
-function openTrackingDrawer(row: ReceiptRow) {
-    activeTrackingRow.value = row;
-    trackingDrawerOpen.value = true;
-    activeRowAction.value = null;
-}
-
-function closeTrackingDrawer() {
-    trackingDrawerOpen.value = false;
-    activeTrackingRow.value = null;
 }
 
 function getStatusBadgeClass(status: string) {
@@ -268,13 +247,13 @@ function getStatusBadgeClass(status: string) {
                                         {{ monthNames[month1Grid.month] }} {{ month1Grid.year }}
                                     </div>
                                     <div class="mb-1 grid grid-cols-7 gap-y-1 text-center">
-                                        <span class="flex size-8 items-center justify-center text-[11px] font-medium text-zinc-400">Su</span>
-                                        <span class="flex size-8 items-center justify-center text-[11px] font-medium text-zinc-400">Mo</span>
-                                        <span class="flex size-8 items-center justify-center text-[11px] font-medium text-zinc-400">Tu</span>
-                                        <span class="flex size-8 items-center justify-center text-[11px] font-medium text-zinc-400">We</span>
-                                        <span class="flex size-8 items-center justify-center text-[11px] font-medium text-zinc-400">Th</span>
-                                        <span class="flex size-8 items-center justify-center text-[11px] font-medium text-zinc-400">Fr</span>
-                                        <span class="flex size-8 items-center justify-center text-[11px] font-medium text-zinc-400">Sa</span>
+                                        <span class="flex size-8 items-center justify-center text-2xs font-medium text-zinc-400">Su</span>
+                                        <span class="flex size-8 items-center justify-center text-2xs font-medium text-zinc-400">Mo</span>
+                                        <span class="flex size-8 items-center justify-center text-2xs font-medium text-zinc-400">Tu</span>
+                                        <span class="flex size-8 items-center justify-center text-2xs font-medium text-zinc-400">We</span>
+                                        <span class="flex size-8 items-center justify-center text-2xs font-medium text-zinc-400">Th</span>
+                                        <span class="flex size-8 items-center justify-center text-2xs font-medium text-zinc-400">Fr</span>
+                                        <span class="flex size-8 items-center justify-center text-2xs font-medium text-zinc-400">Sa</span>
                                     </div>
                                     <div class="grid grid-cols-7 gap-y-1 text-center">
                                         <div
@@ -302,13 +281,13 @@ function getStatusBadgeClass(status: string) {
                                         {{ monthNames[month2Grid.month] }} {{ month2Grid.year }}
                                     </div>
                                     <div class="mb-1 grid grid-cols-7 gap-y-1 text-center">
-                                        <span class="flex size-8 items-center justify-center text-[11px] font-medium text-zinc-400">Su</span>
-                                        <span class="flex size-8 items-center justify-center text-[11px] font-medium text-zinc-400">Mo</span>
-                                        <span class="flex size-8 items-center justify-center text-[11px] font-medium text-zinc-400">Tu</span>
-                                        <span class="flex size-8 items-center justify-center text-[11px] font-medium text-zinc-400">We</span>
-                                        <span class="flex size-8 items-center justify-center text-[11px] font-medium text-zinc-400">Th</span>
-                                        <span class="flex size-8 items-center justify-center text-[11px] font-medium text-zinc-400">Fr</span>
-                                        <span class="flex size-8 items-center justify-center text-[11px] font-medium text-zinc-400">Sa</span>
+                                        <span class="flex size-8 items-center justify-center text-2xs font-medium text-zinc-400">Su</span>
+                                        <span class="flex size-8 items-center justify-center text-2xs font-medium text-zinc-400">Mo</span>
+                                        <span class="flex size-8 items-center justify-center text-2xs font-medium text-zinc-400">Tu</span>
+                                        <span class="flex size-8 items-center justify-center text-2xs font-medium text-zinc-400">We</span>
+                                        <span class="flex size-8 items-center justify-center text-2xs font-medium text-zinc-400">Th</span>
+                                        <span class="flex size-8 items-center justify-center text-2xs font-medium text-zinc-400">Fr</span>
+                                        <span class="flex size-8 items-center justify-center text-2xs font-medium text-zinc-400">Sa</span>
                                     </div>
                                     <div class="grid grid-cols-7 gap-y-1 text-center">
                                         <div
@@ -335,21 +314,21 @@ function getStatusBadgeClass(status: string) {
                                 <div class="flex items-center gap-1.5">
                                     <button
                                         type="button"
-                                        class="rounded-md bg-zinc-100 px-2.5 py-1 text-[11px] font-medium text-zinc-700 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
+                                        class="rounded-md bg-zinc-100 px-2.5 py-1 text-2xs font-medium text-zinc-700 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
                                         @click="applyPresetRange('today')"
                                     >
                                         Today
                                     </button>
                                     <button
                                         type="button"
-                                        class="rounded-md bg-zinc-100 px-2.5 py-1 text-[11px] font-medium text-zinc-700 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
+                                        class="rounded-md bg-zinc-100 px-2.5 py-1 text-2xs font-medium text-zinc-700 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
                                         @click="applyPresetRange('last30')"
                                     >
                                         Last 30 Days
                                     </button>
                                     <button
                                         type="button"
-                                        class="rounded-md bg-zinc-100 px-2.5 py-1 text-[11px] font-medium text-zinc-700 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
+                                        class="rounded-md bg-zinc-100 px-2.5 py-1 text-2xs font-medium text-zinc-700 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
                                         @click="applyPresetRange('thisYear')"
                                     >
                                         This Year
@@ -370,7 +349,7 @@ function getStatusBadgeClass(status: string) {
                     <div class="relative" @click.stop>
                         <button
                             type="button"
-                            class="inline-flex h-8.5 cursor-pointer items-center justify-center gap-1.5 rounded-md border border-zinc-200 bg-white px-3 text-[0.8125rem] font-medium text-zinc-700 shadow-xs transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700/60"
+                            class="inline-flex h-8.5 cursor-pointer items-center justify-center gap-1.5 rounded-md border border-zinc-200 bg-white px-3 text-2sm font-medium text-zinc-700 shadow-xs transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700/60"
                             @click="statusMenuOpen = !statusMenuOpen; dateMenuOpen = false; supplierMenuOpen = false"
                         >
                             <span>{{ statusBtnLabel }}</span>
@@ -403,7 +382,7 @@ function getStatusBadgeClass(status: string) {
                                     />
                                     <span class="flex grow items-center justify-between">
                                         <span
-                                            class="inline-flex h-5 items-center justify-center rounded px-2 text-[11px] font-medium"
+                                            class="inline-flex h-5 items-center justify-center rounded px-2 text-2xs font-medium"
                                             :class="getStatusBadgeClass(st)"
                                         >
                                             {{ humanize(st) }}
@@ -418,7 +397,7 @@ function getStatusBadgeClass(status: string) {
                     <div class="relative" @click.stop>
                         <button
                             type="button"
-                            class="inline-flex h-8.5 cursor-pointer items-center justify-center gap-1.5 rounded-md border border-zinc-200 bg-white px-3 text-[0.8125rem] font-medium text-zinc-700 shadow-xs transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700/60"
+                            class="inline-flex h-8.5 cursor-pointer items-center justify-center gap-1.5 rounded-md border border-zinc-200 bg-white px-3 text-2sm font-medium text-zinc-700 shadow-xs transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700/60"
                             @click="supplierMenuOpen = !supplierMenuOpen; dateMenuOpen = false; statusMenuOpen = false"
                         >
                             <span>{{ supplierBtnLabel }}</span>
@@ -459,7 +438,7 @@ function getStatusBadgeClass(status: string) {
                 <!-- Toolbar Action Buttons (Matches Metronic inbound-stock.html) -->
                 <Link
                     :href="stockRoutes.planner.url()"
-                    class="inline-flex h-8.5 shrink-0 items-center justify-center rounded-md bg-zinc-950 px-3.5 text-[0.8125rem] font-medium text-white shadow-xs transition-colors hover:bg-zinc-900 dark:bg-zinc-200 dark:text-zinc-950 dark:hover:bg-white"
+                    class="inline-flex h-8.5 shrink-0 items-center justify-center rounded-md bg-zinc-950 px-3.5 text-2sm font-medium text-white shadow-xs transition-colors hover:bg-zinc-900 dark:bg-zinc-200 dark:text-zinc-950 dark:hover:bg-white"
                 >
                     <span>Stock Planner</span>
                 </Link>
@@ -469,7 +448,7 @@ function getStatusBadgeClass(status: string) {
             <div class="min-h-[380px] overflow-x-auto">
                 <table class="w-full min-w-[1130px] table-fixed border-separate border-spacing-0 text-left text-sm align-middle caption-bottom">
                     <thead>
-                        <tr class="bg-zinc-50/50 text-[11px] font-semibold text-zinc-500 dark:bg-zinc-800/40 dark:text-zinc-400">
+                        <tr class="bg-zinc-50/50 text-2xs font-semibold text-zinc-500 dark:bg-zinc-800/40 dark:text-zinc-400">
                             <th class="h-10 w-[50px] border-e border-b border-zinc-200 px-4 text-start align-middle dark:border-zinc-800">
                                 <input
                                     v-model="selectAll"
@@ -519,12 +498,6 @@ function getStatusBadgeClass(status: string) {
                             <th class="h-10 w-[140px] border-e border-b border-zinc-200 px-4 text-start align-middle whitespace-nowrap select-none dark:border-zinc-800">
                                 <span>Supplier</span>
                             </th>
-                            <th class="h-10 w-[90px] border-e border-b border-zinc-200 px-4 text-start align-middle whitespace-nowrap select-none dark:border-zinc-800">
-                                <span>Carrier</span>
-                            </th>
-                            <th class="h-10 w-[90px] border-e border-b border-zinc-200 px-4 text-center align-middle whitespace-nowrap select-none dark:border-zinc-800">
-                                <span>Tracking</span>
-                            </th>
                             <th class="h-10 w-[60px] border-b border-zinc-200 px-4 text-center align-middle dark:border-zinc-800" />
                         </tr>
                     </thead>
@@ -561,8 +534,8 @@ function getStatusBadgeClass(status: string) {
                                         {{ row.reference_number }}
                                     </Link>
                                     <span class="inline-flex items-center gap-1 text-xs">
-                                        <span class="font-mono text-[11px] uppercase text-zinc-400">Source:</span>
-                                        <span class="font-mono text-[11px] font-medium text-zinc-700 dark:text-zinc-300">{{ humanize(row.source) }}</span>
+                                        <span class="font-mono text-2xs uppercase text-zinc-400">Source:</span>
+                                        <span class="font-mono text-2xs font-medium text-zinc-700 dark:text-zinc-300">{{ humanize(row.source) }}</span>
                                     </span>
                                 </div>
                             </td>
@@ -592,18 +565,6 @@ function getStatusBadgeClass(status: string) {
                                     <span class="text-sm font-normal text-zinc-800 dark:text-zinc-200">{{ row.supplier?.company_name ?? 'Internal / N/A' }}</span>
                                 </div>
                             </td>
-                            <td class="border-e border-b border-zinc-200 px-4 py-3 text-start text-sm font-normal text-zinc-700 align-middle dark:border-zinc-800 dark:text-zinc-300">
-                                FedEx
-                            </td>
-                            <td class="border-e border-b border-zinc-200 px-3 py-3 text-center align-middle dark:border-zinc-800">
-                                <button
-                                    type="button"
-                                    class="inline-flex h-7 cursor-pointer items-center justify-center rounded-md border border-zinc-200 bg-white px-2.5 text-xs font-medium text-zinc-700 shadow-xs transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700/60"
-                                    @click="openTrackingDrawer(row)"
-                                >
-                                    Show
-                                </button>
-                            </td>
                             <td class="relative border-b border-zinc-200 px-3 py-3 text-center align-middle dark:border-zinc-800">
                                 <div class="relative inline-block text-start" @click.stop>
                                     <button
@@ -626,14 +587,13 @@ function getStatusBadgeClass(status: string) {
                                             <Settings class="size-3.5 opacity-60" />
                                             <span>Settings</span>
                                         </Link>
-                                        <button
-                                            type="button"
+                                        <Link
+                                            :href="inbound.show.url(row.id)"
                                             class="flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-xs text-zinc-700 transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800/80 dark:hover:text-white"
-                                            @click="openTrackingDrawer(row)"
                                         >
                                             <Pencil class="size-3.5 opacity-60" />
-                                            <span>Edit</span>
-                                        </button>
+                                            <span>Open</span>
+                                        </Link>
                                         <div class="-mx-1 my-1 h-px bg-zinc-200 dark:bg-zinc-800" />
                                         <button
                                             type="button"
@@ -699,168 +659,6 @@ function getStatusBadgeClass(status: string) {
         <!-- ========================================================================= -->
         <!-- TRACK SHIPPING SLIDE-OVER DRAWER (Matches Metronic 720px Drawer)           -->
         <!-- ========================================================================= -->
-        <div
-            v-if="trackingDrawerOpen"
-            class="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs transition-opacity duration-300"
-            @click="closeTrackingDrawer()"
-        />
-
-        <div
-            v-if="activeTrackingRow"
-            role="dialog"
-            aria-modal="true"
-            class="fixed top-0 end-0 z-50 flex h-full w-full flex-col overflow-hidden border-s border-zinc-200 bg-white shadow-2xl transition-transform duration-300 ease-in-out dark:border-zinc-800 dark:bg-[#121215] sm:w-[720px]"
-            :class="trackingDrawerOpen ? 'translate-x-0' : 'translate-x-full'"
-        >
-            <!-- Drawer Header -->
-            <div class="flex shrink-0 items-center justify-between border-b border-zinc-200 px-6 py-3.5 dark:border-zinc-800">
-                <h2 class="text-base font-semibold text-zinc-900 dark:text-zinc-100">Track Shipping</h2>
-                <button
-                    type="button"
-                    class="flex size-8 cursor-pointer items-center justify-center rounded-md text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-700 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
-                    @click="closeTrackingDrawer()"
-                >
-                    <X class="size-4" />
-                </button>
-            </div>
-
-            <!-- Drawer Body -->
-            <div class="flex-1 space-y-6 overflow-y-auto p-6">
-                <!-- Top Title & Actions -->
-                <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-                    <div class="flex flex-col gap-1.5">
-                        <div class="flex items-center gap-2.5">
-                            <h3 class="text-xl font-bold text-zinc-900 dark:text-white">{{ activeTrackingRow.reference_number }}</h3>
-                            <span
-                                class="inline-flex h-5 items-center justify-center rounded px-2 text-xs font-medium"
-                                :class="getStatusBadgeClass(activeTrackingRow.status)"
-                            >
-                                {{ humanize(activeTrackingRow.status) }}
-                            </span>
-                        </div>
-                        <div class="flex flex-wrap items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400">
-                            <span>Placed</span>
-                            <span class="font-medium text-zinc-800 dark:text-zinc-200">{{ date(activeTrackingRow.created_at || activeTrackingRow.received_date) }}</span>
-                            <span class="mx-0.5 size-1 rounded-full bg-zinc-400" />
-                            <span>Supplier</span>
-                            <span class="font-medium text-zinc-900 dark:text-white">{{ activeTrackingRow.supplier?.company_name ?? 'Internal' }}</span>
-                        </div>
-                    </div>
-
-                    <div class="flex items-center gap-2.5">
-                        <button
-                            type="button"
-                            class="inline-flex h-[34px] cursor-pointer items-center justify-center rounded-md border border-zinc-200 bg-white px-3 text-xs font-medium text-zinc-700 shadow-xs transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700/60"
-                            @click="closeTrackingDrawer()"
-                        >
-                            Close
-                        </button>
-                        <Link
-                            :href="inbound.show.url(activeTrackingRow.id)"
-                            class="inline-flex h-[34px] cursor-pointer items-center justify-center rounded-md bg-zinc-950 px-3 text-xs font-medium text-white shadow-xs transition-colors hover:bg-zinc-900 dark:bg-zinc-200 dark:text-zinc-950 dark:hover:bg-white"
-                        >
-                            View Details
-                        </Link>
-                    </div>
-                </div>
-
-                <!-- Stepper Card -->
-                <div class="overflow-hidden rounded-lg border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900/40">
-                    <div class="flex flex-col items-start justify-between gap-4 border-b border-zinc-200 bg-zinc-50/70 p-4 sm:flex-row sm:items-center dark:border-zinc-800 dark:bg-zinc-800/40">
-                        <div class="flex items-start gap-3">
-                            <div class="mt-1 flex flex-col items-center gap-1.5">
-                                <span class="size-2 shrink-0 rounded-full bg-zinc-900 dark:bg-white" />
-                                <div class="h-6 w-0.5 bg-zinc-300 dark:bg-zinc-700" />
-                                <span class="size-2 shrink-0 rounded-full bg-zinc-900 dark:bg-white" />
-                            </div>
-                            <div class="flex flex-col gap-3 text-xs">
-                                <span class="font-medium text-zinc-900 dark:text-zinc-100">1234 Industrial Way, Dallas, TX 75201</span>
-                                <span class="font-medium text-zinc-900 dark:text-zinc-100">Warehouse Dock A, Store Location</span>
-                            </div>
-                        </div>
-
-                        <div class="inline-flex h-[34px] shrink-0 items-center gap-2 rounded-md border border-zinc-200 bg-white px-3 text-xs font-semibold text-zinc-800 shadow-xs dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200">
-                            <Truck class="size-4 text-amber-500" />
-                            <span>FedEx Express</span>
-                        </div>
-                    </div>
-
-                    <!-- 4-Step Progress -->
-                    <div class="p-5">
-                        <div class="grid grid-cols-4 gap-2 text-center">
-                            <div class="flex flex-col items-center gap-2">
-                                <div class="h-1.5 w-full rounded-full bg-emerald-500" />
-                                <div class="flex items-center gap-1.5">
-                                    <CheckCircle2 class="size-4 text-emerald-500 fill-emerald-100 dark:fill-emerald-950" />
-                                    <span class="text-xs font-medium text-zinc-800 dark:text-zinc-200">Order Placed</span>
-                                </div>
-                            </div>
-                            <div class="flex flex-col items-center gap-2">
-                                <div class="h-1.5 w-full rounded-full bg-emerald-500" />
-                                <div class="flex items-center gap-1.5">
-                                    <CheckCircle2 class="size-4 text-emerald-500 fill-emerald-100 dark:fill-emerald-950" />
-                                    <span class="text-xs font-medium text-zinc-800 dark:text-zinc-200">Dispatched</span>
-                                </div>
-                            </div>
-                            <div class="flex flex-col items-center gap-2">
-                                <div class="relative h-1.5 w-full overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-700">
-                                    <div class="h-full w-1/2 rounded-full bg-emerald-500" />
-                                </div>
-                                <div class="flex items-center gap-1.5">
-                                    <CheckCircle2 class="size-4 text-emerald-500" />
-                                    <span class="text-xs font-semibold text-zinc-900 dark:text-white">In Transit</span>
-                                </div>
-                            </div>
-                            <div class="flex flex-col items-center gap-2">
-                                <div class="h-1.5 w-full rounded-full bg-zinc-200 dark:bg-zinc-700" />
-                                <div class="flex items-center gap-1.5">
-                                    <Circle class="size-4 text-zinc-400" />
-                                    <span class="text-xs font-medium text-zinc-400">Received</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Shipping Log Timeline Card -->
-                <div class="overflow-hidden rounded-lg border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900/40">
-                    <div class="border-b border-zinc-200 bg-zinc-50/70 px-4 py-2.5 text-xs font-semibold text-zinc-900 dark:border-zinc-800 dark:bg-zinc-800/40 dark:text-zinc-100">
-                        Shipment Timeline Log
-                    </div>
-                    <div class="space-y-5 p-5">
-                        <div class="relative flex items-start gap-3">
-                            <div class="mt-0.5 flex flex-col items-center gap-1.5">
-                                <span class="size-2 shrink-0 rounded-full bg-zinc-900 dark:bg-white" />
-                                <div class="h-10 w-0.5 bg-zinc-200 dark:bg-zinc-700" />
-                            </div>
-                            <div class="flex flex-col gap-0.5">
-                                <div class="flex items-center gap-2">
-                                    <span class="text-xs font-semibold text-zinc-900 dark:text-white">Receipt Created</span>
-                                    <span class="text-[11px] text-zinc-400">{{ date(activeTrackingRow.created_at || activeTrackingRow.received_date) }}</span>
-                                </div>
-                                <span class="text-xs text-zinc-500 dark:text-zinc-400">Inbound receipt created and registered in inventory system</span>
-                            </div>
-                        </div>
-                        <div class="relative flex items-start gap-3">
-                            <div class="mt-0.5 flex flex-col items-center gap-1.5">
-                                <span class="size-2 shrink-0 rounded-full bg-zinc-900 dark:bg-white" />
-                            </div>
-                            <div class="flex flex-col gap-0.5">
-                                <div class="flex items-center gap-2">
-                                    <span class="text-xs font-semibold text-zinc-900 dark:text-white">In Transit</span>
-                                    <span class="text-[11px] text-zinc-400">Processing</span>
-                                </div>
-                                <span class="text-xs text-zinc-500 dark:text-zinc-400">Items expected at central fulfillment hub</span>
-                                <div class="mt-1 flex items-center gap-1 text-[11px] text-zinc-400">
-                                    <MapPin class="size-3 text-zinc-400" />
-                                    <span>Main Receiving Dock</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
 
         <!-- NEW RECEIPT DRAWER / MODAL -->
         <Drawer
@@ -982,12 +780,12 @@ function getStatusBadgeClass(status: string) {
                         </div>
                     </div>
 
-                    <p v-if="form.errors.items" class="text-[11px] text-danger">
+                    <p v-if="form.errors.items" class="text-2xs text-danger">
                         {{ form.errors.items }}
                     </p>
                 </FormSection>
 
-                <p v-if="firstOf('inventory')" class="text-[11px] text-danger">
+                <p v-if="firstOf('inventory')" class="text-2xs text-danger">
                     {{ firstOf('inventory') }}
                 </p>
             </div>

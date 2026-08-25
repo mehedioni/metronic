@@ -185,21 +185,21 @@ function toneFor(value: number | null): string {
             <div class="flex flex-wrap items-end justify-between gap-3 px-5 py-3.5">
                 <div class="flex flex-wrap items-end gap-3">
                     <label class="flex flex-col gap-1.5">
-                        <span class="text-[11px] font-medium text-muted-foreground"
+                        <span class="text-2xs font-medium text-muted-foreground"
                             >From</span
                         >
                         <Input v-model="params.from" type="date" class="w-40" />
                     </label>
 
                     <label class="flex flex-col gap-1.5">
-                        <span class="text-[11px] font-medium text-muted-foreground"
+                        <span class="text-2xs font-medium text-muted-foreground"
                             >To</span
                         >
                         <Input v-model="params.to" type="date" class="w-40" />
                     </label>
 
                     <label class="flex flex-col gap-1.5">
-                        <span class="text-[11px] font-medium text-muted-foreground"
+                        <span class="text-2xs font-medium text-muted-foreground"
                             >Customer name</span
                         >
                         <Input
@@ -229,7 +229,7 @@ function toneFor(value: number | null): string {
 
         <div
             v-if="!meta.expenses_attributable"
-            class="flex items-start gap-2.5 rounded-lg border border-info/20 bg-info-soft px-4 py-3 text-[0.8125rem] text-info"
+            class="flex items-start gap-2.5 rounded-lg border border-info/20 bg-info-soft px-4 py-3 text-2sm text-info"
         >
             <InfoIcon class="mt-px size-4 shrink-0" />
             <p>
@@ -242,7 +242,7 @@ function toneFor(value: number | null): string {
 
         <div
             v-if="meta.lines_without_cost"
-            class="flex items-start gap-2.5 rounded-lg border border-warning/20 bg-warning-soft px-4 py-3 text-[0.8125rem] text-warning"
+            class="flex items-start gap-2.5 rounded-lg border border-warning/20 bg-warning-soft px-4 py-3 text-2sm text-warning"
         >
             <TriangleAlertIcon class="mt-px size-4 shrink-0" />
             <p>
@@ -256,7 +256,7 @@ function toneFor(value: number | null): string {
 
         <div
             v-if="mixedCurrency"
-            class="flex items-start gap-2.5 rounded-lg border border-danger/20 bg-danger-soft px-4 py-3 text-[0.8125rem] text-danger"
+            class="flex items-start gap-2.5 rounded-lg border border-danger/20 bg-danger-soft px-4 py-3 text-2sm text-danger"
         >
             <TriangleAlertIcon class="mt-px size-4 shrink-0" />
             <p>
@@ -272,7 +272,7 @@ function toneFor(value: number | null): string {
                 <p class="mt-1 text-2xl font-bold tracking-tight">
                     {{ money(totals.sales, currency) }}
                 </p>
-                <p class="mt-0.5 text-[11px] text-muted-foreground">
+                <p class="mt-0.5 text-2xs text-muted-foreground">
                     {{ number(totals.orders_count) }} orders
                 </p>
             </Card>
@@ -282,7 +282,7 @@ function toneFor(value: number | null): string {
                 <p class="mt-1 text-2xl font-bold tracking-tight">
                     {{ money(totals.cogs, currency) }}
                 </p>
-                <p class="mt-0.5 text-[11px] text-muted-foreground">
+                <p class="mt-0.5 text-2xs text-muted-foreground">
                     What the goods sold cost the store
                 </p>
             </Card>
@@ -295,7 +295,7 @@ function toneFor(value: number | null): string {
                 >
                     {{ money(totals.gross_profit, currency) }}
                 </p>
-                <p class="mt-0.5 text-[11px] text-muted-foreground">
+                <p class="mt-0.5 text-2xs text-muted-foreground">
                     {{
                         totals.gross_margin_percent === null
                             ? 'No sales to measure'
@@ -313,7 +313,7 @@ function toneFor(value: number | null): string {
                             : money(totals.expenses, currency)
                     }}
                 </p>
-                <p class="mt-0.5 text-[11px] text-muted-foreground">
+                <p class="mt-0.5 text-2xs text-muted-foreground">
                     Rent, wages, utilities — not stock
                 </p>
             </Card>
@@ -330,7 +330,7 @@ function toneFor(value: number | null): string {
                             : money(totals.net_profit, currency)
                     }}
                 </p>
-                <p class="mt-0.5 text-[11px] text-muted-foreground">
+                <p class="mt-0.5 text-2xs text-muted-foreground">
                     {{
                         totals.net_margin_percent === null
                             ? 'Not attributable per customer'
@@ -420,7 +420,7 @@ function toneFor(value: number | null): string {
             <div class="overflow-x-auto">
                 <table class="w-full text-xs">
                     <thead
-                        class="border-b border-border bg-muted/70 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground"
+                        class="border-b border-border bg-muted/70 text-2xs font-semibold uppercase tracking-wider text-muted-foreground"
                     >
                         <tr>
                             <th class="px-5 py-3 text-start">Date</th>
@@ -444,7 +444,7 @@ function toneFor(value: number | null): string {
                                 {{ date(day.date) }}
                                 <span
                                     v-if="day.lines_without_cost"
-                                    class="ms-1 text-[11px] text-warning"
+                                    class="ms-1 text-2xs text-warning"
                                     :title="`${day.lines_without_cost} line(s) have no cost price`"
                                     >·cost?</span
                                 >
@@ -495,7 +495,7 @@ function toneFor(value: number | null): string {
                     </tbody>
 
                     <tfoot
-                        class="border-t border-border bg-muted/40 text-[0.8125rem] font-semibold"
+                        class="border-t border-border bg-muted/40 text-2sm font-semibold"
                     >
                         <tr>
                             <td class="px-5 py-3">Total</td>

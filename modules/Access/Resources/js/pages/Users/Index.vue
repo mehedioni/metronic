@@ -166,7 +166,7 @@ function destroy() {
                                 >{{ row.name }}</Link
                             >
                             <span
-                                class="block truncate text-[11px] text-muted-foreground"
+                                class="block truncate text-2xs text-muted-foreground"
                                 >{{ row.email }}</span
                             >
                         </span>
@@ -316,12 +316,12 @@ function destroy() {
             size="sm"
             @update:open="confirming = null"
         >
-            <p class="text-[0.8125rem] text-muted-foreground">
+            <p class="text-2sm text-muted-foreground">
                 Deleting an account is not the same as revoking access —
                 deactivating keeps their history attributable.
             </p>
 
-            <p v-if="firstOf('user', 'role')" class="mt-3 text-[11px] text-danger">
+            <p v-if="firstOf('user', 'role')" class="mt-3 text-2xs text-danger">
                 {{ firstOf('user', 'role') }}
             </p>
 
