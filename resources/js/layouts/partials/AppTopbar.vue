@@ -62,7 +62,7 @@ function logout() {
 
 <template>
     <header
-        class="sticky top-0 z-30 flex h-16 items-center justify-between gap-3 border-b border-dashed border-border bg-background/95 px-4 backdrop-blur-md lg:px-8"
+        class="sticky top-0 z-30 flex h-16 items-center justify-between gap-3 border-b border-dashed border-zinc-200/80 bg-white/95 px-4 backdrop-blur-md dark:border-zinc-800/80 dark:bg-[#121215]/95 lg:px-8"
     >
         <div class="flex min-w-0 items-center gap-2">
             <Button

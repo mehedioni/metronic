@@ -44,7 +44,7 @@ defineProps<{
             </nav>
 
             <h1
-                class="truncate text-lg font-semibold tracking-tight text-foreground"
+                class="truncate text-xl font-semibold text-zinc-900 dark:text-white lg:text-[22px]"
             >
                 {{ title }}
             </h1>
