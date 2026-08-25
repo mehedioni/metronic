@@ -26,25 +26,25 @@ import stock from '@/routes/inventory/stock';
 import type { Paginated } from '@/types';
 
 interface StockRow {
-    id: string;
-    product_id: string;
-    product_variant_id: string | null;
+    id: number;
+    product_id: number;
+    product_variant_id: number | null;
     quantity_on_hand: number;
     quantity_reserved: number;
     product: {
-        id: string;
+        id: number;
         name: string;
         sku: string | null;
         low_stock_threshold: number;
-        category: { id: string; name: string } | null;
+        category: { id: number; name: string } | null;
     };
-    variant: { id: string; sku: string; name: string } | null;
+    variant: { id: number; sku: string; name: string } | null;
 }
 
 const props = defineProps<{
     items: Paginated<StockRow>;
     filters: Record<string, unknown>;
-    categories: Array<{ id: string; name: string }>;
+    categories: Array<{ id: number; name: string }>;
     movementTypes: string[];
 }>();
 
@@ -105,8 +105,11 @@ function isLow(row: StockRow): boolean {
 }
 
 function openAdjust(row: StockRow) {
-    adjustForm.product_id = row.product_id;
-    adjustForm.product_variant_id = row.product_variant_id;
+    // Form fields carry strings: that is what an <input>/<select> round-trips,
+    // and Laravel's "integer" rule accepts a numeric string.
+    adjustForm.product_id = String(row.product_id);
+    adjustForm.product_variant_id =
+        row.product_variant_id === null ? null : String(row.product_variant_id);
     adjustForm.type = 'adjustment_increase';
     adjustForm.quantity = 1;
     adjustForm.reason = '';

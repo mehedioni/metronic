@@ -25,29 +25,29 @@ import inbound from '@/routes/inventory/inbound';
 import type { Paginated } from '@/types';
 
 interface ReceiptRow {
-    id: string;
+    id: number;
     reference_number: string;
     source: string;
     status: string;
     received_date: string | null;
     items_count: number;
     items_sum_quantity: number | null;
-    supplier: { id: string; company_name: string } | null;
+    supplier: { id: number; company_name: string } | null;
     received_by: { id: number; name: string } | null;
 }
 
 interface ProductOption {
-    id: string;
+    id: number;
     name: string;
     sku: string | null;
-    variants: Array<{ id: string; sku: string; name: string }>;
+    variants: Array<{ id: number; sku: string; name: string }>;
 }
 
 const props = defineProps<{
     receipts: Paginated<ReceiptRow>;
     filters: Record<string, unknown>;
     options: {
-        suppliers?: Array<{ id: string; company_name: string }>;
+        suppliers?: Array<{ id: number; company_name: string }>;
         products?: ProductOption[];
         sources?: string[];
         statuses?: string[];
@@ -113,11 +113,17 @@ const breadcrumbs = [
     { label: 'Inbound Stock' },
 ];
 
-/** Variants of the product chosen on a line, for its variant select. */
+/**
+ * Variants of the product chosen on a line, for its variant select.
+ *
+ * The line holds the id as a string, because that is what the select binds;
+ * the option carries the numeric key, so the two are compared as strings.
+ */
 function variantsFor(productId: string) {
     return (
-        props.options.products?.find((product) => product.id === productId)
-            ?.variants ?? []
+        props.options.products?.find(
+            (product) => String(product.id) === productId,
+        )?.variants ?? []
     );
 }
 

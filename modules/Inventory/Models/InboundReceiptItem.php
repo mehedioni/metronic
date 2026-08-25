@@ -2,10 +2,10 @@
 
 namespace Modules\Inventory\Models;
 
-use App\Core\BaseUuidModel;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\UseFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Modules\Inventory\Database\Factories\InboundReceiptItemFactory;
 use Modules\Inventory\Support\StockableUnit;
@@ -15,7 +15,7 @@ use Modules\Inventory\Support\StockableUnit;
     'unit_cost', 'supplier_sku', 'notes',
 ])]
 #[UseFactory(InboundReceiptItemFactory::class)]
-class InboundReceiptItem extends BaseUuidModel
+class InboundReceiptItem extends Model
 {
     /** @use HasFactory<InboundReceiptItemFactory> */
     use HasFactory;

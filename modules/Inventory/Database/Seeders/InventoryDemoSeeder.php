@@ -111,7 +111,6 @@ class InventoryDemoSeeder extends Seeder
 
         foreach ($products as $product) {
             $product->suppliers()->attach($suppliers->random()->id, [
-                'id' => Str::uuid()->toString(),
                 'variant_key' => '',
                 'supplier_sku' => 'S-'.Str::upper(Str::random(6)),
                 'unit_cost' => $product->cost_price,

@@ -27,7 +27,7 @@ class ExpenseService
             ->search($filters['search'] ?? null)
             ->between($filters['from'] ?? null, $filters['to'] ?? null)
             ->when($filters['category'] ?? null, fn (Builder $q, string $category) => $q->where('category', $category))
-            ->when($filters['supplier_id'] ?? null, fn (Builder $q, string $supplier) => $q->where('supplier_id', $supplier))
+            ->when($filters['supplier_id'] ?? null, fn (Builder $q, int|string $supplier) => $q->where('supplier_id', $supplier))
             ->tap(fn (Builder $q) => QuerySorter::apply(
                 $q,
                 $filters['sort'] ?? null,

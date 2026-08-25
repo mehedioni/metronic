@@ -17,7 +17,7 @@ import { humanize } from '@/lib/status';
 import products from '@/routes/inventory/products';
 
 interface Variant {
-    id: string;
+    id: number;
     sku: string;
     name: string;
     cost_price: string | null;
@@ -27,14 +27,16 @@ interface Variant {
 }
 
 interface InventoryItem {
-    id: string;
-    product_variant_id: string | null;
+    id: number;
+    product_variant_id: number | null;
     quantity_on_hand: number;
     quantity_reserved: number;
 }
 
 interface Product {
-    id: string;
+    id: number;
+    /** Public identifier, for links and integrations outside the app. */
+    uuid: string;
     name: string;
     sku: string | null;
     description: string | null;
@@ -43,10 +45,10 @@ interface Product {
     cost_price: string | null;
     selling_price: string | null;
     low_stock_threshold: number;
-    category: { id: string; name: string } | null;
-    primary_supplier: { id: string; company_name: string } | null;
+    category: { id: number; name: string } | null;
+    primary_supplier: { id: number; company_name: string } | null;
     variants: Variant[];
-    suppliers: Array<{ id: string; company_name: string }>;
+    suppliers: Array<{ id: number; company_name: string }>;
     inventory_items: InventoryItem[];
 }
 
@@ -201,6 +203,17 @@ function destroy() {
                                     </dt>
                                     <dd class="text-[0.8125rem]">
                                         {{ number(product.low_stock_threshold) }}
+                                    </dd>
+                                </div>
+                                <div class="sm:col-span-2">
+                                    <dt class="text-xs text-muted-foreground">
+                                        Public ID
+                                    </dt>
+                                    <dd
+                                        class="truncate font-mono text-[11px] text-muted-foreground"
+                                        :title="product.uuid"
+                                    >
+                                        {{ product.uuid }}
                                     </dd>
                                 </div>
                             </dl>

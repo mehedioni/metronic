@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 use Modules\Inventory\Database\Factories\ProductFactory;
 use Modules\Inventory\Enums\ProductStatus;
 use Modules\Inventory\Enums\ProductType;
@@ -27,6 +28,40 @@ class Product extends BaseModel
 {
     /** @use HasFactory<ProductFactory> */
     use HasFactory;
+
+    /**
+     * The public identifier is generated, never supplied, so it stays out of
+     * the fillable list and cannot be set through a request.
+     *
+     * Generated in the constructor rather than from a "creating" event,
+     * because events get muted — seeders run inside Model::withoutEvents() —
+     * and a NOT NULL unique column whose value depends on an event fires an
+     * insert error the first time anything mutes them. Hydration from the
+     * database replaces the attribute bag wholesale, so this never overwrites
+     * a stored uuid.
+     *
+     * Random (v4) on purpose. A time-ordered uuid would carry the creation
+     * moment and sit near its neighbours, which gives back some of what a
+     * public identifier is here to withhold.
+     */
+    public function __construct(array $attributes = [])
+    {
+        parent::__construct($attributes);
+
+        $this->attributes['uuid'] ??= Str::uuid()->toString();
+    }
+
+    /**
+     * Resolve a product from its public identifier.
+     *
+     * Nothing binds routes to it today — links use the integer key — but any
+     * outward-facing lookup (an export, an integration, a catalogue URL)
+     * should go through this rather than exposing the key.
+     */
+    public static function findByUuid(string $uuid): ?self
+    {
+        return static::query()->where('uuid', $uuid)->first();
+    }
 
     protected $attributes = [
         'type' => ProductType::Simple->value,

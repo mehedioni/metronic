@@ -26,7 +26,7 @@ import customerRoutes from '@/routes/inventory/customers';
 import type { Paginated } from '@/types';
 
 interface CustomerRow {
-    id: string;
+    id: number;
     code: string;
     name: string;
     email: string | null;

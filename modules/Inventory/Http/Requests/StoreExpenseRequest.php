@@ -25,7 +25,7 @@ class StoreExpenseRequest extends FormRequest
             'amount' => ['required', 'numeric', 'min:0.01', 'max:99999999'],
             'currency' => ['nullable', 'string', 'size:3'],
             'reference' => ['nullable', 'string', 'max:120'],
-            'supplier_id' => ['nullable', 'uuid', Rule::exists('suppliers', 'id')->whereNull('deleted_at')],
+            'supplier_id' => ['nullable', 'integer', 'min:1', Rule::exists('suppliers', 'id')->whereNull('deleted_at')],
             'description' => ['nullable', 'string', 'max:1000'],
         ];
     }

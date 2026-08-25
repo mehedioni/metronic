@@ -9,9 +9,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('orders', function (Blueprint $table) {
-            $table->uuid('id')->primary();
+            $table->id();
             $table->string('order_number')->unique();
-            $table->foreignUuid('customer_id')->nullable()->constrained('customers')->nullOnDelete();
+            $table->foreignId('customer_id')->nullable()->constrained('customers')->nullOnDelete();
             $table->string('customer_name');
             $table->string('customer_email')->nullable()->index();
             $table->string('customer_phone', 40)->nullable();
@@ -34,10 +34,10 @@ return new class extends Migration
         });
 
         Schema::create('order_items', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-            $table->foreignUuid('order_id')->constrained('orders')->cascadeOnDelete();
-            $table->foreignUuid('product_id')->constrained('products')->restrictOnDelete();
-            $table->foreignUuid('product_variant_id')->nullable()->constrained('product_variants')->restrictOnDelete();
+            $table->id();
+            $table->foreignId('order_id')->constrained('orders')->cascadeOnDelete();
+            $table->foreignId('product_id')->constrained('products')->restrictOnDelete();
+            $table->foreignId('product_variant_id')->nullable()->constrained('product_variants')->restrictOnDelete();
             $table->unsignedInteger('quantity');
             $table->unsignedInteger('quantity_fulfilled')->default(0);
             $table->decimal('unit_price', 12, 2)->default(0);

@@ -16,7 +16,7 @@ import products from '@/routes/inventory/products';
 import suppliers from '@/routes/inventory/suppliers';
 
 interface Supplier {
-    id: string;
+    id: number;
     code: string;
     company_name: string;
     contact_name: string | null;
@@ -31,11 +31,11 @@ interface Supplier {
 }
 
 interface History {
-    products_supplied: Array<{ id: string; name: string; sku: string | null }>;
+    products_supplied: Array<{ id: number; name: string; sku: string | null }>;
     total_received_quantity: number;
     last_received_at: string | null;
     recent_receipts: Array<{
-        id: string;
+        id: number;
         reference_number: string;
         status: string;
         items_sum_quantity?: number | null;

@@ -20,16 +20,16 @@ import products from '@/routes/inventory/products';
 import type { Paginated } from '@/types';
 
 interface MovementRow {
-    id: string;
+    id: number;
     type: string;
     quantity: number;
     quantity_before: number;
     quantity_after: number;
     reason: string | null;
     created_at: string;
-    product: { id: string; name: string; sku: string | null } | null;
-    variant: { id: string; sku: string } | null;
-    supplier: { id: string; company_name: string } | null;
+    product: { id: number; name: string; sku: string | null } | null;
+    variant: { id: number; sku: string } | null;
+    supplier: { id: number; company_name: string } | null;
     user: { id: number; name: string } | null;
 }
 

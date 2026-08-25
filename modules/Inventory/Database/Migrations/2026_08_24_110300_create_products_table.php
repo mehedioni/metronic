@@ -9,9 +9,16 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('products', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-            $table->foreignUuid('category_id')->nullable()->constrained('categories')->nullOnDelete();
-            $table->foreignUuid('primary_supplier_id')->nullable()->constrained('suppliers')->nullOnDelete();
+            $table->id();
+            // Public identifier for a product, separate from the primary key.
+            // The key is an integer because every join and foreign key in the
+            // schema carries it; the uuid is what goes out into the world —
+            // catalogue links, exports, integrations — where a sequential
+            // number would leak how many products the store has and invite
+            // walking the range.
+            $table->uuid('uuid')->unique();
+            $table->foreignId('category_id')->nullable()->constrained('categories')->nullOnDelete();
+            $table->foreignId('primary_supplier_id')->nullable()->constrained('suppliers')->nullOnDelete();
             $table->string('name');
             $table->string('slug')->unique();
             $table->string('sku')->nullable()->unique();

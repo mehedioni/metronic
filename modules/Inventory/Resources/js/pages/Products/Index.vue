@@ -29,7 +29,7 @@ interface InventoryRow {
 }
 
 interface ProductRow {
-    id: string;
+    id: number;
     name: string;
     sku: string | null;
     status: string;
@@ -38,8 +38,8 @@ interface ProductRow {
     cost_price: string | null;
     variants_count: number;
     low_stock_threshold: number;
-    category: { id: string; name: string } | null;
-    primary_supplier: { id: string; company_name: string } | null;
+    category: { id: number; name: string } | null;
+    primary_supplier: { id: number; company_name: string } | null;
     inventory_items: InventoryRow[];
 }
 
@@ -47,8 +47,8 @@ const props = defineProps<{
     products: Paginated<ProductRow>;
     filters: Record<string, unknown>;
     options: {
-        categories?: Array<{ id: string; name: string }>;
-        suppliers?: Array<{ id: string; company_name: string }>;
+        categories?: Array<{ id: number; name: string }>;
+        suppliers?: Array<{ id: number; company_name: string }>;
         statuses?: string[];
         types?: string[];
     };

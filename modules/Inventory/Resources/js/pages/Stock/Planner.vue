@@ -29,19 +29,19 @@ interface Plan {
 }
 
 interface PlannerRow {
-    id: string;
-    product_id: string;
+    id: number;
+    product_id: number;
     quantity_on_hand: number;
     quantity_reserved: number;
     plan: Plan;
-    product: { id: string; name: string; sku: string | null };
-    variant: { id: string; sku: string; name: string } | null;
+    product: { id: number; name: string; sku: string | null };
+    variant: { id: number; sku: string; name: string } | null;
 }
 
 const props = defineProps<{
     items: Paginated<PlannerRow>;
     filters: Record<string, unknown>;
-    categories: Array<{ id: string; name: string }>;
+    categories: Array<{ id: number; name: string }>;
     summary?: {
         units_tracked: number;
         below_target: number;

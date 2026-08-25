@@ -26,14 +26,14 @@ import reports from '@/routes/inventory/reports';
 import type { Paginated } from '@/types';
 
 interface ExpenseRow {
-    id: string;
+    id: number;
     spent_on: string;
     category: string;
     amount: string;
     currency: string;
     reference: string | null;
     description: string | null;
-    supplier: { id: string; company_name: string } | null;
+    supplier: { id: number; company_name: string } | null;
     created_by: { id: number; name: string } | null;
 }
 
@@ -41,7 +41,7 @@ const props = defineProps<{
     expenses: Paginated<ExpenseRow>;
     filters: Record<string, unknown>;
     categories: string[];
-    suppliers: Array<{ id: string; company_name: string }>;
+    suppliers: Array<{ id: number; company_name: string }>;
     summary?: {
         count: number;
         total: number;
@@ -100,7 +100,7 @@ function openEdit(row: ExpenseRow) {
     form.amount = row.amount;
     form.currency = row.currency;
     form.reference = row.reference ?? '';
-    form.supplier_id = row.supplier?.id ?? '';
+    form.supplier_id = row.supplier ? String(row.supplier.id) : '';
     form.description = row.description ?? '';
     form.clearErrors();
 

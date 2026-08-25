@@ -20,13 +20,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('expenses', function (Blueprint $table) {
-            $table->uuid('id')->primary();
+            $table->id();
             $table->date('spent_on')->index();
             $table->string('category')->index();
             $table->decimal('amount', 12, 2);
             $table->char('currency', 3)->default('USD');
             $table->string('reference')->nullable();
-            $table->foreignUuid('supplier_id')->nullable()->constrained('suppliers')->nullOnDelete();
+            $table->foreignId('supplier_id')->nullable()->constrained('suppliers')->nullOnDelete();
             $table->text('description')->nullable();
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();

@@ -23,19 +23,19 @@ import categoryRoutes from '@/routes/inventory/categories';
 import type { Paginated } from '@/types';
 
 interface CategoryRow {
-    id: string;
+    id: number;
     name: string;
     slug: string;
     status: string;
     products_count: number;
-    parent: { id: string; name: string } | null;
+    parent: { id: number; name: string } | null;
 }
 
 const props = defineProps<{
     categories: Paginated<CategoryRow>;
     filters: Record<string, unknown>;
     statuses: string[];
-    parents: Array<{ id: string; name: string }>;
+    parents: Array<{ id: number; name: string }>;
 }>();
 
 const { can } = usePermissions();

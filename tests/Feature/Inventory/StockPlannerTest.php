@@ -1,7 +1,6 @@
 <?php
 
 use App\Core\Support\Permissions;
-use Illuminate\Support\Str;
 use Modules\Inventory\Enums\StockMovementType;
 use Modules\Inventory\Models\Product;
 use Modules\Inventory\Models\Supplier;
@@ -68,7 +67,6 @@ it('takes the lead time from the supplier link', function () {
     $supplier = Supplier::factory()->create();
 
     $product->suppliers()->attach($supplier->id, [
-        'id' => Str::uuid()->toString(),
         'variant_key' => '',
         'lead_time_days' => 21,
         'is_preferred' => true,

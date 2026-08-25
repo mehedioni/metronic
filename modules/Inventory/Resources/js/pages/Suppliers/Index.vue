@@ -26,7 +26,7 @@ import supplierRoutes from '@/routes/inventory/suppliers';
 import type { Paginated } from '@/types';
 
 interface SupplierRow {
-    id: string;
+    id: number;
     code: string;
     company_name: string;
     contact_name: string | null;

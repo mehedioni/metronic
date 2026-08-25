@@ -32,15 +32,15 @@ class UpdateInboundReceiptRequest extends FormRequest
                     ->ignore($this->route('receipt')?->getKey())
                     ->whereNull('deleted_at'),
             ],
-            'supplier_id' => ['nullable', 'uuid', Rule::exists('suppliers', 'id')->whereNull('deleted_at')],
+            'supplier_id' => ['nullable', 'integer', 'min:1', Rule::exists('suppliers', 'id')->whereNull('deleted_at')],
             'source' => ['sometimes', Rule::in(InboundSource::values())],
             'status' => ['nullable', Rule::in([InboundReceiptStatus::Draft->value, InboundReceiptStatus::Pending->value])],
             'received_date' => ['nullable', 'date'],
             'notes' => ['nullable', 'string', 'max:2000'],
 
             'items' => ['sometimes', 'array', 'min:1'],
-            'items.*.product_id' => ['required', 'uuid', Rule::exists('products', 'id')->whereNull('deleted_at')],
-            'items.*.product_variant_id' => ['nullable', 'uuid', Rule::exists('product_variants', 'id')->whereNull('deleted_at')],
+            'items.*.product_id' => ['required', 'integer', 'min:1', Rule::exists('products', 'id')->whereNull('deleted_at')],
+            'items.*.product_variant_id' => ['nullable', 'integer', 'min:1', Rule::exists('product_variants', 'id')->whereNull('deleted_at')],
             'items.*.quantity' => ['required', 'integer', 'min:1'],
             'items.*.unit_cost' => ['nullable', 'numeric', 'min:0'],
             'items.*.supplier_sku' => ['nullable', 'string', 'max:80'],

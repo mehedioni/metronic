@@ -14,17 +14,17 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('stock_movements', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-            $table->foreignUuid('product_id')->constrained('products')->restrictOnDelete();
-            $table->foreignUuid('product_variant_id')->nullable()->constrained('product_variants')->restrictOnDelete();
-            $table->foreignUuid('supplier_id')->nullable()->constrained('suppliers')->nullOnDelete();
+            $table->id();
+            $table->foreignId('product_id')->constrained('products')->restrictOnDelete();
+            $table->foreignId('product_variant_id')->nullable()->constrained('product_variants')->restrictOnDelete();
+            $table->foreignId('supplier_id')->nullable()->constrained('suppliers')->nullOnDelete();
             $table->string('type')->index();
             $table->integer('quantity');
             $table->integer('quantity_before');
             $table->integer('quantity_after');
             $table->decimal('unit_cost', 12, 2)->nullable();
             $table->string('reference_type')->nullable();
-            $table->uuid('reference_id')->nullable();
+            $table->unsignedBigInteger('reference_id')->nullable();
             $table->text('reason')->nullable();
             $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
 

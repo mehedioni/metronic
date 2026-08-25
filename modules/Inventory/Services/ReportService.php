@@ -193,7 +193,7 @@ class ReportService
             ->whereBetween('orders.created_at', [$from->copy()->startOfDay(), $to->copy()->endOfDay()])
             ->when(
                 $filters['customer_id'] ?? null,
-                fn (Builder $query, string $id) => $query->where('orders.customer_id', $id),
+                fn (Builder $query, int|string $id) => $query->where('orders.customer_id', $id),
             )
             ->when(
                 $filters['customer'] ?? null,

@@ -26,7 +26,7 @@ class ReportRequest extends FormRequest
             // request for an empty report.
             'to' => ['nullable', 'date'],
             'customer' => ['nullable', 'string', 'max:255'],
-            'customer_id' => ['nullable', 'uuid'],
+            'customer_id' => ['nullable', 'integer', 'min:1'],
         ];
     }
 

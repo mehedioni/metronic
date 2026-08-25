@@ -10,8 +10,8 @@ namespace Modules\Inventory\Support;
 final readonly class StockableUnit
 {
     public function __construct(
-        public string $productId,
-        public ?string $productVariantId = null,
+        public int $productId,
+        public ?int $productVariantId = null,
     ) {}
 
     /**
