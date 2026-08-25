@@ -74,7 +74,7 @@ Module pages are addressed `Module::Path/Name` (resolved in
 | `inventory.orders.index` / `.show` | `Inventory::Orders/Index` / `Show` | `orders` / `order`, `allowedTransitions`, `options` |
 | `inventory.orders.create` / `.edit` | `Inventory::Orders/Create` / `Edit` | `options` (customers, products with variants and stock, statuses), (`order`) |
 | `inventory.expenses.index` | `Inventory::Expenses/Index` | `expenses`, `filters`, `categories`, `suppliers`, `summary` (deferred) |
-| `inventory.reports.daily` | `Inventory::Reports/Daily` | `report` (range, days, totals, meta), `filters`, `customers`, `expensesByCategory` (deferred) |
+| `inventory.reports.daily` | `Inventory::Reports/Daily` | `report` (range, days, totals, meta), `filters`, `expensesByCategory` (deferred) |
 | `access.users.index` / `.show` | `Access::Users/Index` / `Show` | `users` / `user`, `roles` |
 | `access.roles.index` / `.show` | `Access::Roles/Index` / `Show` | `roles` / `role`, `permissionGroups` |
 | `access.permissions.index` | `Access::Permissions/Index` | `groups`, `assigned` |

@@ -292,8 +292,7 @@ it('serves the report screen', function () {
         ->assertInertia(fn ($page) => $page
             ->component('Inventory::Reports/Daily')
             ->has('report.days')
-            ->has('report.totals')
-            ->has('customers'));
+            ->has('report.totals'));
 });
 
 it('denies the report without reports.view', function () {

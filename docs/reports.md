@@ -46,7 +46,7 @@ was worth.
 | --- | --- |
 | `from`, `to` | Inclusive date range. Defaults to the last 30 days, clamped to 366. A backwards range is swapped rather than rejected — that is a typo, not a request for an empty report. |
 | `customer` | Free text, matched against the name and email snapshotted on the order **and** against the linked customer's name and code, so a walk-in sale typed as "Emma Chen" is found alongside that person's account. |
-| `customer_id` | Exact customer. |
+| `customer_id` | Exact customer. Accepted but not offered on screen — the report filters by typed name; this is here for a link straight to one customer's trading. |
 
 Every day in the range is present, including days with no trading: a gap has
 to read as a zero, not as a missing row a chart would interpolate over.

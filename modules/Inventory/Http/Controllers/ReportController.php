@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use Inertia\Inertia;
 use Inertia\Response;
 use Modules\Inventory\Http\Requests\ReportRequest;
-use Modules\Inventory\Models\Customer;
 use Modules\Inventory\Services\ReportService;
 
 class ReportController extends Controller
@@ -32,10 +31,6 @@ class ReportController extends Controller
             'expensesByCategory' => Inertia::defer(
                 fn () => $this->reports->expensesByCategory($filters),
             ),
-            'customers' => Customer::query()
-                ->select(['id', 'code', 'name'])
-                ->orderBy('name')
-                ->get(),
         ]);
     }
 }

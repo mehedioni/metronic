@@ -11,7 +11,6 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Select } from '@/components/ui/select';
 import { useCsvExport } from '@/composables/useCsvExport';
 import { useTableQuery } from '@/composables/useTableQuery';
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -54,7 +53,6 @@ interface Report {
 const props = defineProps<{
     report: Report;
     filters: Record<string, unknown>;
-    customers: Array<{ id: string; code: string; name: string }>;
     expensesByCategory?: Record<string, number>;
 }>();
 
@@ -207,24 +205,8 @@ function toneFor(value: number | null): string {
                         <Input
                             v-model="params.customer"
                             placeholder="Any customer"
-                            class="w-56"
+                            class="w-64"
                         />
-                    </label>
-
-                    <label class="flex flex-col gap-1.5">
-                        <span class="text-[11px] font-medium text-muted-foreground"
-                            >Or pick one</span
-                        >
-                        <Select v-model="params.customer_id" class="w-56">
-                            <option value="">Any customer</option>
-                            <option
-                                v-for="customer in props.customers"
-                                :key="customer.id"
-                                :value="customer.id"
-                            >
-                                {{ customer.name }} ({{ customer.code }})
-                            </option>
-                        </Select>
                     </label>
                 </div>
 
