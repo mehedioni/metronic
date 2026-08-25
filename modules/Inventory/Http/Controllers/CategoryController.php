@@ -29,11 +29,13 @@ class CategoryController extends Controller
         ]);
     }
 
-    public function create(): Response
+    public function create(ListRequest $request): Response
     {
         $this->authorize('create', Category::class);
 
         return Inertia::render('Inventory::Categories/Create', [
+            'categories' => $this->categories->paginate($request->filters()),
+            'filters' => $request->filters(),
             'statuses' => RecordStatus::values(),
             'parents' => Category::query()->select(['id', 'name'])->orderBy('name')->get(),
         ]);
@@ -50,12 +52,16 @@ class CategoryController extends Controller
             ->with('success', 'Category created.');
     }
 
-    public function show(Category $category): Response
+    public function show(ListRequest $request, Category $category): Response
     {
         $this->authorize('view', $category);
 
         return Inertia::render('Inventory::Categories/Show', [
             'category' => $category->load(['parent:id,name', 'children:id,name,parent_id'])->loadCount('products'),
+            'categories' => $this->categories->paginate($request->filters()),
+            'filters' => $request->filters(),
+            'statuses' => RecordStatus::values(),
+            'parents' => Category::query()->select(['id', 'name'])->orderBy('name')->get(),
         ]);
     }
 
