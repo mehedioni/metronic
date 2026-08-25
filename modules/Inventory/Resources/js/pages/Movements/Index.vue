@@ -851,6 +851,165 @@ const availableCarriers = ['UPS Global', 'FedEx Express', 'DHL Express', 'USPS G
                     </div>
                 </div>
             </div>
+
+            <!-- STOCK MOVEMENTS VIEW (When viewing /inventory/movements) -->
+            <div v-else class="rounded-xl border border-zinc-200 bg-white shadow-xs dark:border-zinc-800 dark:bg-[#121215]">
+                <!-- Card Toolbar -->
+                <div class="flex flex-col items-stretch justify-between gap-3 border-b border-zinc-200 p-4 dark:border-zinc-800 sm:flex-row sm:items-center">
+                    <div class="flex flex-wrap items-center gap-2.5">
+                        <!-- Search Input -->
+                        <div class="relative w-full sm:w-48 lg:w-56">
+                            <Search class="absolute start-3 top-1/2 size-4 -translate-y-1/2 text-zinc-400" />
+                            <input
+                                v-model="params.search"
+                                type="text"
+                                placeholder="Search movements..."
+                                class="h-[34px] w-full rounded-md border border-zinc-200 bg-white ps-9 pe-3 text-xs text-zinc-900 placeholder-zinc-400 shadow-xs focus:outline-none focus:ring-1 focus:ring-zinc-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+                            />
+                        </div>
+
+                        <!-- Movement Type Filter -->
+                        <div class="relative">
+                            <select
+                                v-model="params.type"
+                                class="inline-flex h-[34px] cursor-pointer items-center justify-center rounded-md border border-zinc-200 bg-white px-3 text-xs font-medium text-zinc-700 shadow-xs focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
+                            >
+                                <option value="">All Types</option>
+                                <option v-for="t in props.types" :key="t" :value="t">
+                                    {{ humanize(t) }}
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Table Container -->
+                <div class="min-h-[380px] overflow-x-auto">
+                    <table class="w-full min-w-[960px] table-fixed border-separate border-spacing-0 text-left align-middle text-sm">
+                        <thead>
+                            <tr class="bg-zinc-50/50 text-[11px] font-semibold text-zinc-500 dark:bg-zinc-800/40 dark:text-zinc-400">
+                                <th class="h-10 w-[240px] border-e border-b border-zinc-200 px-4 text-start align-middle dark:border-zinc-800">
+                                    Product
+                                </th>
+                                <th class="h-10 w-[140px] border-e border-b border-zinc-200 px-4 text-start align-middle dark:border-zinc-800">
+                                    Type
+                                </th>
+                                <th class="h-10 w-[100px] border-e border-b border-zinc-200 px-4 text-center align-middle dark:border-zinc-800">
+                                    Change
+                                </th>
+                                <th class="h-10 w-[130px] border-e border-b border-zinc-200 px-4 text-center align-middle dark:border-zinc-800">
+                                    Before / After
+                                </th>
+                                <th class="h-10 w-[150px] border-e border-b border-zinc-200 px-4 text-start align-middle dark:border-zinc-800">
+                                    Actor / Supplier
+                                </th>
+                                <th class="h-10 w-[140px] border-e border-b border-zinc-200 px-4 text-start align-middle dark:border-zinc-800">
+                                    Date & Time
+                                </th>
+                                <th class="h-10 w-[140px] border-b border-zinc-200 px-4 text-start align-middle dark:border-zinc-800">
+                                    Reason
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-zinc-200 dark:divide-zinc-800">
+                            <tr v-if="rows.length === 0">
+                                <td colspan="7" class="border-b border-zinc-200 py-12 text-center text-sm text-zinc-400 dark:border-zinc-800">
+                                    No stock movements recorded yet.
+                                </td>
+                            </tr>
+                            <tr
+                                v-for="row in rows"
+                                :key="row.id"
+                                class="transition-colors hover:bg-zinc-50/70 dark:hover:bg-zinc-800/40"
+                            >
+                                <!-- Product -->
+                                <td class="border-e border-b border-zinc-200 px-4 py-3 align-middle dark:border-zinc-800">
+                                    <div class="flex min-w-0 flex-col gap-0.5">
+                                        <span class="truncate text-sm font-medium text-zinc-900 dark:text-white">
+                                            {{ row.product?.name ?? '—' }}
+                                        </span>
+                                        <span class="font-mono text-[11px] text-zinc-400">
+                                            {{ row.variant?.sku ?? row.product?.sku ?? '—' }}
+                                        </span>
+                                    </div>
+                                </td>
+
+                                <!-- Type Badge -->
+                                <td class="border-e border-b border-zinc-200 px-4 py-3 align-middle dark:border-zinc-800">
+                                    <span
+                                        class="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold"
+                                        :class="
+                                            row.quantity > 0
+                                                ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400'
+                                                : 'bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-400'
+                                        "
+                                    >
+                                        {{ humanize(row.type) }}
+                                    </span>
+                                </td>
+
+                                <!-- Change -->
+                                <td class="border-e border-b border-zinc-200 px-4 py-3 text-center align-middle font-mono font-semibold dark:border-zinc-800">
+                                    <span :class="row.quantity > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'">
+                                        {{ row.quantity > 0 ? `+${row.quantity}` : row.quantity }}
+                                    </span>
+                                </td>
+
+                                <!-- Before / After -->
+                                <td class="border-e border-b border-zinc-200 px-4 py-3 text-center align-middle text-xs text-zinc-600 dark:border-zinc-800 dark:text-zinc-400">
+                                    <span class="font-mono">{{ row.quantity_before }}</span>
+                                    <span class="mx-1 text-zinc-400">→</span>
+                                    <span class="font-mono font-medium text-zinc-900 dark:text-white">{{ row.quantity_after }}</span>
+                                </td>
+
+                                <!-- Actor / Supplier -->
+                                <td class="border-e border-b border-zinc-200 px-4 py-3 text-start align-middle text-xs text-zinc-700 dark:border-zinc-800 dark:text-zinc-300">
+                                    {{ row.user?.name ?? row.supplier?.company_name ?? 'System' }}
+                                </td>
+
+                                <!-- Date & Time -->
+                                <td class="border-e border-b border-zinc-200 px-4 py-3 text-start align-middle text-xs text-zinc-500 dark:border-zinc-800 dark:text-zinc-400">
+                                    {{ dateTime(row.created_at) }}
+                                </td>
+
+                                <!-- Reason -->
+                                <td class="border-b border-zinc-200 px-4 py-3 text-start align-middle text-xs text-zinc-600 dark:border-zinc-800 dark:text-zinc-400">
+                                    {{ row.reason ?? '—' }}
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Table Footer / Pagination -->
+                <div class="flex flex-col items-center justify-between gap-4 border-t border-zinc-200 p-4 text-xs text-zinc-500 dark:border-zinc-800 dark:text-zinc-400 sm:flex-row">
+                    <div class="flex items-center gap-2">
+                        <span>Rows per page</span>
+                        <div class="relative">
+                            <select
+                                v-model="params.per_page"
+                                class="inline-flex h-7 cursor-pointer items-center justify-center rounded-md border border-zinc-200 bg-white px-2 text-xs font-medium text-zinc-700 shadow-xs focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
+                            >
+                                <option :value="10">10</option>
+                                <option :value="20">20</option>
+                                <option :value="50">50</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-4">
+                        <span class="font-medium text-zinc-600 dark:text-zinc-400">
+                            {{ props.movements.from || 1 }} - {{ props.movements.to || rows.length }} of {{ props.movements.total || rows.length }}
+                        </span>
+                        <Pagination
+                            :links="props.movements.links"
+                            :from="props.movements.from"
+                            :to="props.movements.to"
+                            :total="props.movements.total"
+                        />
+                    </div>
+                </div>
+            </div>
         </main>
 
         <!-- TRACK SHIPPING DRAWER / SHEET (1:1 with Metronic outbound-stock.html) -->

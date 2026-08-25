@@ -114,7 +114,7 @@ function getSupplierColor(name?: string): string {
 }
 
 function getProductImage(item: StockRow, index: number): string {
-    if (item.product.image_path) {
+    if (item.product?.image_path) {
         return item.product.image_path.startsWith('/') || item.product.image_path.startsWith('http')
             ? item.product.image_path
             : `/assets/products/${item.product.image_path}`;
@@ -128,7 +128,7 @@ function available(row: StockRow): number {
 }
 
 function isLow(row: StockRow): boolean {
-    return row.quantity_on_hand > 0 && row.quantity_on_hand <= row.product.low_stock_threshold;
+    return row.quantity_on_hand > 0 && row.quantity_on_hand <= (row.product?.low_stock_threshold ?? 0);
 }
 
 function delta(row: StockRow): { text: string; isPos: boolean } {
