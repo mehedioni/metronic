@@ -88,6 +88,12 @@ draft ──► pending ──► confirmed ──► processing ──► compl
    └──────────┴────────────┴─────────────┴──► cancelled
 ```
 
+- Intake (`OrderService::create`): records the order and its lines and has
+  **no** inventory effect. A line with no `unit_price` is priced from the
+  variant, falling back to the product. Quantities beyond what is available are
+  accepted deliberately — a shop can write down an order it intends to restock
+  for, and nothing is promised until confirmation. Lines stay editable while
+  the status is `draft` or `pending`.
 - `pending → confirmed` (`ConfirmOrderAction`): **reserves** stock for every
   line. Rejected with `InsufficientStockException` if a line exceeds available
   stock, unless `config('inventory.allow_overselling')` is true. A second

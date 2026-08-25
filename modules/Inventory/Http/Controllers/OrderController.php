@@ -35,6 +35,15 @@ class OrderController extends Controller
         ]);
     }
 
+    public function create(): Response
+    {
+        $this->authorize('create', Order::class);
+
+        return Inertia::render('Inventory::Orders/Create', [
+            'options' => $this->formOptions(),
+        ]);
+    }
+
     public function store(StoreOrderRequest $request): RedirectResponse
     {
         $this->authorize('create', Order::class);
@@ -61,6 +70,31 @@ class OrderController extends Controller
                 fn (OrderStatus $status): string => $status->value,
                 $order->status->allowedTransitions(),
             ),
+            'options' => $this->formOptions(),
+        ]);
+    }
+
+    /**
+     * Lines and totals are only editable while the order has no inventory
+     * impact, so a confirmed order is sent back to its detail screen rather
+     * than opened in a form it could not save.
+     */
+    public function edit(Order $order): Response|RedirectResponse
+    {
+        $this->authorize('update', $order);
+
+        if (! $order->status->isEditable()) {
+            return redirect()
+                ->route('inventory.orders.show', $order)
+                ->with('error', "Order {$order->order_number} is {$order->status->value} and can no longer be edited.");
+        }
+
+        return Inertia::render('Inventory::Orders/Edit', [
+            'order' => $order->load([
+                'customer:id,code,name,email,phone',
+                'items.product:id,name,sku',
+                'items.variant:id,sku,name',
+            ]),
             'options' => $this->formOptions(),
         ]);
     }
@@ -134,10 +168,16 @@ class OrderController extends Controller
                 ->select(['id', 'code', 'name', 'email'])
                 ->orderBy('name')
                 ->get(),
+            // Stock comes along so the form can show what is available to
+            // promise per unit. Confirming would reject an oversell anyway;
+            // seeing it while typing beats finding out at confirmation.
             'products' => Product::query()
                 ->active()
                 ->select(['id', 'name', 'sku', 'selling_price', 'type'])
-                ->with('variants:id,product_id,sku,name,selling_price')
+                ->with([
+                    'variants:id,product_id,sku,name,selling_price',
+                    'inventoryItems:id,product_id,product_variant_id,quantity_on_hand,quantity_reserved',
+                ])
                 ->orderBy('name')
                 ->get(),
         ];

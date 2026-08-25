@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import { BanIcon, CheckIcon, PackageCheckIcon } from 'lucide-vue-next';
+import { BanIcon, CheckIcon, PackageCheckIcon, PencilIcon } from 'lucide-vue-next';
 import { computed, reactive, ref } from 'vue';
 import { FormField, Textarea } from '@/components/form';
 import PageHeader from '@/components/PageHeader.vue';
@@ -97,6 +97,11 @@ const canCancel = computed(
     () => can('orders.cancel') && props.allowedTransitions.includes('cancelled'),
 );
 
+/** Lines are frozen once the order reserves stock; OrderStatus decides. */
+const canEdit = computed(
+    () => can('orders.update') && ['draft', 'pending'].includes(props.order.status),
+);
+
 const breadcrumbs = computed(() => [
     { label: 'Store Inventory' },
     { label: 'Orders', href: orders.index.url() },
@@ -149,6 +154,17 @@ function cancel() {
         >
             <template #actions>
                 <StatusBadge :status="order.status" />
+
+                <Button
+                    v-if="canEdit"
+                    variant="outline"
+                    size="dense"
+                    as="a"
+                    :href="orders.edit.url(order.id)"
+                >
+                    <PencilIcon />
+                    Edit
+                </Button>
 
                 <Button
                     v-if="canConfirm"

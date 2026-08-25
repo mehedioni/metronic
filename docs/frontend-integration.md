@@ -72,6 +72,7 @@ Module pages are addressed `Module::Path/Name` (resolved in
 | `inventory.movements.index` | `Inventory::Movements/Index` | `movements`, `filters`, `types` |
 | `inventory.inbound.index` / `.show` | `Inventory::Inbound/Index` / `Show` | `receipts` / `receipt`, `allowedTransitions`, `options` |
 | `inventory.orders.index` / `.show` | `Inventory::Orders/Index` / `Show` | `orders` / `order`, `allowedTransitions`, `options` |
+| `inventory.orders.create` / `.edit` | `Inventory::Orders/Create` / `Edit` | `options` (customers, products with variants and stock, statuses), (`order`) |
 | `access.users.index` / `.show` | `Access::Users/Index` / `Show` | `users` / `user`, `roles` |
 | `access.roles.index` / `.show` | `Access::Roles/Index` / `Show` | `roles` / `role`, `permissionGroups` |
 | `access.permissions.index` | `Access::Permissions/Index` | `groups`, `assigned` |
@@ -86,6 +87,7 @@ use it to render actions instead of re-deriving the rules in the frontend.
 | Adjust stock | `POST inventory.stock.adjust` |
 | Receive a receipt | `POST inventory.inbound.receive` |
 | Cancel a receipt | `POST inventory.inbound.cancel` |
+| Take an order | `POST inventory.orders.store` — `customer_id` **or** `customer_name`, plus `items[]` |
 | Confirm an order | `POST inventory.orders.confirm` |
 | Fulfil an order | `POST inventory.orders.fulfill` — optional `lines[<order_item_id>]` for a partial handover; sending none fulfils everything outstanding |
 | Cancel an order | `POST inventory.orders.cancel` |

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
+import { PlusIcon } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 import DataTable from '@/components/DataTable.vue';
 import type { Column } from '@/components/DataTable.vue';
@@ -12,6 +13,7 @@ import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import { useCsvExport } from '@/composables/useCsvExport';
+import { usePermissions } from '@/composables/usePermissions';
 import { useTableQuery } from '@/composables/useTableQuery';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { date, money, number } from '@/lib/format';
@@ -42,6 +44,7 @@ const props = defineProps<{
     };
 }>();
 
+const { can } = usePermissions();
 const { exportRows } = useCsvExport();
 
 const { params, loading, toggleSort, sortState, reset } = useTableQuery({
@@ -98,7 +101,19 @@ function exportCurrent() {
             title="Orders"
             :description="`${number(props.orders.total)} orders`"
             :breadcrumbs="breadcrumbs"
-        />
+        >
+            <template #actions>
+                <Button
+                    v-if="can('orders.create')"
+                    size="dense"
+                    as="a"
+                    :href="orderRoutes.create.url()"
+                >
+                    <PlusIcon />
+                    Take order
+                </Button>
+            </template>
+        </PageHeader>
 
         <Card>
             <CardHeader>
@@ -154,6 +169,13 @@ function exportCurrent() {
                 @sort="toggleSort"
                 @selection-change="selected = $event as OrderRow[]"
             >
+                <template v-if="can('orders.create')" #empty-action>
+                    <Button size="dense" as="a" :href="orderRoutes.create.url()">
+                        <PlusIcon />
+                        Take order
+                    </Button>
+                </template>
+
                 <template #cell-order_number="{ row }">
                     <Link
                         :href="orderRoutes.show.url(row.id)"

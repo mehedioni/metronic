@@ -77,7 +77,6 @@ Route::middleware(['auth'])->prefix('inventory')->name('inventory.')->group(func
         ->name('inbound.cancel');
 
     Route::resource('orders', OrderController::class)
-        ->except(['create', 'edit'])
         ->middleware('permission:'.Permissions::ORDERS_VIEW);
     Route::post('orders/{order}/confirm', [OrderController::class, 'confirm'])
         ->middleware('permission:'.Permissions::ORDERS_UPDATE)
