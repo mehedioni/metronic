@@ -32,7 +32,12 @@ class StockQueryService
     public function paginateItems(array $filters): LengthAwarePaginator
     {
         return InventoryItem::query()
-            ->with(['product:id,name,sku,category_id,primary_supplier_id,low_stock_threshold', 'product.category:id,name', 'variant:id,sku,name'])
+            ->with([
+                'product:id,name,sku,category_id,primary_supplier_id,cost_price,selling_price,image_path,low_stock_threshold',
+                'product.category:id,name',
+                'product.primarySupplier:id,company_name,code',
+                'variant:id,sku,name,selling_price,cost_price',
+            ])
             ->when($filters['search'] ?? null, fn ($query, $term) => $query->whereHas(
                 'product',
                 fn ($product) => $product->search($term),
@@ -54,8 +59,33 @@ class StockQueryService
                 'quantity_on_hand',
                 'asc',
             ))
-            ->paginate($filters['per_page'] ?? 15)
+            ->paginate($filters['per_page'] ?? 10)
             ->withQueryString();
+    }
+
+    /**
+     * @return array{total_asset_value: float, total_products: int, in_stock: int, low_stock: int, out_of_stock: int}
+     */
+    public function summary(): array
+    {
+        $items = InventoryItem::query()
+            ->join('products', 'inventory_items.product_id', '=', 'products.id')
+            ->selectRaw('
+                COALESCE(SUM(inventory_items.quantity_on_hand * products.selling_price), 0) as total_asset_value,
+                COUNT(inventory_items.id) as total_products,
+                COUNT(CASE WHEN inventory_items.quantity_on_hand > products.low_stock_threshold THEN 1 END) as in_stock,
+                COUNT(CASE WHEN inventory_items.quantity_on_hand > 0 AND inventory_items.quantity_on_hand <= products.low_stock_threshold THEN 1 END) as low_stock,
+                COUNT(CASE WHEN inventory_items.quantity_on_hand <= 0 THEN 1 END) as out_of_stock
+            ')
+            ->first();
+
+        return [
+            'total_asset_value' => (float) ($items->total_asset_value ?? 0),
+            'total_products' => (int) ($items->total_products ?? 0),
+            'in_stock' => (int) ($items->in_stock ?? 0),
+            'low_stock' => (int) ($items->low_stock ?? 0),
+            'out_of_stock' => (int) ($items->out_of_stock ?? 0),
+        ];
     }
 
     /**

@@ -33,7 +33,7 @@ defineProps<{ label?: string; showLabel?: boolean }>();
 
         <span
             v-if="showLabel"
-            class="truncate text-base font-bold tracking-tight text-foreground"
+            class="truncate text-sm font-bold tracking-tight text-zinc-900 dark:text-white"
         >
             {{ label }}
         </span>

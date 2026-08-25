@@ -12,6 +12,7 @@ use Modules\Inventory\Http\Requests\AdjustStockRequest;
 use Modules\Inventory\Http\Requests\ListRequest;
 use Modules\Inventory\Models\Category;
 use Modules\Inventory\Models\InventoryItem;
+use Modules\Inventory\Models\Supplier;
 use Modules\Inventory\Services\StockPlannerService;
 use Modules\Inventory\Services\StockQueryService;
 use Modules\Inventory\Support\StockableUnit;
@@ -26,8 +27,10 @@ class InventoryController extends Controller
 
         return Inertia::render('Inventory::Stock/Index', [
             'items' => $this->stock->paginateItems($request->filters()),
+            'summary' => $this->stock->summary(),
             'filters' => $request->filters(),
             'categories' => Category::query()->select(['id', 'name'])->orderBy('name')->get(),
+            'suppliers' => Supplier::query()->select(['id', 'company_name'])->orderBy('company_name')->get(),
             'movementTypes' => StockMovementType::manualValues(),
         ]);
     }

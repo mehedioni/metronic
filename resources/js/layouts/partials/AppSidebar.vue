@@ -32,7 +32,24 @@ const sections = computed(() =>
 const currentPath = computed(() => page.url.split('?')[0]);
 
 function isCurrent(link: NavLink): boolean {
-    return currentPath.value === link.href.split('?')[0];
+    const pageUrlObj = new URL(page.url, 'http://localhost');
+    const linkUrlObj = new URL(link.href, 'http://localhost');
+
+    if (pageUrlObj.pathname !== linkUrlObj.pathname) {
+        return false;
+    }
+
+    const linkParams = new URLSearchParams(linkUrlObj.search);
+    const linkParamEntries = [...linkParams.entries()];
+
+    if (linkParamEntries.length > 0) {
+        const pageParams = new URLSearchParams(pageUrlObj.search);
+        return linkParamEntries.every(([key, val]) => pageParams.get(key) === val);
+    }
+
+    const pageParams = new URLSearchParams(pageUrlObj.search);
+    // If page has flow/filter params that belong to another specific link in sidebar, generic link shouldn't be active
+    return pageParams.get('direction_flow') === null;
 }
 
 function isGroupActive(group: NavGroup): boolean {
@@ -74,7 +91,7 @@ function toggleGroup(id: string) {
     <aside
         :class="
             cn(
-                'fixed inset-y-0 start-0 z-50 flex flex-col border-e border-sidebar-border bg-sidebar transition-[width,transform] duration-300 ease-out',
+                'fixed inset-y-0 start-0 z-50 flex flex-col border-e border-dashed border-zinc-200/80 bg-white transition-[width,transform] duration-300 ease-out dark:border-zinc-800/80 dark:bg-[#121215]',
                 collapsed ? 'w-18' : 'w-64',
                 mobileOpen ? 'translate-x-0' : '-translate-x-full',
                 'lg:translate-x-0',
@@ -82,7 +99,7 @@ function toggleGroup(id: string) {
         "
     >
         <div
-            class="flex h-16 shrink-0 items-center justify-between border-b border-dashed border-sidebar-border px-5"
+            class="flex h-16 shrink-0 items-center justify-between border-b border-dashed border-zinc-200/80 px-6 dark:border-zinc-800/80"
         >
             <Link href="/dashboard" class="min-w-0" @click="closeMobile">
                 <AppLogo
@@ -99,15 +116,14 @@ function toggleGroup(id: string) {
             >
                 <p
                     v-if="section.heading && !collapsed"
-                    class="px-3 pb-2 text-[11px] font-bold tracking-wider text-muted-foreground uppercase"
+                    class="px-3 pb-2 text-[11px] font-bold tracking-wider text-zinc-400 uppercase dark:text-zinc-500"
                 >
                     {{ section.heading }}
                 </p>
 
                 <div class="space-y-1">
                     <div v-for="group in section.groups" :key="group.id">
-                        <!-- A collapsed rail has no room for the accordion, so
-                             the group icon links straight to its first page. -->
+                        <!-- Collapsed Rail Link -->
                         <Link
                             v-if="collapsed"
                             :href="group.links[0].href"
@@ -116,8 +132,8 @@ function toggleGroup(id: string) {
                                 cn(
                                     'flex items-center justify-center rounded-lg px-3 py-2 transition-colors',
                                     isGroupActive(group)
-                                        ? 'bg-sidebar-accent text-sidebar-accent-foreground'
-                                        : 'text-sidebar-foreground hover:bg-sidebar-accent',
+                                        ? 'bg-zinc-100 text-zinc-900 dark:bg-zinc-800 dark:text-white'
+                                        : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-white',
                                 )
                             "
                             @click="closeMobile"
@@ -128,20 +144,40 @@ function toggleGroup(id: string) {
                         <template v-else>
                             <button
                                 type="button"
-                                class="flex w-full cursor-pointer items-center justify-between rounded-lg px-3 py-2 text-sm font-medium text-sidebar-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                                :class="
+                                    cn(
+                                        'group flex w-full cursor-pointer items-center justify-between rounded-lg px-3 py-2 text-xs transition-colors hover:text-blue-600 dark:hover:text-blue-500',
+                                        isGroupActive(group)
+                                            ? 'bg-zinc-50 font-semibold text-zinc-900 dark:bg-zinc-800/50 dark:text-white'
+                                            : 'font-medium text-zinc-900 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800',
+                                    )
+                                "
                                 :aria-expanded="open[group.id]"
                                 @click="toggleGroup(group.id)"
                             >
                                 <span class="flex items-center gap-2.5">
                                     <component
                                         :is="group.icon"
-                                        class="size-4 text-muted-foreground"
+                                        class="size-4 transition-colors group-hover:text-blue-600 dark:group-hover:text-blue-500"
+                                        :class="
+                                            isGroupActive(group)
+                                                ? 'text-zinc-900 dark:text-white'
+                                                : 'text-zinc-900 dark:text-zinc-300'
+                                        "
                                     />
-                                    <span>{{ group.label }}</span>
+                                    <span
+                                        :class="
+                                            isGroupActive(group)
+                                                ? 'text-xs font-semibold'
+                                                : 'text-xs font-medium'
+                                        "
+                                    >
+                                        {{ group.label }}
+                                    </span>
                                 </span>
 
                                 <ChevronDownIcon
-                                    class="size-3.5 text-muted-foreground transition-transform"
+                                    class="size-3.5 text-zinc-400 transition-transform transition-colors group-hover:text-blue-600 dark:group-hover:text-blue-500"
                                     :class="open[group.id] ? 'rotate-180' : ''"
                                 />
                             </button>
@@ -158,8 +194,8 @@ function toggleGroup(id: string) {
                                         cn(
                                             'block rounded-md px-3 py-1.5 text-xs transition-colors',
                                             isCurrent(link)
-                                                ? 'bg-sidebar-accent font-medium text-info'
-                                                : 'text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
+                                                ? 'bg-blue-50 font-medium text-blue-600 dark:bg-blue-500/10 dark:text-blue-500'
+                                                : 'text-zinc-900 hover:bg-zinc-50 hover:text-blue-600 dark:text-zinc-400 dark:hover:bg-zinc-800/50 dark:hover:text-blue-500',
                                         )
                                     "
                                     @click="closeMobile"
