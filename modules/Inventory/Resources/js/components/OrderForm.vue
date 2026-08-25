@@ -86,7 +86,11 @@ const props = defineProps<{
     action: string;
     method?: 'post' | 'put';
     submitLabel?: string;
-    cancelHref: string;
+    cancelHref?: string;
+}>();
+
+const emit = defineEmits<{
+    cancel: [];
 }>();
 
 const form = useForm<OrderPayload>({
@@ -549,9 +553,24 @@ if (!form.items.length) {
         <div class="flex flex-wrap items-center justify-end gap-2">
             <Badge v-if="form.isDirty" variant="outline">Unsaved changes</Badge>
 
-            <Button variant="outline" size="dense" as="a" :href="cancelHref"
-                >Cancel</Button
+            <Button
+                v-if="cancelHref"
+                variant="outline"
+                size="dense"
+                as="a"
+                :href="cancelHref"
             >
+                Cancel
+            </Button>
+            <Button
+                v-else
+                type="button"
+                variant="outline"
+                size="dense"
+                @click="$emit('cancel')"
+            >
+                Cancel
+            </Button>
             <Button type="submit" size="dense" :disabled="form.processing">
                 {{ submitLabel ?? 'Save order' }}
             </Button>

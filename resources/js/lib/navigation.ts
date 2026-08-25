@@ -139,11 +139,6 @@ export const navigation: NavSection[] = [
                         href: '/inventory/orders',
                         permission: 'orders.view',
                     },
-                    {
-                        label: 'Take Order',
-                        href: '/inventory/orders/create',
-                        permission: 'orders.create',
-                    },
                 ],
             },
             {

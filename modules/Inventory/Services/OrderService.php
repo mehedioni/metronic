@@ -35,7 +35,19 @@ class OrderService
             ->withCount('items')
             ->search($filters['search'] ?? null)
             ->between($filters['from'] ?? null, $filters['to'] ?? null)
-            ->when($filters['status'] ?? null, fn ($query, $status) => $query->where('status', $status))
+            ->when($filters['status'] ?? null, function ($query, $status) {
+                if ($status === 'in_transit') {
+                    $query->whereIn('status', ['confirmed', 'processing']);
+                } elseif ($status === 'delivered') {
+                    $query->where('status', 'completed');
+                } elseif ($status === 'canceled' || $status === 'cancelled') {
+                    $query->where('status', 'cancelled');
+                } elseif ($status === 'returns') {
+                    $query->where('status', 'draft');
+                } else {
+                    $query->where('status', $status);
+                }
+            })
             ->when($filters['customer_id'] ?? null, fn ($query, $customerId) => $query->where('customer_id', $customerId))
             ->tap(fn ($query) => QuerySorter::apply(
                 $query,

@@ -31,15 +31,31 @@ class OrderController extends Controller
         return Inertia::render('Inventory::Orders/Index', [
             'orders' => $this->orders->paginate($request->filters()),
             'filters' => $request->filters(),
+            'counts' => [
+                'all' => Order::count(),
+                'in_transit' => Order::whereIn('status', ['confirmed', 'processing'])->count(),
+                'delivered' => Order::where('status', 'completed')->count(),
+                'returns' => Order::where('status', 'draft')->count(),
+                'canceled' => Order::where('status', 'cancelled')->count(),
+            ],
             'options' => $this->formOptions(),
         ]);
     }
 
-    public function create(): Response
+    public function create(ListRequest $request): Response
     {
         $this->authorize('create', Order::class);
 
         return Inertia::render('Inventory::Orders/Create', [
+            'orders' => $this->orders->paginate($request->filters()),
+            'filters' => $request->filters(),
+            'counts' => [
+                'all' => Order::count(),
+                'in_transit' => Order::whereIn('status', ['confirmed', 'processing'])->count(),
+                'delivered' => Order::where('status', 'completed')->count(),
+                'returns' => Order::where('status', 'draft')->count(),
+                'canceled' => Order::where('status', 'cancelled')->count(),
+            ],
             'options' => $this->formOptions(),
         ]);
     }
