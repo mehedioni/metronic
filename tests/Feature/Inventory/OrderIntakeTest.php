@@ -2,12 +2,14 @@
 
 use App\Core\Support\Permissions;
 use Modules\Inventory\Actions\ConfirmOrderAction;
+use Modules\Inventory\Actions\FulfillOrderAction;
 use Modules\Inventory\Enums\ProductStatus;
 use Modules\Inventory\Enums\StockMovementType;
 use Modules\Inventory\Models\Customer;
 use Modules\Inventory\Models\Order;
 use Modules\Inventory\Models\Product;
 use Modules\Inventory\Models\ProductVariant;
+use Modules\Inventory\Models\StockMovement;
 use Modules\Inventory\Services\InventoryService;
 use Modules\Inventory\Support\StockableUnit;
 
@@ -72,6 +74,96 @@ it('takes an order for a customer and prices it from the catalogue', function ()
         ->and($order->subtotal)->toBe('75.00')
         ->and($order->total)->toBe('75.00')
         ->and($order->order_number)->toStartWith('ORD-');
+});
+
+it('snapshots the cost price onto the line, so a later cost change cannot restate the margin', function () {
+    $product = Product::factory()->create([
+        'selling_price' => 50,
+        'cost_price' => 20,
+    ]);
+
+    $this->actingAs($this->clerk)->post('/inventory/orders', [
+        'customer_name' => 'Walk-in',
+        'items' => [['product_id' => $product->id, 'quantity' => 2]],
+    ])->assertSessionHasNoErrors();
+
+    $line = Order::query()->firstOrFail()->items()->firstOrFail();
+
+    expect($line->unit_cost)->toBe('20.00')
+        ->and($line->lineCost())->toBe(40.0);
+
+    // The supplier puts their prices up; the order already placed must not move.
+    $product->update(['cost_price' => 45]);
+
+    expect($line->refresh()->unit_cost)->toBe('20.00');
+});
+
+it('prefers the variant cost over the product cost', function () {
+    $product = Product::factory()->variable()->create(['cost_price' => 10]);
+    $variant = ProductVariant::factory()->create([
+        'product_id' => $product->id,
+        'cost_price' => 33,
+        'selling_price' => 60,
+    ]);
+
+    $this->actingAs($this->clerk)->post('/inventory/orders', [
+        'customer_name' => 'Walk-in',
+        'items' => [
+            [
+                'product_id' => $product->id,
+                'product_variant_id' => $variant->id,
+                'quantity' => 1,
+            ],
+        ],
+    ])->assertSessionHasNoErrors();
+
+    expect(Order::query()->firstOrFail()->items()->firstOrFail()->unit_cost)
+        ->toBe('33.00');
+});
+
+it('leaves the cost null when nothing states one, rather than recording it as free', function () {
+    $product = Product::factory()->create([
+        'selling_price' => 12,
+        'cost_price' => null,
+    ]);
+
+    $this->actingAs($this->clerk)->post('/inventory/orders', [
+        'customer_name' => 'Walk-in',
+        'items' => [['product_id' => $product->id, 'quantity' => 1]],
+    ])->assertSessionHasNoErrors();
+
+    $line = Order::query()->firstOrFail()->items()->firstOrFail();
+
+    expect($line->unit_cost)->toBeNull()
+        ->and($line->lineCost())->toBeNull();
+});
+
+it('carries the line cost onto the fulfilment ledger row', function () {
+    $product = Product::factory()->create(['selling_price' => 50, 'cost_price' => 18]);
+
+    app(InventoryService::class)->record(
+        new StockableUnit($product->id),
+        StockMovementType::OpeningStock,
+        5,
+    );
+
+    // Confirmation is reached from pending; a draft has to be moved on first.
+    $this->actingAs($this->clerk)->post('/inventory/orders', [
+        'customer_name' => 'Walk-in',
+        'status' => 'pending',
+        'items' => [['product_id' => $product->id, 'quantity' => 2]],
+    ]);
+
+    $order = Order::query()->firstOrFail();
+
+    app(ConfirmOrderAction::class)->handle($order);
+    app(FulfillOrderAction::class)->handle($order->refresh());
+
+    $movement = StockMovement::query()
+        ->where('type', StockMovementType::OrderOut)
+        ->firstOrFail();
+
+    expect($movement->unit_cost)->toBe('18.00');
 });
 
 it('takes a walk-in order with only a name', function () {

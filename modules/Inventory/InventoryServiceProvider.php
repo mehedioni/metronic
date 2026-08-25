@@ -3,9 +3,12 @@
 namespace Modules\Inventory;
 
 use App\Core\ModuleServiceProvider;
+use App\Core\Support\Permissions;
+use App\Models\User;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Foundation\Exceptions\Handler;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Modules\Inventory\Exceptions\InventoryException;
 
 /**
@@ -24,7 +27,24 @@ class InventoryServiceProvider extends ModuleServiceProvider
     {
         parent::boot();
 
+        $this->registerAbilities();
         $this->registerExceptionRendering();
+    }
+
+    /**
+     * Abilities that guard a read rather than a record.
+     *
+     * The report is an aggregate over orders, order lines and expenses, so
+     * there is no model to hang a policy on — but the controller still has to
+     * re-check what the route middleware asserted, the way every other screen
+     * in this module does.
+     */
+    private function registerAbilities(): void
+    {
+        Gate::define(
+            'viewReports',
+            fn (User $user): bool => $user->can(Permissions::REPORTS_VIEW),
+        );
     }
 
     /**

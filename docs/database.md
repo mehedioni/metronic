@@ -32,6 +32,7 @@
 | `inbound_receipts` / `inbound_receipt_items` | unique `reference_number`; supplier `restrictOnDelete`; items cascade from the receipt, products restricted |
 | `orders` / `order_items` | unique `order_number`; items cascade from the order, products restricted |
 | `customers` | unique `code`; unique `email`; indexed `name`, `phone`, `country`, `status` |
+| `expenses` | indexed `spent_on`, `category`, composite `(spent_on, category)`; supplier `nullOnDelete` |
 
 `stock_movements` uses microsecond timestamps because two movements for the same
 unit inside one second must still order deterministically in an audit trail.

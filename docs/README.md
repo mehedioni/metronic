@@ -13,4 +13,5 @@ Laravel + Inertia + Vue application. Start with
 | [suppliers.md](suppliers.md) | Supplier structure, product links, receiving, history |
 | [database.md](database.md) | Tables, keys, indexes, integrity rules |
 | [customers.md](customers.md) | Customer records and how orders relate to them |
+| [reports.md](reports.md) | Daily sales, cost of goods, expenses and profit |
 | [frontend-integration.md](frontend-integration.md) | The UI: shell, list plumbing, page props, action endpoints |

@@ -149,9 +149,39 @@ class OrderService
                 'product_variant_id' => $item['product_variant_id'] ?? null,
                 'quantity' => $quantity,
                 'unit_price' => $unitPrice,
+                'unit_cost' => $this->resolveUnitCost($item),
                 'line_total' => round($unitPrice * $quantity, 2),
             ]);
         }
+    }
+
+    /**
+     * What these units cost the store, captured at intake.
+     *
+     * Never resolved at report time: the product's cost price is current, and
+     * reading it later would silently restate the margin on every past order
+     * whenever a supplier changes their prices. Null stays null — an unknown
+     * cost has to report as unknown, not as free.
+     *
+     * @param  array<string, mixed>  $item
+     */
+    private function resolveUnitCost(array $item): ?float
+    {
+        if (array_key_exists('unit_cost', $item) && $item['unit_cost'] !== null) {
+            return (float) $item['unit_cost'];
+        }
+
+        if (! empty($item['product_variant_id'])) {
+            $variant = ProductVariant::query()->find($item['product_variant_id']);
+
+            if ($variant?->cost_price !== null) {
+                return (float) $variant->cost_price;
+            }
+        }
+
+        $cost = Product::query()->find($item['product_id'])?->cost_price;
+
+        return $cost === null ? null : (float) $cost;
     }
 
     /**

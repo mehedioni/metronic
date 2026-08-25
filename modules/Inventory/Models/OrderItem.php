@@ -12,7 +12,7 @@ use Modules\Inventory\Support\StockableUnit;
 
 #[Fillable([
     'order_id', 'product_id', 'product_variant_id', 'quantity',
-    'quantity_fulfilled', 'unit_price', 'line_total',
+    'quantity_fulfilled', 'unit_price', 'unit_cost', 'line_total',
 ])]
 #[UseFactory(OrderItemFactory::class)]
 class OrderItem extends BaseUuidModel
@@ -30,6 +30,7 @@ class OrderItem extends BaseUuidModel
             'quantity' => 'integer',
             'quantity_fulfilled' => 'integer',
             'unit_price' => 'decimal:2',
+            'unit_cost' => 'decimal:2',
             'line_total' => 'decimal:2',
         ];
     }
@@ -52,6 +53,18 @@ class OrderItem extends BaseUuidModel
     public function unit(): StockableUnit
     {
         return new StockableUnit($this->product_id, $this->product_variant_id);
+    }
+
+    /**
+     * What these units cost the store, from the snapshot taken at intake.
+     * Null when no cost price was known, which a margin report must treat as
+     * unknown rather than as zero.
+     */
+    public function lineCost(): ?float
+    {
+        return $this->unit_cost === null
+            ? null
+            : round((float) $this->unit_cost * $this->quantity, 2);
     }
 
     public function outstandingQuantity(): int

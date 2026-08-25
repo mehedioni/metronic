@@ -41,6 +41,9 @@ return new class extends Migration
             $table->unsignedInteger('quantity');
             $table->unsignedInteger('quantity_fulfilled')->default(0);
             $table->decimal('unit_price', 12, 2)->default(0);
+            // Cost is snapshotted beside the price so a margin report of a past
+            // period stays correct after a supplier raises their prices.
+            $table->decimal('unit_cost', 12, 2)->nullable();
             $table->decimal('line_total', 12, 2)->default(0);
             $table->timestamps();
 

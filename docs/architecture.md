@@ -70,7 +70,8 @@ through an Action, and every Action delegates the actual quantity change to
 - **Services** own listing, filtering, pagination and plain CRUD:
   `CategoryService`, `SupplierService`, `ProductService`,
   `InboundReceiptService`, `OrderService`, `CustomerService`,
-  `StockQueryService`, `StockPlannerService`, `DashboardService`.
+  `StockQueryService`, `StockPlannerService`, `DashboardService`,
+  `ExpenseService`, `ReportService`.
 - **Actions** own the transitions that have an inventory effect:
   `ReceiveInboundReceiptAction`, `CancelInboundReceiptAction`,
   `AdjustStockAction`, `ConfirmOrderAction`, `CancelOrderAction`,
@@ -90,6 +91,7 @@ through an Action, and every Action delegates the actual quantity change to
 | `InboundReceipt` / `InboundReceiptItem` | receiving document and its lines |
 | `Order` / `OrderItem` | sales order and its lines; `belongsTo` customer (nullable — a walk-in sale has none) |
 | `Customer` | who the store sells to; orders keep their own contact snapshot |
+| `Expense` | operating cost recorded against a trading day; never a stock purchase |
 
 ### Enums as the transition table
 

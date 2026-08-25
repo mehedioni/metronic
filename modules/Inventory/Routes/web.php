@@ -5,10 +5,12 @@ use Illuminate\Support\Facades\Route;
 use Modules\Inventory\Http\Controllers\CategoryController;
 use Modules\Inventory\Http\Controllers\CustomerController;
 use Modules\Inventory\Http\Controllers\DashboardController;
+use Modules\Inventory\Http\Controllers\ExpenseController;
 use Modules\Inventory\Http\Controllers\InboundReceiptController;
 use Modules\Inventory\Http\Controllers\InventoryController;
 use Modules\Inventory\Http\Controllers\OrderController;
 use Modules\Inventory\Http\Controllers\ProductController;
+use Modules\Inventory\Http\Controllers\ReportController;
 use Modules\Inventory\Http\Controllers\StockMovementController;
 use Modules\Inventory\Http\Controllers\SupplierController;
 
@@ -75,6 +77,14 @@ Route::middleware(['auth'])->prefix('inventory')->name('inventory.')->group(func
     Route::post('inbound/{receipt}/cancel', [InboundReceiptController::class, 'cancel'])
         ->middleware('permission:'.Permissions::INVENTORY_ADJUST)
         ->name('inbound.cancel');
+
+    Route::resource('expenses', ExpenseController::class)
+        ->only(['index', 'store', 'update', 'destroy'])
+        ->middleware('permission:'.Permissions::EXPENSES_VIEW);
+
+    Route::get('reports/daily', [ReportController::class, 'daily'])
+        ->middleware('permission:'.Permissions::REPORTS_VIEW)
+        ->name('reports.daily');
 
     Route::resource('orders', OrderController::class)
         ->middleware('permission:'.Permissions::ORDERS_VIEW);

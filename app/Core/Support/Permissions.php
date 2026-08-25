@@ -63,6 +63,16 @@ final class Permissions
 
     public const CUSTOMERS_DELETE = 'customers.delete';
 
+    public const EXPENSES_VIEW = 'expenses.view';
+
+    public const EXPENSES_CREATE = 'expenses.create';
+
+    public const EXPENSES_UPDATE = 'expenses.update';
+
+    public const EXPENSES_DELETE = 'expenses.delete';
+
+    public const REPORTS_VIEW = 'reports.view';
+
     public const USERS_VIEW = 'users.view';
 
     public const USERS_CREATE = 'users.create';
@@ -129,6 +139,13 @@ final class Permissions
                 self::CUSTOMERS_UPDATE,
                 self::CUSTOMERS_DELETE,
             ],
+            'expenses' => [
+                self::EXPENSES_VIEW,
+                self::EXPENSES_CREATE,
+                self::EXPENSES_UPDATE,
+                self::EXPENSES_DELETE,
+            ],
+            'reports' => [self::REPORTS_VIEW],
             'users' => [
                 self::USERS_VIEW,
                 self::USERS_CREATE,

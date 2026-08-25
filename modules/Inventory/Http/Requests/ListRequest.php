@@ -28,6 +28,8 @@ class ListRequest extends FormRequest
             'source' => ['nullable', 'string', 'max:40'],
             'type' => ['nullable', 'string', 'max:40'],
             'category_id' => ['nullable', 'uuid'],
+            // Expense category, which is an enum value rather than a record id.
+            'category' => ['nullable', 'string', 'max:40'],
             'parent_id' => ['nullable', 'uuid'],
             'supplier_id' => ['nullable', 'uuid'],
             'customer_id' => ['nullable', 'uuid'],

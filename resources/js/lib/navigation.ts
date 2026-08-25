@@ -1,6 +1,8 @@
 import {
     BoxesIcon,
+    ChartColumnIcon,
     ClipboardListIcon,
+    ReceiptIcon,
     LayoutGridIcon,
     PackageIcon,
     ShapesIcon,
@@ -153,6 +155,30 @@ export const navigation: NavSection[] = [
                         label: 'Customer List',
                         href: '/inventory/customers',
                         permission: 'customers.view',
+                    },
+                ],
+            },
+            {
+                id: 'expenses',
+                label: 'Expenses',
+                icon: ReceiptIcon,
+                links: [
+                    {
+                        label: 'Expense List',
+                        href: '/inventory/expenses',
+                        permission: 'expenses.view',
+                    },
+                ],
+            },
+            {
+                id: 'reports',
+                label: 'Reports',
+                icon: ChartColumnIcon,
+                links: [
+                    {
+                        label: 'Daily Sales & Profit',
+                        href: '/inventory/reports/daily',
+                        permission: 'reports.view',
                     },
                 ],
             },

@@ -11,10 +11,12 @@ use Modules\Inventory\Actions\CancelOrderAction;
 use Modules\Inventory\Actions\ConfirmOrderAction;
 use Modules\Inventory\Actions\FulfillOrderAction;
 use Modules\Inventory\Actions\ReceiveInboundReceiptAction;
+use Modules\Inventory\Enums\ExpenseCategory;
 use Modules\Inventory\Enums\InboundReceiptStatus;
 use Modules\Inventory\Enums\StockMovementType;
 use Modules\Inventory\Models\Category;
 use Modules\Inventory\Models\Customer;
+use Modules\Inventory\Models\Expense;
 use Modules\Inventory\Models\InboundReceipt;
 use Modules\Inventory\Models\Order;
 use Modules\Inventory\Models\Product;
@@ -53,6 +55,7 @@ class InventoryDemoSeeder extends Seeder
         $this->openingStock($products);
         $this->receivingHistory($products, $suppliers);
         $this->salesHistory($products, $customers);
+        $this->operatingExpenses();
         $this->alignLedgerDates();
 
         $this->command?->info(sprintf(
@@ -244,6 +247,9 @@ class InventoryDemoSeeder extends Seeder
         foreach ($products->random(fake()->numberBetween(1, 4)) as $product) {
             $variant = $product->variants()->inRandomOrder()->first();
             $price = (float) ($variant?->selling_price ?? $product->selling_price);
+            // Cost is snapshotted the same way OrderService does it, or the
+            // profit report would have revenue with no cost behind it.
+            $cost = $variant?->cost_price ?? $product->cost_price;
             $quantity = fake()->numberBetween(1, 6);
 
             $order->items()->create([
@@ -251,6 +257,7 @@ class InventoryDemoSeeder extends Seeder
                 'product_variant_id' => $variant?->id,
                 'quantity' => $quantity,
                 'unit_price' => $price,
+                'unit_cost' => $cost === null ? null : (float) $cost,
                 'line_total' => round($price * $quantity, 2),
             ]);
         }
@@ -288,6 +295,58 @@ class InventoryDemoSeeder extends Seeder
     private function cancel(CancelOrderAction $cancel, Order $order): void
     {
         rescue(fn () => $cancel->handle($order->refresh(), 'Customer changed their mind'), report: false);
+    }
+
+    /**
+     * Running costs across the same period the sales cover, so the daily
+     * profit report has both sides of the equation.
+     *
+     * Rent and salaries land once a month; the rest are sprinkled across the
+     * days, which is roughly how a small shop's ledger looks.
+     */
+    private function operatingExpenses(): void
+    {
+        $today = Carbon::now()->startOfDay();
+
+        foreach ([0, 1, 2] as $monthsAgo) {
+            $firstOfMonth = $today->copy()->subMonths($monthsAgo)->startOfMonth();
+
+            if ($firstOfMonth->greaterThan($today)) {
+                continue;
+            }
+
+            Expense::factory()->create([
+                'spent_on' => $firstOfMonth->toDateString(),
+                'category' => ExpenseCategory::Rent,
+                'amount' => 2400,
+                'description' => 'Shop rent',
+            ]);
+
+            Expense::factory()->create([
+                'spent_on' => $firstOfMonth->toDateString(),
+                'category' => ExpenseCategory::Salaries,
+                'amount' => 5200,
+                'description' => 'Staff wages',
+            ]);
+        }
+
+        $sprinkled = [
+            ExpenseCategory::Utilities,
+            ExpenseCategory::Marketing,
+            ExpenseCategory::Logistics,
+            ExpenseCategory::Maintenance,
+            ExpenseCategory::Fees,
+        ];
+
+        foreach (range(1, 45) as $index) {
+            Expense::factory()->create([
+                'spent_on' => $today->copy()
+                    ->subDays(fake()->numberBetween(0, 90))
+                    ->toDateString(),
+                'category' => fake()->randomElement($sprinkled),
+                'amount' => fake()->randomFloat(2, 15, 420),
+            ]);
+        }
     }
 
     /**

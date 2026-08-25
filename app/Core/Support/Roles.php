@@ -48,6 +48,7 @@ final class Roles
             self::ADMIN => Permissions::all(),
             self::MANAGER => Permissions::forGroups([
                 'dashboard', 'categories', 'suppliers', 'products', 'inventory', 'orders', 'customers',
+                'expenses', 'reports',
             ]),
             self::INVENTORY_MANAGER => array_merge(
                 Permissions::forGroups(['dashboard', 'categories', 'suppliers', 'products', 'inventory']),
@@ -55,6 +56,7 @@ final class Roles
                     Permissions::ORDERS_VIEW,
                     Permissions::ORDERS_FULFILL,
                     Permissions::CUSTOMERS_VIEW,
+                    Permissions::REPORTS_VIEW,
                 ],
             ),
             self::STAFF => [

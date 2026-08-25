@@ -105,6 +105,9 @@ class FulfillOrderAction
             new MovementContext(
                 reference: $order,
                 reason: "Order {$order->order_number}",
+                // The line's cost snapshot travels onto the ledger row, so the
+                // audit trail says what leaving stock was worth.
+                unitCost: $item->unit_cost === null ? null : (float) $item->unit_cost,
                 userId: $userId,
             ),
         );
