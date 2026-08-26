@@ -39,9 +39,11 @@
 | `stock_movements` | ledger; product/variant `restrictOnDelete`, supplier/user `nullOnDelete`; `timestamps(6)`; indexes on type, `(product_id, created_at)`, `(reference_type, reference_id)` |
 | `inbound_receipts` / `inbound_receipt_items` | unique `reference_number`; supplier `restrictOnDelete`; items cascade from the receipt, products restricted |
 | `orders` / `order_items` | unique `order_number`; items cascade from the order, products restricted |
-| `customers` | unique `code`; unique `email`; indexed `name`, `phone`, `country`, `status` |
+| `customers` | unique `code`; unique `email`; indexed `name`, `phone`, `country`, `status`; `avatar_disk` + relative `avatar_path` |
 | `expenses` | indexed `spent_on`, `category`, composite `(spent_on, category)`; supplier `nullOnDelete` |
 | `products` | unique `uuid`, `slug`, `sku`; indexed `name`, `type`, `status` |
+| `product_images` | FK to product (cascade), optional variant; `disk` + relative `path`; indexes `(product_id, sort_order)`, `(product_id, is_primary)` |
+| `settings` | unique `key`, nullable `value`; read as one cached blob (see [settings.md](settings.md)) |
 
 `stock_movements` uses microsecond timestamps because two movements for the same
 unit inside one second must still order deterministically in an audit trail.

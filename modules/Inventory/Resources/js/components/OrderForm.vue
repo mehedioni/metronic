@@ -61,7 +61,6 @@ export interface OrderPayload {
     customer_phone: string;
     delivery_address: string;
     status_id: number | '';
-    currency: string;
     discount_total: string | number | '';
     tax_total: string | number | '';
     notes: string;
@@ -113,7 +112,6 @@ const form = useForm<OrderPayload>({
     delivery_address: props.order?.delivery_address ?? '',
     // A new order starts as a draft: nothing is reserved until it is confirmed.
     status_id: props.order?.status_id ?? '',
-    currency: props.order?.currency ?? 'USD',
     discount_total: props.order?.discount_total ?? '',
     tax_total: props.order?.tax_total ?? '',
     notes: props.order?.notes ?? '',
@@ -407,7 +405,7 @@ if (!form.items.length) {
                                 <strong>{{ availableFor(line) ?? '—' }}</strong>
                             </span>
                             <span class="font-medium">
-                                Line total {{ money(lineTotal(line), form.currency) }}
+                                Line total {{ money(lineTotal(line)) }}
                             </span>
                         </div>
                     </div>
@@ -488,10 +486,6 @@ if (!form.items.length) {
                         </Select>
                     </FormField>
 
-                    <FormField label="Currency" :error="form.errors.currency">
-                        <Input v-model="form.currency" maxlength="3" class="font-mono" />
-                    </FormField>
-
                     <div class="grid gap-4 sm:grid-cols-2">
                         <FormField label="Discount" :error="form.errors.discount_total">
                             <Input
@@ -517,27 +511,27 @@ if (!form.items.length) {
                     <dl class="space-y-2 text-2sm">
                         <div class="flex justify-between">
                             <dt class="text-muted-foreground">Subtotal</dt>
-                            <dd>{{ money(subtotal, form.currency) }}</dd>
+                            <dd>{{ money(subtotal) }}</dd>
                         </div>
                         <div class="flex justify-between">
                             <dt class="text-muted-foreground">Discount</dt>
                             <dd>
                                 −{{
-                                    money(Number(form.discount_total || 0), form.currency)
+                                    money(Number(form.discount_total || 0))
                                 }}
                             </dd>
                         </div>
                         <div class="flex justify-between">
                             <dt class="text-muted-foreground">Tax</dt>
                             <dd>
-                                {{ money(Number(form.tax_total || 0), form.currency) }}
+                                {{ money(Number(form.tax_total || 0)) }}
                             </dd>
                         </div>
                         <div
                             class="flex justify-between border-t border-dashed border-border pt-2 font-semibold"
                         >
                             <dt>Total</dt>
-                            <dd>{{ money(total, form.currency) }}</dd>
+                            <dd>{{ money(total) }}</dd>
                         </div>
                     </dl>
 

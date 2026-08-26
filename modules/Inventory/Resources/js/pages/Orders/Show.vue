@@ -43,7 +43,6 @@ interface Order {
     discount_total: string;
     tax_total: string;
     total: string;
-    currency: string;
     notes: string | null;
     confirmed_at: string | null;
     completed_at: string | null;
@@ -268,10 +267,10 @@ function cancel() {
                                         </Badge>
                                     </td>
                                     <td class="px-5 py-3 text-end">
-                                        {{ money(item.unit_price, order.currency) }}
+                                        {{ money(item.unit_price) }}
                                     </td>
                                     <td class="px-5 py-3 text-end font-medium">
-                                        {{ money(item.line_total, order.currency) }}
+                                        {{ money(item.line_total) }}
                                     </td>
                                 </tr>
                             </tbody>
@@ -282,23 +281,23 @@ function cancel() {
                         <dl class="ms-auto max-w-xs space-y-2 text-2sm">
                             <div class="flex justify-between">
                                 <dt class="text-muted-foreground">Subtotal</dt>
-                                <dd>{{ money(order.subtotal, order.currency) }}</dd>
+                                <dd>{{ money(order.subtotal) }}</dd>
                             </div>
                             <div class="flex justify-between">
                                 <dt class="text-muted-foreground">Discount</dt>
                                 <dd>
-                                    {{ money(order.discount_total, order.currency) }}
+                                    {{ money(order.discount_total) }}
                                 </dd>
                             </div>
                             <div class="flex justify-between">
                                 <dt class="text-muted-foreground">Tax</dt>
-                                <dd>{{ money(order.tax_total, order.currency) }}</dd>
+                                <dd>{{ money(order.tax_total) }}</dd>
                             </div>
                             <div
                                 class="flex justify-between border-t border-dashed border-border pt-2 font-semibold"
                             >
                                 <dt>Total</dt>
-                                <dd>{{ money(order.total, order.currency) }}</dd>
+                                <dd>{{ money(order.total) }}</dd>
                             </div>
                         </dl>
                     </div>

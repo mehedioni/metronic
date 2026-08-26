@@ -1,3 +1,5 @@
+import { currency } from '@/lib/currency';
+
 /**
  * Display formatting.
  *
@@ -5,19 +7,27 @@
  * precision in transit; these helpers are the only place it becomes a number,
  * and only for display.
  */
-export function money(
-    value: number | string | null | undefined,
-    currency = 'USD',
-): string {
+
+/**
+ * An amount in the store's currency, as chosen in Settings → General.
+ *
+ * Written from the configured symbol rather than by locale, so the same amount
+ * reads identically wherever it is rendered.
+ */
+export function money(value: number | string | null | undefined): string {
     if (value === null || value === undefined || value === '') {
         return '—';
     }
 
-    return new Intl.NumberFormat(undefined, {
-        style: 'currency',
-        currency,
-        minimumFractionDigits: 2,
+    const active = currency();
+    const amount = new Intl.NumberFormat(undefined, {
+        minimumFractionDigits: active.decimals,
+        maximumFractionDigits: active.decimals,
     }).format(Number(value));
+
+    return active.position === 'after'
+        ? `${amount} ${active.symbol}`
+        : `${active.symbol}${amount}`;
 }
 
 export function number(value: number | string | null | undefined): string {

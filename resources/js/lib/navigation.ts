@@ -6,6 +6,7 @@ import {
     LayoutGridIcon,
     PackageIcon,
     ShapesIcon,
+    SettingsIcon,
     ShieldCheckIcon,
     TruckIcon,
     UsersRoundIcon,
@@ -14,11 +15,17 @@ import type { Component } from 'vue';
 
 export interface NavLink {
     label: string;
-    href: string;
-    /** Permission name the backend enforces for the destination. */
-    permission: string;
+    /** Absent on a link that opens a drawer rather than navigating. */
+    href?: string;
+    /**
+     * Permission name the backend enforces for the destination. Absent means
+     * every signed-in user may follow it — a user's own profile, say.
+     */
+    permission?: string;
     /** Also mark the parent active for these path prefixes. */
     match?: string[];
+    /** Opens the settings drawer on this tab instead of visiting a page. */
+    settingsTab?: 'general' | 'profile';
 }
 
 export interface NavGroup {
@@ -212,6 +219,23 @@ export const navigation: NavSection[] = [
     {
         heading: 'Administration',
         groups: [
+            {
+                id: 'settings',
+                label: 'Settings',
+                icon: SettingsIcon,
+                links: [
+                    {
+                        label: 'General',
+                        settingsTab: 'general',
+                        permission: 'settings.manage',
+                    },
+                    {
+                        // No permission: everyone may edit their own account.
+                        label: 'Profile',
+                        settingsTab: 'profile',
+                    },
+                ],
+            },
             {
                 id: 'access',
                 label: 'Access',

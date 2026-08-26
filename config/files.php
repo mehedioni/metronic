@@ -32,6 +32,7 @@ return [
         'customers' => 'customers',
         'expenses' => 'expenses',
         'users' => 'users',
+        'settings' => 'settings',
     ],
 
     /*

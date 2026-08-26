@@ -32,7 +32,6 @@ class UpdateOrderRequest extends FormRequest
             'status_id' => ['nullable', 'integer', Rule::in(OrderStatuses::assignableIds())],
             'discount_total' => ['nullable', 'numeric', 'min:0'],
             'tax_total' => ['nullable', 'numeric', 'min:0'],
-            'currency' => ['nullable', 'string', 'size:3'],
             'notes' => ['nullable', 'string', 'max:2000'],
 
             'items' => ['sometimes', 'array', 'min:1'],

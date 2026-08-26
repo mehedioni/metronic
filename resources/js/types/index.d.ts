@@ -9,6 +9,15 @@ export interface AuthUser {
 }
 
 /** Props shared with every page via HandleInertiaRequests::share(). */
+/** How a currency is written, from config/currencies.php. */
+export interface CurrencyConfig {
+    code: string;
+    name: string;
+    symbol: string;
+    position: 'before' | 'after';
+    decimals: number;
+}
+
 export interface SharedData {
     app: {
         name: string;
@@ -23,6 +32,14 @@ export interface SharedData {
         maxKilobytes: number;
         maxPerProduct: number;
     };
+    /** Store-wide settings, from Settings → General. */
+    settings: {
+        companyName: string;
+        logoUrl: string | null;
+        currency: CurrencyConfig;
+    };
+    /** The currencies Settings offers, from config/currencies.php. */
+    currencies: CurrencyConfig[];
     flash: {
         success: string | null;
         error: string | null;

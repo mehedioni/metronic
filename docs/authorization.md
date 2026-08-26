@@ -35,9 +35,13 @@ groups (`Roles::permissionMap()`):
 | --- | --- |
 | Super Admin | everything, via `Gate::before` — holds no explicit permissions |
 | Admin | every permission in the catalogue |
-| Manager | dashboard, categories, suppliers, products, inventory, orders, customers |
+| Manager | dashboard, categories, suppliers, products, inventory, orders, customers, expenses, reports, settings |
 | Inventory Manager | dashboard, categories, suppliers, products, inventory + view orders, fulfil orders, view customers |
 | Staff | read-only across the app, plus `orders.create` |
+
+`settings.manage` covers the store's own settings — its name, logo and
+currency. A user's own profile is deliberately not a permission: everyone has
+an account, so everyone may edit theirs. See [settings.md](settings.md).
 
 Roles exist only to group permissions. Controllers and policies always check
 **permissions**, never role names. The two exceptions are deliberate and

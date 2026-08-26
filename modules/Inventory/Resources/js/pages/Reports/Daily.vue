@@ -46,7 +46,6 @@ interface Report {
         expenses_attributable: boolean;
         customer_filter: string | null;
         lines_without_cost: number;
-        currencies: string[];
     };
 }
 
@@ -68,9 +67,6 @@ const days = computed(() => props.report.days);
 const totals = computed(() => props.report.totals);
 const meta = computed(() => props.report.meta);
 
-/** One currency is assumed; the sums stop meaning anything otherwise. */
-const mixedCurrency = computed(() => meta.value.currencies.length > 1);
-const currency = computed(() => meta.value.currencies[0] ?? 'USD');
 
 const labels = computed(() =>
     days.value.map((day) =>
@@ -254,23 +250,12 @@ function toneFor(value: number | null): string {
             </p>
         </div>
 
-        <div
-            v-if="mixedCurrency"
-            class="flex items-start gap-2.5 rounded-lg border border-danger/20 bg-danger-soft px-4 py-3 text-2sm text-danger"
-        >
-            <TriangleAlertIcon class="mt-px size-4 shrink-0" />
-            <p>
-                Orders in this range use more than one currency
-                ({{ meta.currencies.join(', ') }}). These totals are plain sums
-                and do not convert between them.
-            </p>
-        </div>
 
         <div class="grid gap-5 sm:grid-cols-2 xl:grid-cols-5">
             <Card class="p-5">
                 <p class="text-xs text-muted-foreground">Sales</p>
                 <p class="mt-1 text-2xl font-bold tracking-tight">
-                    {{ money(totals.sales, currency) }}
+                    {{ money(totals.sales) }}
                 </p>
                 <p class="mt-0.5 text-2xs text-muted-foreground">
                     {{ number(totals.orders_count) }} orders
@@ -280,7 +265,7 @@ function toneFor(value: number | null): string {
             <Card class="p-5">
                 <p class="text-xs text-muted-foreground">Cost of goods</p>
                 <p class="mt-1 text-2xl font-bold tracking-tight">
-                    {{ money(totals.cogs, currency) }}
+                    {{ money(totals.cogs) }}
                 </p>
                 <p class="mt-0.5 text-2xs text-muted-foreground">
                     What the goods sold cost the store
@@ -293,7 +278,7 @@ function toneFor(value: number | null): string {
                     class="mt-1 text-2xl font-bold tracking-tight"
                     :class="toneFor(totals.gross_profit)"
                 >
-                    {{ money(totals.gross_profit, currency) }}
+                    {{ money(totals.gross_profit) }}
                 </p>
                 <p class="mt-0.5 text-2xs text-muted-foreground">
                     {{
@@ -310,7 +295,7 @@ function toneFor(value: number | null): string {
                     {{
                         totals.expenses === null
                             ? '—'
-                            : money(totals.expenses, currency)
+                            : money(totals.expenses)
                     }}
                 </p>
                 <p class="mt-0.5 text-2xs text-muted-foreground">
@@ -327,7 +312,7 @@ function toneFor(value: number | null): string {
                     {{
                         totals.net_profit === null
                             ? '—'
-                            : money(totals.net_profit, currency)
+                            : money(totals.net_profit)
                     }}
                 </p>
                 <p class="mt-0.5 text-2xs text-muted-foreground">
@@ -453,10 +438,10 @@ function toneFor(value: number | null): string {
                                 {{ day.orders_count || '—' }}
                             </td>
                             <td class="px-5 py-2.5 text-end">
-                                {{ day.sales ? money(day.sales, currency) : '—' }}
+                                {{ day.sales ? money(day.sales) : '—' }}
                             </td>
                             <td class="px-5 py-2.5 text-end">
-                                {{ day.cogs ? money(day.cogs, currency) : '—' }}
+                                {{ day.cogs ? money(day.cogs) : '—' }}
                             </td>
                             <td
                                 class="px-5 py-2.5 text-end font-medium"
@@ -464,7 +449,7 @@ function toneFor(value: number | null): string {
                             >
                                 {{
                                     day.sales
-                                        ? money(day.gross_profit, currency)
+                                        ? money(day.gross_profit)
                                         : '—'
                                 }}
                             </td>
@@ -473,7 +458,7 @@ function toneFor(value: number | null): string {
                                     day.expenses === null
                                         ? '—'
                                         : day.expenses
-                                          ? money(day.expenses, currency)
+                                          ? money(day.expenses)
                                           : '—'
                                 }}
                             </td>
@@ -488,7 +473,7 @@ function toneFor(value: number | null): string {
                                 {{
                                     day.net_profit === null
                                         ? '—'
-                                        : money(day.net_profit, currency)
+                                        : money(day.net_profit)
                                 }}
                             </td>
                         </tr>
@@ -503,22 +488,22 @@ function toneFor(value: number | null): string {
                                 {{ number(totals.orders_count) }}
                             </td>
                             <td class="px-5 py-3 text-end">
-                                {{ money(totals.sales, currency) }}
+                                {{ money(totals.sales) }}
                             </td>
                             <td class="px-5 py-3 text-end">
-                                {{ money(totals.cogs, currency) }}
+                                {{ money(totals.cogs) }}
                             </td>
                             <td
                                 class="px-5 py-3 text-end"
                                 :class="toneFor(totals.gross_profit)"
                             >
-                                {{ money(totals.gross_profit, currency) }}
+                                {{ money(totals.gross_profit) }}
                             </td>
                             <td class="px-5 py-3 text-end">
                                 {{
                                     totals.expenses === null
                                         ? '—'
-                                        : money(totals.expenses, currency)
+                                        : money(totals.expenses)
                                 }}
                             </td>
                             <td
@@ -528,7 +513,7 @@ function toneFor(value: number | null): string {
                                 {{
                                     totals.net_profit === null
                                         ? '—'
-                                        : money(totals.net_profit, currency)
+                                        : money(totals.net_profit)
                                 }}
                             </td>
                         </tr>

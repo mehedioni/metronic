@@ -24,7 +24,6 @@ return new class extends Migration
             $table->date('spent_on')->index();
             $table->string('category')->index();
             $table->decimal('amount', 12, 2);
-            $table->char('currency', 3)->default('USD');
             $table->string('reference')->nullable();
             $table->foreignId('supplier_id')->nullable()->constrained('suppliers')->nullOnDelete();
             $table->text('description')->nullable();

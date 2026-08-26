@@ -42,7 +42,6 @@ interface History {
         order_number: string;
         status: string;
         total: string;
-        currency: string;
         items_count: number;
         created_at: string;
     }>;
@@ -193,7 +192,7 @@ function toggleStatus() {
                                                 {{ order.items_count }}
                                             </td>
                                             <td class="px-5 py-3 text-end font-medium">
-                                                {{ money(order.total, order.currency) }}
+                                                {{ money(order.total) }}
                                             </td>
                                             <td class="px-5 py-3">
                                                 <StatusBadge

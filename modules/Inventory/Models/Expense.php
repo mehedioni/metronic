@@ -19,7 +19,7 @@ use Modules\Inventory\Policies\ExpensePolicy;
  * An operating expense, recorded against the trading day it belongs to.
  */
 #[Fillable([
-    'spent_on', 'category', 'amount', 'currency', 'reference',
+    'spent_on', 'category', 'amount', 'reference',
     'supplier_id', 'description', 'created_by',
 ])]
 #[UsePolicy(ExpensePolicy::class)]
@@ -30,7 +30,6 @@ class Expense extends BaseModel
     use HasFactory;
 
     protected $attributes = [
-        'currency' => 'USD',
         'category' => ExpenseCategory::Other->value,
     ];
 

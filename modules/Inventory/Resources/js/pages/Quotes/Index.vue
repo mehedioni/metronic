@@ -35,7 +35,6 @@ interface QuoteRow {
     customer_phone: string | null;
     status: OrderStatus;
     total: string;
-    currency: string;
     items_count: number;
     created_at: string;
     customer: { id: number; code: string; name: string } | null;
@@ -182,7 +181,7 @@ function exportCurrent() {
                 </template>
 
                 <template #cell-total="{ row }">
-                    <span class="font-medium">{{ money(row.total, row.currency) }}</span>
+                    <span class="font-medium">{{ money(row.total) }}</span>
                 </template>
 
                 <template #cell-created_by_name="{ row }">

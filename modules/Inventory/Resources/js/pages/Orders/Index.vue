@@ -52,7 +52,6 @@ interface OrderRow {
     discount_total: string;
     tax_total: string;
     total: string;
-    currency: string;
     items_count: number;
     created_at: string;
     customer: {
@@ -209,7 +208,7 @@ function exportCurrent() {
         { label: 'OrderId', value: (row, i) => getOrderCode(row, i) },
         { label: 'Date', value: (row) => date(row.created_at) },
         { label: 'Customer', value: (row) => row.customer_name },
-        { label: 'Total', value: (row) => money(row.total, row.currency) },
+        { label: 'Total', value: (row) => money(row.total) },
         { label: 'Status', value: (row) => row.status.label },
     ]);
 }
@@ -445,7 +444,7 @@ function exportCurrent() {
 
                                     <!-- Total -->
                                     <td class="px-4 py-3.5 font-medium text-zinc-900 dark:text-white">
-                                        {{ money(row.total, row.currency) }}
+                                        {{ money(row.total) }}
                                     </td>
 
 
@@ -798,7 +797,7 @@ function exportCurrent() {
                                         </div>
                                         <div class="flex flex-col gap-1">
                                             <span class="text-xs font-normal text-zinc-400">Total Price</span>
-                                            <span class="text-xs font-medium text-zinc-900 dark:text-white">{{ money(viewingOrder.total, viewingOrder.currency) }}</span>
+                                            <span class="text-xs font-medium text-zinc-900 dark:text-white">{{ money(viewingOrder.total) }}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -899,24 +898,24 @@ function exportCurrent() {
                                         <div class="flex justify-between text-zinc-500">
                                             <span>Subtotal</span>
                                             <span class="font-medium text-zinc-800 dark:text-zinc-200">
-                                                {{ money(viewingOrder.subtotal, viewingOrder.currency) }}
+                                                {{ money(viewingOrder.subtotal) }}
                                             </span>
                                         </div>
                                         <div class="flex justify-between text-zinc-500">
                                             <span>Discount</span>
                                             <span class="font-medium text-zinc-800 dark:text-zinc-200">
-                                                −{{ money(viewingOrder.discount_total, viewingOrder.currency) }}
+                                                −{{ money(viewingOrder.discount_total) }}
                                             </span>
                                         </div>
                                         <div class="flex justify-between text-zinc-500">
                                             <span>Tax</span>
                                             <span class="font-medium text-zinc-800 dark:text-zinc-200">
-                                                {{ money(viewingOrder.tax_total, viewingOrder.currency) }}
+                                                {{ money(viewingOrder.tax_total) }}
                                             </span>
                                         </div>
                                         <div class="flex justify-between border-t border-zinc-100 pt-2 font-semibold text-zinc-900 dark:border-zinc-800 dark:text-white">
                                             <span>Total</span>
-                                            <span>{{ money(viewingOrder.total, viewingOrder.currency) }}</span>
+                                            <span>{{ money(viewingOrder.total) }}</span>
                                         </div>
                                     </div>
                                 </div>

@@ -23,7 +23,6 @@ return new class extends Migration
             $table->decimal('discount_total', 12, 2)->default(0);
             $table->decimal('tax_total', 12, 2)->default(0);
             $table->decimal('total', 12, 2)->default(0);
-            $table->char('currency', 3)->default('USD');
             $table->text('notes')->nullable();
             $table->timestamp('confirmed_at')->nullable();
             $table->timestamp('completed_at')->nullable();

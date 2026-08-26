@@ -61,10 +61,10 @@ attributable, so those are still reported.
 
 ## Currency
 
-Every figure is a plain sum, which is only meaningful while the range holds one
-currency. `meta.currencies` lists what was found, and the screen warns rather
-than quietly adding dollars to euros. Converting between currencies is out of
-scope for a single-store system.
+Every figure is a plain sum, and it is meaningful because a single store trades
+in a single currency — the one set in Settings → General. Orders and expenses
+keep no currency of their own, so there is no mix to warn about and nothing to
+convert. See [settings.md](settings.md).
 
 ## Expenses
 

@@ -24,7 +24,6 @@ class OrderFactory extends Factory
             'customer_name' => fake()->name(),
             'customer_email' => fake()->unique()->safeEmail(),
             'status_id' => OrderStatuses::key('pending')->id,
-            'currency' => 'USD',
         ];
     }
 

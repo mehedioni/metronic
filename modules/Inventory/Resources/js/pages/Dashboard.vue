@@ -69,7 +69,6 @@ interface Statistics {
         customer_name: string;
         status: string;
         total: string;
-        currency: string;
         items_count: number;
         created_at: string;
     }>;
@@ -416,7 +415,7 @@ const statusValues = computed(() =>
 
                                 <div class="flex shrink-0 items-center gap-2">
                                     <span class="text-2sm font-medium">
-                                        {{ money(order.total, order.currency) }}
+                                        {{ money(order.total) }}
                                     </span>
                                     <StatusBadge :status="order.status" size="sm" />
                                 </div>
