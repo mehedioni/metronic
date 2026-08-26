@@ -16,7 +16,7 @@ import { computed, ref } from 'vue';
 import Pagination from '@/components/Pagination.vue';
 import { useTableQuery } from '@/composables/useTableQuery';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { dateTime,  } from '@/lib/format';
+import { date, dateTime } from '@/lib/format';
 import { humanize } from '@/lib/status';
 import movementRoutes from '@/routes/inventory/movements';
 import products from '@/routes/inventory/products';

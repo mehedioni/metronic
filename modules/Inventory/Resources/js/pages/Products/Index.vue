@@ -17,7 +17,7 @@ import Pagination from '@/components/Pagination.vue';
 import { Drawer } from '@/components/ui/drawer';
 import { useTableQuery } from '@/composables/useTableQuery';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { money } from '@/lib/format';
+import { date, money } from '@/lib/format';
 import productRoutes from '@/routes/inventory/products';
 import type { Paginated } from '@/types';
 import ProductForm from '../../components/ProductForm.vue';

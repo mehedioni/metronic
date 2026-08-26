@@ -864,22 +864,6 @@ const filteredRows = computed(() => {
                         <div class="overflow-hidden rounded-md border border-zinc-200 bg-white shadow-xs dark:border-zinc-800 dark:bg-[#18181b]">
                             <div class="flex items-center justify-between border-b border-zinc-200 bg-zinc-50/50 px-5 py-2.5 dark:border-zinc-800 dark:bg-zinc-800/30">
                                 <h3 class="text-xs font-semibold text-zinc-900 dark:text-zinc-100">Inventory Rules</h3>
-                                <div class="flex items-center gap-2">
-                                    <label class="text-xs font-medium text-zinc-700 dark:text-zinc-300">Auto Reorder</label>
-                                    <button
-                                        type="button"
-                                        role="switch"
-                                        :aria-checked="isAutoReorder(selectedDrawerItem.id)"
-                                        class="relative inline-flex h-5 w-8 shrink-0 cursor-pointer items-center rounded-full transition-colors"
-                                        :class="isAutoReorder(selectedDrawerItem.id) ? 'bg-zinc-950 dark:bg-zinc-200' : 'bg-zinc-300 dark:bg-zinc-700'"
-                                        @click="toggleAutoReorder(selectedDrawerItem.id)"
-                                    >
-                                        <span
-                                            class="pointer-events-none block size-3.5 rounded-full bg-white shadow-md transition-transform duration-200 dark:bg-zinc-900"
-                                            :class="isAutoReorder(selectedDrawerItem.id) ? 'translate-x-3.5' : 'translate-x-0.5'"
-                                        />
-                                    </button>
-                                </div>
                             </div>
 
                             <div class="space-y-5 p-5">
