@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Str;
 use Modules\Inventory\Database\Factories\ProductFactory;
 use Modules\Inventory\Enums\ProductStatus;
@@ -20,7 +21,7 @@ use Modules\Inventory\Policies\ProductPolicy;
 #[Fillable([
     'category_id', 'primary_supplier_id', 'name', 'slug', 'sku', 'description',
     'type', 'status', 'cost_price', 'selling_price', 'low_stock_threshold',
-    'image_path', 'meta',
+    'meta',
 ])]
 #[UsePolicy(ProductPolicy::class)]
 #[UseFactory(ProductFactory::class)]
@@ -89,6 +90,27 @@ class Product extends BaseModel
     public function primarySupplier(): BelongsTo
     {
         return $this->belongsTo(Supplier::class, 'primary_supplier_id');
+    }
+
+    /**
+     * Every image for this product, in the order they were arranged.
+     */
+    public function images(): HasMany
+    {
+        return $this->hasMany(ProductImage::class)->ordered();
+    }
+
+    /**
+     * The one image a list row or a card shows. Prefers the image flagged
+     * primary, and falls back to the first in order so a product with images
+     * always has something to show.
+     */
+    public function primaryImage(): HasOne
+    {
+        return $this->hasOne(ProductImage::class)
+            ->orderByDesc('is_primary')
+            ->orderBy('sort_order')
+            ->orderBy('id');
     }
 
     public function variants(): HasMany

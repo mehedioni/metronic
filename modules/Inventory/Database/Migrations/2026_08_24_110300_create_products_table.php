@@ -28,7 +28,6 @@ return new class extends Migration
             $table->decimal('cost_price', 12, 2)->nullable();
             $table->decimal('selling_price', 12, 2)->nullable();
             $table->unsignedInteger('low_stock_threshold')->default(0);
-            $table->string('image_path')->nullable();
             $table->json('meta')->nullable();
             $table->timestamps();
             $table->softDeletes();

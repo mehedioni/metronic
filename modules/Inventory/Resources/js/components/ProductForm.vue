@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
+import ProductImageDropzone from './ProductImageDropzone.vue';
 
 interface Option {
     id: number;
@@ -37,6 +38,8 @@ export interface ProductPayload {
     selling_price: string | number | null;
     low_stock_threshold: number;
     variants: VariantRow[];
+    /** Chosen in the form, uploaded with it; empty when editing. */
+    images: File[];
 }
 
 /**
@@ -83,16 +86,23 @@ const form = useForm<ProductPayload>({
     cost_price: props.product?.cost_price ?? '',
     selling_price: props.product?.selling_price ?? '',
     low_stock_threshold: props.product?.low_stock_threshold ?? 0,
-    variants: (props.product?.variants ?? []).map((variant) => ({
-        id: variant.id,
-        sku: variant.sku ?? '',
-        name: variant.name ?? '',
-        cost_price: variant.cost_price ?? '',
-        selling_price: variant.selling_price ?? '',
-        low_stock_threshold: variant.low_stock_threshold ?? 0,
-        status: variant.status ?? 'active',
-    })),
+    variants: (props.product?.variants ?? []).map((variant) => ({ ...variant })),
+    images: [],
 });
+
+/**
+ * A new product has no id to upload against, so its images travel with the
+ * create request. An existing one uses ProductImageManager on the edit screen,
+ * which can reorder and promote what is already stored.
+ */
+const isCreate = computed(() => !props.product?.id);
+
+/** Validation reports a bad upload as `images.0`, so match the whole family. */
+const imageErrors = computed(() =>
+    Object.entries(form.errors)
+        .filter(([field]) => field === 'images' || field.startsWith('images.'))
+        .map(([, message]) => message as string),
+);
 
 /** A variable product must ship at least one variant — the backend rejects it otherwise. */
 const isVariable = computed(() => form.type === 'variable');
@@ -121,7 +131,14 @@ function submit() {
     };
 
     if ((props.method ?? 'post') === 'put') {
-        form.put(props.action, options);
+        // Editing never carries files; images are managed on their own endpoints.
+        form
+            .transform((data) =>
+                Object.fromEntries(
+                    Object.entries(data).filter(([field]) => field !== 'images'),
+                ),
+            )
+            .put(props.action, options);
 
         return;
     }
@@ -260,6 +277,22 @@ defineExpose({ form });
             </div>
 
             <div class="space-y-5">
+                <FormSection
+                    v-if="isCreate"
+                    title="Images"
+                    description="The first image represents the product in lists."
+                >
+                    <ProductImageDropzone v-model="form.images" />
+
+                    <p
+                        v-for="message in imageErrors"
+                        :key="message"
+                        class="text-2xs text-danger"
+                    >
+                        {{ message }}
+                    </p>
+                </FormSection>
+
                 <FormSection title="Classification">
                     <FormField label="Category" :error="form.errors.category_id">
                         <Select v-model="form.category_id">

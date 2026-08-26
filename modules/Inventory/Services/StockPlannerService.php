@@ -39,7 +39,8 @@ class StockPlannerService
     {
         $items = InventoryItem::query()
             ->with([
-                'product:id,name,sku,category_id,primary_supplier_id,cost_price,selling_price,image_path,low_stock_threshold',
+                'product:id,name,sku,category_id,primary_supplier_id,cost_price,selling_price,low_stock_threshold',
+                'product.primaryImage',
                 'product.category:id,name',
                 'variant:id,sku,name,low_stock_threshold,selling_price,cost_price',
             ])

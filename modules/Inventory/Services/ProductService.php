@@ -36,6 +36,9 @@ class ProductService
                 'primarySupplier:id,company_name',
                 'variants',
                 'inventoryItems:id,product_id,product_variant_id,quantity_on_hand,quantity_reserved',
+                // One image per row; the gallery is only loaded on the detail
+                // screens.
+                'primaryImage',
             ])
             ->withCount('variants')
             ->search($filters['search'] ?? null)
@@ -167,6 +170,6 @@ class ProductService
      */
     private function attributes(array $data): array
     {
-        return collect($data)->except(['variants', 'suppliers'])->all();
+        return collect($data)->except(['variants', 'suppliers', 'images'])->all();
     }
 }

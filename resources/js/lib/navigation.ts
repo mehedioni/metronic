@@ -73,11 +73,11 @@ export const navigation: NavSection[] = [
                         href: '/inventory/stock',
                         permission: 'inventory.view',
                     },
-                    {
-                        label: 'Stock Planner',
-                        href: '/inventory/stock/planner',
-                        permission: 'inventory.view',
-                    },
+                    // {
+                    //     label: 'Stock Planner',
+                    //     href: '/inventory/stock/planner',
+                    //     permission: 'inventory.view',
+                    // },
                     {
                         label: 'Inbound Stock',
                         href: '/inventory/inbound',

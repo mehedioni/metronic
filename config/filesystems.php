@@ -41,7 +41,13 @@ return [
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),
-            'url' => rtrim(env('APP_URL', 'http://localhost'), '/').'/storage',
+            // Root-relative on purpose: the browser resolves it against
+            // whatever host served the page, so the same install works on
+            // metronic.test, localhost and a tunnel without APP_URL being in
+            // step. Set FILES_PUBLIC_URL to an absolute URL when the links
+            // must survive outside a page — a CDN in front of storage, or
+            // images in email.
+            'url' => rtrim(env('FILES_PUBLIC_URL', '/storage'), '/'),
             'visibility' => 'public',
             'throw' => false,
             'report' => false,

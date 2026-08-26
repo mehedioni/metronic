@@ -40,7 +40,8 @@ interface ProductRow {
     cost_price: string | null;
     variants_count: number;
     low_stock_threshold: number;
-    image_path: string | null;
+    /** Serialised by the ProductImage model, URL included. */
+    primary_image: { id: number; url: string | null } | null;
     created_at: string;
     updated_at: string;
     category: { id: number; name: string } | null;
@@ -243,9 +244,16 @@ function getStatusBadgeClass(status?: string) {
     return 'bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300';
 }
 
-/** The stored image, or null so the cell falls back to a neutral placeholder. */
+/**
+ * The URL the backend generated for the product's primary image, or null so
+ * the cell falls back to a neutral placeholder.
+ *
+ * Never built here: the path lives in the database and the URL comes from the
+ * configured disk, so a component that concatenated one would break the day
+ * storage moves to S3.
+ */
 function getProductImage(row: ProductRow): string | null {
-    return row.image_path ?? null;
+    return row.primary_image?.url ?? null;
 }
 
 function formatPrice(row: ProductRow): string {

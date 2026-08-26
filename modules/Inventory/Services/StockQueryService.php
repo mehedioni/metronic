@@ -33,7 +33,8 @@ class StockQueryService
     {
         return InventoryItem::query()
             ->with([
-                'product:id,name,sku,category_id,primary_supplier_id,cost_price,selling_price,image_path,low_stock_threshold',
+                'product:id,name,sku,category_id,primary_supplier_id,cost_price,selling_price,low_stock_threshold',
+                'product.primaryImage',
                 'product.category:id,name',
                 'product.primarySupplier:id,company_name,code',
                 'variant:id,sku,name,selling_price,cost_price',
