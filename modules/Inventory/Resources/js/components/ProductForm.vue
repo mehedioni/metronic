@@ -8,7 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import ProductImageDropzone from './ProductImageDropzone.vue';
-import ProductImageManager, { type ProductImage } from './ProductImageManager.vue';
+import ProductImageManager from './ProductImageManager.vue';
+import type {ProductImage} from './ProductImageManager.vue';
 
 interface Option {
     id: number;

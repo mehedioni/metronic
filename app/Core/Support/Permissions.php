@@ -93,6 +93,8 @@ final class Permissions
 
     public const PERMISSIONS_MANAGE = 'permissions.manage';
 
+    public const SETTINGS_MANAGE = 'settings.manage';
+
     /**
      * All permissions keyed by the group they belong to.
      *
@@ -162,6 +164,9 @@ final class Permissions
                 self::PERMISSIONS_VIEW,
                 self::PERMISSIONS_MANAGE,
             ],
+            // Store-wide settings: company name, logo, currency. A user's own
+            // profile is not here — everyone may edit their own.
+            'settings' => [self::SETTINGS_MANAGE],
         ];
     }
 

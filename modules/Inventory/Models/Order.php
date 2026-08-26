@@ -28,7 +28,7 @@ use Modules\Inventory\Support\OrderStatuses;
 #[Fillable([
     'order_number', 'customer_id', 'customer_name', 'customer_email', 'customer_phone',
     'delivery_address', 'status_id', 'subtotal', 'discount_total', 'tax_total',
-    'total', 'currency', 'notes', 'created_by',
+    'total', 'notes', 'created_by',
 ])]
 #[UsePolicy(OrderPolicy::class)]
 #[UseFactory(OrderFactory::class)]
@@ -36,10 +36,6 @@ class Order extends BaseModel
 {
     /** @use HasFactory<OrderFactory> */
     use HasFactory;
-
-    protected $attributes = [
-        'currency' => 'USD',
-    ];
 
     /**
      * The status object travels with every serialised order, so the frontend

@@ -30,7 +30,6 @@ interface ExpenseRow {
     spent_on: string;
     category: string;
     amount: string;
-    currency: string;
     reference: string | null;
     description: string | null;
     supplier: { id: number; company_name: string } | null;
@@ -68,7 +67,6 @@ const form = useForm({
     spent_on: new Date().toISOString().slice(0, 10),
     category: 'other',
     amount: '' as string | number,
-    currency: 'USD',
     reference: '',
     supplier_id: '',
     description: '',
@@ -98,7 +96,6 @@ function openEdit(row: ExpenseRow) {
     form.spent_on = row.spent_on.slice(0, 10);
     form.category = row.category;
     form.amount = row.amount;
-    form.currency = row.currency;
     form.reference = row.reference ?? '';
     form.supplier_id = row.supplier ? String(row.supplier.id) : '';
     form.description = row.description ?? '';
@@ -143,7 +140,6 @@ function exportCurrent() {
         { label: 'Date', value: (row) => row.spent_on },
         { label: 'Category', value: (row) => row.category },
         { label: 'Amount', value: (row) => row.amount },
-        { label: 'Currency', value: (row) => row.currency },
         { label: 'Reference', value: (row) => row.reference ?? '' },
         { label: 'Description', value: (row) => row.description ?? '' },
         { label: 'Paid to', value: (row) => row.supplier?.company_name ?? '' },
@@ -292,7 +288,7 @@ function exportCurrent() {
 
                 <template #cell-amount="{ row }">
                     <span class="font-medium">{{
-                        money(row.amount, row.currency)
+                        money(row.amount)
                     }}</span>
                 </template>
 
@@ -398,14 +394,6 @@ function exportCurrent() {
                         />
                     </FormField>
 
-                    <FormField label="Currency" :error="form.errors.currency">
-                        <Input
-                            v-model="form.currency"
-                            maxlength="3"
-                            class="font-mono"
-                        />
-                    </FormField>
-
                     <FormField
                         label="Reference"
                         :error="form.errors.reference"
@@ -458,7 +446,7 @@ function exportCurrent() {
                 profit report for
                 {{ confirming ? date(confirming.spent_on) : 'that day' }} will
                 rise by
-                {{ confirming ? money(confirming.amount, confirming.currency) : '' }}.
+                {{ confirming ? money(confirming.amount) : '' }}.
             </p>
 
             <template #footer>

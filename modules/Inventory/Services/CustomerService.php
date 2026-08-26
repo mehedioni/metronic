@@ -136,7 +136,7 @@ class CustomerService
                 ->withCount('items')
                 ->latest()
                 ->limit(10)
-                ->get(['id', 'order_number', 'status', 'total', 'currency', 'created_at']),
+                ->get(['id', 'order_number', 'status', 'total', 'created_at']),
         ];
     }
 }

@@ -86,7 +86,6 @@ class ReportService
                 'expenses_attributable' => $attributable,
                 'customer_filter' => $filters['customer'] ?? null,
                 'lines_without_cost' => array_sum(array_column($days, 'lines_without_cost')),
-                'currencies' => $this->currencies($from, $to, $filters),
             ],
         ];
     }
@@ -240,24 +239,6 @@ class ReportService
                 ? round((($grossProfit - $expenses) / $sales) * 100, 1)
                 : null,
         ];
-    }
-
-    /**
-     * Currencies present in the range. Every figure here is a plain sum, which
-     * is only meaningful while there is one — the report says so rather than
-     * quietly adding dollars to euros.
-     *
-     * @param  array<string, mixed>  $filters
-     * @return array<int, string>
-     */
-    private function currencies(Carbon $from, Carbon $to, array $filters): array
-    {
-        return $this->ordersInRange($from, $to, $filters)
-            ->distinct()
-            ->pluck('orders.currency')
-            ->filter()
-            ->values()
-            ->all();
     }
 
     /**

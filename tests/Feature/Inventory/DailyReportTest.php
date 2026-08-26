@@ -275,17 +275,6 @@ it('breaks expenses down by category', function () {
     expect($breakdown)->toBe(['rent' => 150.0, 'marketing' => 20.0]);
 });
 
-it('names every currency in range, so mixed sums can be called out', function () {
-    $today = Carbon::now()->toDateString();
-
-    soldOn($today, price: 100, cost: 10)->forceFill(['currency' => 'USD'])->save();
-    soldOn($today, price: 100, cost: 10)->forceFill(['currency' => 'EUR'])->save();
-
-    $report = $this->report->daily(['from' => $today, 'to' => $today]);
-
-    expect($report['meta']['currencies'])->toHaveCount(2);
-});
-
 it('serves the report screen', function () {
     $this->actingAs($this->analyst)
         ->get('/inventory/reports/daily')

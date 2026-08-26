@@ -27,7 +27,6 @@ it('records an expense against a trading day', function () {
 
     expect($expense->category)->toBe(ExpenseCategory::Rent)
         ->and($expense->amount)->toBe('2400.00')
-        ->and($expense->currency)->toBe('USD')
         // The recorder is captured, so the ledger is attributable.
         ->and($expense->created_by)->toBe($this->bookkeeper->id);
 });

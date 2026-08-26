@@ -2,6 +2,7 @@
 import { Link } from '@inertiajs/vue3';
 import { ChevronRightIcon } from 'lucide-vue-next';
 import type { Crumb } from '@/components/PageHeader.vue';
+import SettingsDrawer from '@/components/SettingsDrawer.vue';
 import { useSidebar } from '@/composables/useSidebar';
 import AppSidebar from '@/layouts/partials/AppSidebar.vue';
 import AppTopbar from '@/layouts/partials/AppTopbar.vue';
@@ -74,5 +75,9 @@ const { collapsed } = useSidebar();
                 <slot />
             </main>
         </div>
+
+        <!-- Settings opens over whichever page is showing, so it is mounted
+             once here rather than by each page. -->
+        <SettingsDrawer />
     </div>
 </template>

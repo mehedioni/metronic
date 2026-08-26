@@ -22,7 +22,6 @@ class ExpenseFactory extends Factory
             'spent_on' => now()->toDateString(),
             'category' => fake()->randomElement(ExpenseCategory::values()),
             'amount' => fake()->randomFloat(2, 10, 800),
-            'currency' => 'USD',
             'description' => fake()->sentence(4),
         ];
     }

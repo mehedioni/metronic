@@ -17,7 +17,6 @@ interface OrderRow {
     customer_phone: string | null;
     status: OrderStatus;
     total: string;
-    currency: string;
     items_count: number;
     created_at: string;
     customer: { id: number; code: string; name: string } | null;

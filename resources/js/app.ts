@@ -1,8 +1,10 @@
-import { createInertiaApp } from '@inertiajs/vue3';
+import { createInertiaApp, router } from '@inertiajs/vue3';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import type { DefineComponent } from 'vue';
 import { createApp, h } from 'vue';
 import { initializeTheme } from '@/composables/useAppearance';
+import { setCurrency } from '@/lib/currency';
+import type { SharedData } from '@/types';
 import '../css/app.css';
 
 const appName = import.meta.env.VITE_APP_NAME ?? '';
@@ -35,6 +37,19 @@ createInertiaApp({
         [title, appName].filter(Boolean).join(' - ') || document.title,
     resolve: resolvePage,
     setup({ el, App, props, plugin }) {
+        /**
+         * money() reads the store's currency from a module-level ref, so it is
+         * set here — once on boot and again after every visit, which is what
+         * makes saved settings take effect without a reload.
+         */
+        const apply = (shared: Partial<SharedData>) =>
+            setCurrency(shared.settings?.currency);
+
+        apply(props.initialPage.props as Partial<SharedData>);
+        router.on('success', (event) =>
+            apply(event.detail.page.props as Partial<SharedData>),
+        );
+
         createApp({ render: () => h(App, props) })
             .use(plugin)
             .mount(el);

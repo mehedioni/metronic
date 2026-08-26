@@ -3,6 +3,7 @@ import { Link, usePage } from '@inertiajs/vue3';
 import { ChevronDownIcon } from 'lucide-vue-next';
 import { computed, ref, watch } from 'vue';
 import { usePermissions } from '@/composables/usePermissions';
+import { useSettingsDrawer } from '@/composables/useSettingsDrawer';
 import { useSidebar } from '@/composables/useSidebar';
 import AppLogo from '@/layouts/partials/AppLogo.vue';
 import { navigation } from '@/lib/navigation';
@@ -13,6 +14,7 @@ import type { SharedData } from '@/types';
 const page = usePage<SharedData>();
 const { can } = usePermissions();
 const { collapsed, mobileOpen, closeMobile } = useSidebar();
+const { openSettings } = useSettingsDrawer();
 
 /** Groups keep only the links the signed-in user may actually follow. */
 const sections = computed(() =>
@@ -22,7 +24,9 @@ const sections = computed(() =>
             groups: section.groups
                 .map((group) => ({
                     ...group,
-                    links: group.links.filter((link) => can(link.permission)),
+                    links: group.links.filter(
+                        (link) => !link.permission || can(link.permission),
+                    ),
                 }))
                 .filter((group) => group.links.length > 0),
         }))
@@ -31,9 +35,14 @@ const sections = computed(() =>
 
 const currentPath = computed(() => page.url.split('?')[0]);
 
+/** A drawer link opens over the current page, so it is never "current". */
 function isCurrent(link: NavLink): boolean {
+    if (!link.href) {
+        return false;
+    }
+
     const pageUrlObj = new URL(page.url, 'http://localhost');
-    const linkUrlObj = new URL(link.href, 'http://localhost');
+    const linkUrlObj = new URL(link.href!, 'http://localhost');
 
     if (pageUrlObj.pathname !== linkUrlObj.pathname) {
         return false;
@@ -76,6 +85,20 @@ watch(
     },
     { immediate: true },
 );
+
+/** Links that navigate, and links that open the settings drawer. */
+function pageLinks(group: NavGroup): NavLink[] {
+    return group.links.filter((link) => link.href);
+}
+
+function drawerLinks(group: NavGroup): NavLink[] {
+    return group.links.filter((link) => link.settingsTab);
+}
+
+function onDrawerLink(link: NavLink) {
+    openSettings(link.settingsTab);
+    closeMobile();
+}
 
 function toggleGroup(id: string) {
     open.value[id] = !open.value[id];
@@ -125,10 +148,20 @@ function toggleGroup(id: string) {
 
                 <div class="space-y-3">
                     <div v-for="group in section.groups" :key="group.id">
-                        <!-- Collapsed Rail Link -->
+                        <!-- Collapsed rail: opens the drawer, or follows the link -->
+                        <button
+                            v-if="collapsed && group.links[0].settingsTab"
+                            type="button"
+                            :title="group.label"
+                            class="flex w-full cursor-pointer items-center justify-center rounded-lg px-3 py-2 text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-white"
+                            @click="onDrawerLink(group.links[0])"
+                        >
+                            <component :is="group.icon" class="size-4" />
+                        </button>
+
                         <Link
-                            v-if="collapsed"
-                            :href="group.links[0].href"
+                            v-else-if="collapsed"
+                            :href="group.links[0].href!"
                             :title="group.label"
                             :class="
                                 cn(
@@ -188,10 +221,20 @@ function toggleGroup(id: string) {
                                 v-show="open[group.id]"
                                 class="mt-1 space-y-1 ps-7"
                             >
+                                <button
+                                    v-for="link in drawerLinks(group)"
+                                    :key="link.label"
+                                    type="button"
+                                    class="block w-full cursor-pointer rounded-md px-3 py-1.5 text-start text-2sm text-zinc-900 transition-colors hover:bg-zinc-50 hover:text-blue-600 dark:text-zinc-400 dark:hover:bg-zinc-800/50 dark:hover:text-blue-500"
+                                    @click="onDrawerLink(link)"
+                                >
+                                    {{ link.label }}
+                                </button>
+
                                 <Link
-                                    v-for="link in group.links"
+                                    v-for="link in pageLinks(group)"
                                     :key="link.href"
-                                    :href="link.href"
+                                    :href="link.href!"
                                     :class="
                                         cn(
                                             'block rounded-md px-3 py-1.5 text-2sm transition-colors',

@@ -2,6 +2,8 @@
 
 namespace App\Http\Middleware;
 
+use App\Core\Services\SettingsService;
+use App\Core\Support\Currency;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -36,13 +38,20 @@ class HandleInertiaRequests extends Middleware
     public function share(Request $request): array
     {
         $user = $request->user();
+        $settings = app(SettingsService::class);
 
         return [
             ...parent::share($request),
-            // The store's name lives in config/env only; no component hardcodes it.
+            // The store's name comes from config/env until an operator
+            // overrides it in Settings; no component hardcodes it either way.
             'app' => [
-                'name' => config('app.name'),
+                'name' => $settings->companyName(),
             ],
+            // Store-wide settings every screen may need: the name it trades
+            // under, its logo, and the currency amounts are written in.
+            'settings' => $settings->forSharing(),
+            // The choices Settings offers, so the form never restates them.
+            'currencies' => Currency::options(),
             'auth' => [
                 'user' => $user?->only('id', 'name', 'email', 'is_active'),
                 'roles' => $user?->getRoleNames()->all() ?? [],
