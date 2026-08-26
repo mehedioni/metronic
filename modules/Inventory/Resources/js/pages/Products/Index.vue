@@ -131,6 +131,26 @@ const currentTab = computed({
 });
 const filterMenuOpen = ref(false);
 const activeRowActionsMenu = ref<string | number | null>(null);
+const actionMenuPosition = ref<{ top: string; left: string }>({ top: '0px', left: '0px' });
+
+function toggleRowMenu(event: MouseEvent, rowId: number) {
+    if (activeRowActionsMenu.value === rowId) {
+        activeRowActionsMenu.value = null;
+        return;
+    }
+    const target = event.currentTarget as HTMLElement | null;
+    if (target) {
+        const rect = target.getBoundingClientRect();
+        const menuHeight = 140;
+        const menuWidth = 144;
+        const spaceBelow = window.innerHeight - rect.bottom;
+        const top = spaceBelow < menuHeight ? `${Math.max(8, rect.top - menuHeight)}px` : `${rect.bottom + 4}px`;
+        const left = `${Math.min(window.innerWidth - menuWidth - 16, Math.max(8, rect.right - menuWidth))}px`;
+
+        actionMenuPosition.value = { top, left };
+    }
+    activeRowActionsMenu.value = rowId;
+}
 
 const selectedCategories = ref<string[]>([]);
 const selectedStatuses = ref<string[]>([]);
@@ -387,7 +407,7 @@ function formatPrice(row: ProductRow): string {
     <Head title="Product List" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
-        <main class="flex-1 space-y-6 p-4 md:p-6 lg:p-7" @click="filterMenuOpen = false; activeRowActionsMenu = null">
+        <main class="flex flex-1 flex-col space-y-6 p-4 md:p-6 lg:p-7" @click="filterMenuOpen = false; activeRowActionsMenu = null">
             <!-- Page Title & Header Actions -->
             <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
@@ -416,7 +436,7 @@ function formatPrice(row: ProductRow): string {
             </div>
 
             <!-- Table Card Container -->
-            <div class="overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-xs dark:border-zinc-800 dark:bg-[#09090b]">
+            <div class="flex flex-1 flex-col min-h-[480px] overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-xs dark:border-zinc-800 dark:bg-[#09090b]">
                 <!-- Tabs and Toolbar Header -->
                 <div class="flex flex-col items-start justify-between gap-4 border-b border-zinc-100 p-4 xl:flex-row xl:items-center md:p-5 dark:border-zinc-800">
                     <!-- Category Tabs (1:1 styling matching product-list.html) -->
@@ -580,7 +600,7 @@ function formatPrice(row: ProductRow): string {
                 </div>
 
                 <!-- Table Container -->
-                <div class="overflow-x-auto">
+                <div class="flex-1 overflow-x-auto">
                     <table class="w-full table-fixed border-separate border-spacing-0 caption-bottom text-left text-sm align-middle min-w-[1080px]">
                         <thead>
                             <tr class="bg-zinc-50/50 text-2xs font-semibold text-zinc-500 dark:bg-zinc-800/40 dark:text-zinc-400">
@@ -616,7 +636,7 @@ function formatPrice(row: ProductRow): string {
                         </thead>
                         <tbody class="divide-y divide-zinc-200 dark:divide-zinc-800">
                             <tr
-                                v-for="row in rows"
+                                v-for="(row, index) in rows"
                                 :key="row.id"
                                 class="cursor-pointer transition-colors hover:bg-zinc-50/70 dark:hover:bg-zinc-800/40"
                             >
@@ -661,54 +681,58 @@ function formatPrice(row: ProductRow): string {
                                     {{ date(row.updated_at) }}
                                 </td>
 
-                                <!-- 1:1 Table Action Cell with 3 Action Icons (Settings, Edit, Delete) -->
+                                <!-- 1:1 Table Action Cell with 3-Dot MoreVertical Dropdown Menu -->
                                 <td class="relative border-b border-zinc-200 px-3 py-3.5 text-center align-middle dark:border-zinc-800" @click.stop>
                                     <div class="relative inline-block text-start">
                                         <button
                                             type="button"
                                             class="inline-flex size-7 cursor-pointer items-center justify-center rounded-md text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-700 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
-                                            @click="activeRowActionsMenu = activeRowActionsMenu === row.id ? null : row.id"
+                                            @click="toggleRowMenu($event, row.id)"
                                         >
                                             <MoreVertical class="size-4" />
                                         </button>
 
-                                        <div
-                                            v-if="activeRowActionsMenu === row.id"
-                                            class="absolute right-0 top-full z-50 my-1 w-36 overflow-hidden rounded-md border border-zinc-200 bg-white p-1 text-zinc-900 shadow-md dark:border-zinc-800 dark:bg-[#18181b] dark:text-zinc-100"
-                                        >
-                                            <div class="select-none px-2 py-1.5 text-xs font-medium text-zinc-400 dark:text-zinc-500">
-                                                Actions
+                                        <Teleport to="body">
+                                            <div
+                                                v-if="activeRowActionsMenu === row.id"
+                                                class="fixed z-[9999] w-36 overflow-hidden rounded-md border border-zinc-200 bg-white p-1 text-zinc-900 shadow-md dark:border-zinc-800 dark:bg-[#18181b] dark:text-zinc-100"
+                                                :style="{ top: actionMenuPosition.top, left: actionMenuPosition.left }"
+                                                @click.stop
+                                            >
+                                                <div class="select-none px-2 py-1.5 text-xs font-medium text-zinc-400 dark:text-zinc-500">
+                                                    Actions
+                                                </div>
+                                                <div class="-mx-1 my-1 h-px bg-zinc-200 dark:bg-zinc-800"></div>
+                                                <!-- 1. View Action -->
+                                                <button
+                                                    type="button"
+                                                    class="relative flex w-full cursor-pointer select-none items-center gap-2 rounded-md px-2 py-1.5 text-xs text-zinc-700 outline-hidden transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800/80 dark:hover:text-white"
+                                                    @click="activeRowActionsMenu = null; openViewDrawer(row)"
+                                                >
+                                                    <Eye class="size-3.5 opacity-60" />
+                                                    <span>View</span>
+                                                </button>
+                                                <!-- 2. Edit Action -->
+                                                <button
+                                                    type="button"
+                                                    class="relative flex w-full cursor-pointer select-none items-center gap-2 rounded-md px-2 py-1.5 text-xs text-zinc-700 outline-hidden transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800/80 dark:hover:text-white"
+                                                    @click="activeRowActionsMenu = null; openEditModal(row)"
+                                                >
+                                                    <Pencil class="size-3.5 opacity-60" />
+                                                    <span>Edit</span>
+                                                </button>
+                                                <div class="-mx-1 my-1 h-px bg-zinc-200 dark:bg-zinc-800"></div>
+                                                <!-- 3. Delete Action -->
+                                                <button
+                                                    type="button"
+                                                    class="relative flex w-full cursor-pointer select-none items-center gap-2 rounded-md px-2 py-1.5 text-xs text-rose-600 outline-hidden transition-colors hover:bg-rose-50 dark:hover:bg-rose-950/40"
+                                                    @click="activeRowActionsMenu = null; productToDelete = row; deleteDialogOpen = true"
+                                                >
+                                                    <Trash2 class="size-3.5 opacity-60" />
+                                                    <span>Delete</span>
+                                                </button>
                                             </div>
-                                            <div class="-mx-1 my-1 h-px bg-zinc-200 dark:bg-zinc-800"></div>
-                                            <!-- 1. View Icon Action -->
-                                            <button
-                                                type="button"
-                                                class="relative flex w-full cursor-pointer select-none items-center gap-2 rounded-md px-2 py-1.5 text-xs text-zinc-700 outline-hidden transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800/80 dark:hover:text-white"
-                                                @click="openViewDrawer(row)"
-                                            >
-                                                <Eye class="size-3.5 opacity-60" />
-                                                <span>View</span>
-                                            </button>
-                                            <!-- 2. Edit (Pencil) Icon Action -->
-                                            <button
-                                                type="button"
-                                                class="relative flex w-full cursor-pointer select-none items-center gap-2 rounded-md px-2 py-1.5 text-xs text-zinc-700 outline-hidden transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800/80 dark:hover:text-white"
-                                                @click="openEditModal(row)"
-                                            >
-                                                <Pencil class="size-3.5 opacity-60" />
-                                                <span>Edit</span>
-                                            </button>
-                                            <div class="-mx-1 my-1 h-px bg-zinc-200 dark:bg-zinc-800"></div>
-                                            <!-- 3. Delete (Trash) Icon Action -->
-                                            <button
-                                                type="button"
-                                                class="relative flex w-full cursor-pointer select-none items-center gap-2 rounded-md px-2 py-1.5 text-xs text-rose-600 outline-hidden transition-colors hover:bg-rose-50 dark:hover:bg-rose-950/40"
-                                                @click="activeRowActionsMenu = null; productToDelete = row; deleteDialogOpen = true"
-                                            >
-                                                <Trash2 class="size-3.5 opacity-60" />
-                                                <span>Delete</span>
-                                            </button>
-                                        </div>
+                                        </Teleport>
                                     </div>
                                 </td>
                             </tr>
