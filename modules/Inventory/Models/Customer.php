@@ -3,6 +3,7 @@
 namespace Modules\Inventory\Models;
 
 use App\Core\BaseModel;
+use App\Core\Concerns\HasAvatar;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\UseFactory;
 use Illuminate\Database\Eloquent\Attributes\UsePolicy;
@@ -26,12 +27,21 @@ use Modules\Inventory\Policies\CustomerPolicy;
 #[UseFactory(CustomerFactory::class)]
 class Customer extends BaseModel
 {
+    use HasAvatar;
+
     /** @use HasFactory<CustomerFactory> */
     use HasFactory;
 
     protected $attributes = [
         'status' => RecordStatus::Active->value,
     ];
+
+    /**
+     * The photo's URL travels with the record, so no screen builds one.
+     *
+     * @var list<string>
+     */
+    protected $appends = ['avatar_url'];
 
     protected function casts(): array
     {

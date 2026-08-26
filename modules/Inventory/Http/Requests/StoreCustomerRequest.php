@@ -34,6 +34,14 @@ class StoreCustomerRequest extends FormRequest
             'tax_number' => ['nullable', 'string', 'max:80'],
             'notes' => ['nullable', 'string', 'max:2000'],
             'status' => ['nullable', Rule::in(RecordStatus::values())],
+
+            // The photo is stored by AvatarService once the record has an id,
+            // never written into a column here. Limits come from config/files.php.
+            'avatar' => [
+                'nullable', 'file', 'image',
+                'mimes:'.implode(',', (array) config('files.images.mimes', ['jpg', 'png'])),
+                'max:'.(int) config('files.images.max_kilobytes', 5120),
+            ],
         ];
     }
 }

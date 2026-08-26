@@ -62,7 +62,7 @@ class CustomerService
     public function create(array $data): Customer
     {
         return Customer::create([
-            ...$data,
+            ...$this->attributes($data),
             'code' => $data['code'] ?? $this->numbers->generate(Customer::class, 'code', 'customer'),
         ]);
     }
@@ -72,9 +72,21 @@ class CustomerService
      */
     public function update(Customer $customer, array $data): Customer
     {
-        $customer->update($data);
+        $customer->update($this->attributes($data));
 
         return $customer->refresh();
+    }
+
+    /**
+     * The record's own columns. The photo arrives as a file and is stored by
+     * AvatarService, so it never belongs in a mass assignment.
+     *
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    private function attributes(array $data): array
+    {
+        return collect($data)->except(['avatar', 'remove_avatar'])->all();
     }
 
     public function setStatus(Customer $customer, RecordStatus $status): Customer

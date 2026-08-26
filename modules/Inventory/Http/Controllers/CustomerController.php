@@ -2,6 +2,7 @@
 
 namespace Modules\Inventory\Http\Controllers;
 
+use App\Core\Services\AvatarService;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
@@ -15,7 +16,10 @@ use Modules\Inventory\Services\CustomerService;
 
 class CustomerController extends Controller
 {
-    public function __construct(private CustomerService $customers) {}
+    public function __construct(
+        private CustomerService $customers,
+        private AvatarService $avatars,
+    ) {}
 
     public function index(ListRequest $request): Response
     {
@@ -33,6 +37,9 @@ class CustomerController extends Controller
         $this->authorize('create', Customer::class);
 
         $customer = $this->customers->create($request->validated());
+
+        // The photo needs the customer's id, so it is stored once it exists.
+        $this->avatars->sync($customer, $request->file('avatar'));
 
         return redirect()
             ->route('inventory.customers.show', $customer)
@@ -54,6 +61,7 @@ class CustomerController extends Controller
         $this->authorize('update', $customer);
 
         $this->customers->update($customer, $request->validated());
+        $this->avatars->sync($customer, $request->file('avatar'), $request->boolean('remove_avatar'));
 
         return back()->with('success', 'Customer updated.');
     }

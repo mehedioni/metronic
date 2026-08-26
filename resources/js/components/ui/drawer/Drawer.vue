@@ -30,7 +30,13 @@ const props = defineProps<{
      * Panel width, matching the design's sizes: a confirmation, a single
      * column form, a two column form, and a full detail view.
      */
-    size?: 'sm' | 'default' | 'lg' | 'xl';
+    size?: 'sm' | 'default' | 'md' | 'lg' | 'xl';
+    /**
+     * Drop the body's padding so the content can reach the panel edges. For a
+     * split layout whose divider has to run from the header to the footer,
+     * which it cannot do inside a padded box.
+     */
+    flush?: boolean;
     class?: HTMLAttributes['class'];
 }>();
 
@@ -39,6 +45,7 @@ defineEmits<{ 'update:open': [value: boolean] }>();
 const widths = {
     sm: 'lg:w-[420px]',
     default: 'lg:w-[500px]',
+    md: 'lg:w-[820px]',
     lg: 'lg:w-[1080px]',
     xl: 'lg:w-[1160px]',
 };
@@ -87,7 +94,10 @@ const widths = {
                     </div>
                 </header>
 
-                <div class="min-h-0 flex-1 overflow-y-auto px-5 py-4">
+                <div
+                    class="min-h-0 flex-1 overflow-y-auto"
+                    :class="flush ? '' : 'px-5 py-4'"
+                >
                     <slot />
                 </div>
 

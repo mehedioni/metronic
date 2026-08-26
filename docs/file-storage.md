@@ -175,6 +175,28 @@ primary flag behave identically however a product was created.
 All guarded by `products.update`, and an image id belonging to another product
 returns 404 rather than being trusted.
 
+## One photo on a record
+
+A gallery is a table; a single photo is two columns. `App\Core\Concerns\HasAvatar`
+gives a model `avatar_disk` + `avatar_path` and an appended `avatar_url`, and
+`App\Core\Services\AvatarService` does the writing:
+
+```php
+$avatars->sync($customer, $request->file('avatar'), $request->boolean('remove_avatar'));
+```
+
+`sync()` covers the three things a form can mean — a new photo, its removal, or
+neither — so no controller repeats those branches. Replacing removes the bytes
+it replaced, after the commit. Customers use it today; any model that adds the
+trait and the two columns can use it without new upload code.
+
+**Removal is its own intent.** A form that simply omits the file field is not
+asking for the photo to be deleted, which is why `remove_avatar` exists rather
+than treating an absent file as "clear it".
+
+The create form's panel is `AvatarUploadField.vue` — the photo travels with the
+form, so an abandoned form leaves nothing on disk.
+
 ## Local setup
 
 The `public` disk serves through a symlink:
