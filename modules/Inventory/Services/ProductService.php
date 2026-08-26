@@ -35,10 +35,11 @@ class ProductService
                 'category:id,name',
                 'primarySupplier:id,company_name',
                 'variants',
+                'suppliers:id,company_name',
                 'inventoryItems:id,product_id,product_variant_id,quantity_on_hand,quantity_reserved',
-                // One image per row; the gallery is only loaded on the detail
-                // screens.
+                // Primary for list thumbnails; all images for the edit drawer.
                 'primaryImage',
+                'images',
             ])
             ->withCount('variants')
             ->search($filters['search'] ?? null)
@@ -52,7 +53,7 @@ class ProductService
                 $filters['direction'] ?? null,
                 self::SORTABLE,
             ))
-            ->paginate($filters['per_page'] ?? 15)
+            ->paginate($filters['per_page'] ?? 25)
             ->withQueryString();
     }
 

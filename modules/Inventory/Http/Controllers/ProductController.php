@@ -28,10 +28,25 @@ class ProductController extends Controller
     {
         $this->authorize('viewAny', Product::class);
 
+        $statusCounts = Product::query()
+            ->selectRaw('status, count(*) as total')
+            ->groupBy('status')
+            ->pluck('total', 'status');
+
+        $filters = array_merge([
+            'per_page' => 25,
+        ], $request->filters());
+
         return Inertia::render('Inventory::Products/Index', [
-            'products' => $this->products->paginate($request->filters()),
-            'filters' => $request->filters(),
+            'products' => $this->products->paginate($filters),
+            'filters' => $filters,
             'options' => $this->formOptions(),
+            'counts' => [
+                'all' => (int) $statusCounts->sum(),
+                'active' => (int) $statusCounts->get(ProductStatus::Active->value, 0),
+                'inactive' => (int) $statusCounts->get(ProductStatus::Inactive->value, 0),
+                'archived' => (int) $statusCounts->get(ProductStatus::Archived->value, 0),
+            ],
         ]);
     }
 

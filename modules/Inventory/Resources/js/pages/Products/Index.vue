@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import {
     Package,
     ChevronsUpDown,
@@ -7,28 +7,50 @@ import {
     Pencil,
     Plus,
     Search,
-    Settings,
     SlidersHorizontal,
     Trash2,
     Upload,
+    Eye,
 } from 'lucide-vue-next';
 import { computed, ref, watch } from 'vue';
 import Pagination from '@/components/Pagination.vue';
 import { Drawer } from '@/components/ui/drawer';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { useTableQuery } from '@/composables/useTableQuery';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { date, money } from '@/lib/format';
 import productRoutes from '@/routes/inventory/products';
 import type { Paginated } from '@/types';
 import ProductForm from '../../components/ProductForm.vue';
+import type { ProductImage } from '../../components/ProductImageManager.vue';
 
 interface InventoryRow {
     quantity_on_hand: number;
     quantity_reserved: number;
 }
 
+interface ProductVariantRow {
+    id: number;
+    sku: string | null;
+    name: string;
+    cost_price: string | null;
+    selling_price: string | null;
+    status: string;
+    low_stock_threshold?: number;
+}
+
 interface ProductRow {
     id: number;
+    uuid?: string;
     name: string;
     sku: string | null;
     description?: string | null;
@@ -47,7 +69,9 @@ interface ProductRow {
     category: { id: number; name: string } | null;
     primary_supplier: { id: number; company_name: string } | null;
     inventory_items: InventoryRow[];
-    variants?: any[];
+    variants?: ProductVariantRow[];
+    suppliers?: Array<{ id: number; company_name: string }>;
+    images?: ProductImage[];
 }
 
 const props = defineProps<{
@@ -59,9 +83,23 @@ const props = defineProps<{
         statuses?: string[];
         types?: string[];
     };
+    counts?: {
+        all: number;
+        active: number;
+        inactive: number;
+        archived: number;
+    };
     showCreateModal?: boolean;
 }>();
 
+const tabCounts = computed(() => {
+    return {
+        all: props.counts?.all ?? props.products?.total ?? 0,
+        active: props.counts?.active ?? 0,
+        inactive: props.counts?.inactive ?? 0,
+        archived: props.counts?.archived ?? 0,
+    };
+});
 
 const { params, toggleSort } = useTableQuery({
     url: productRoutes.index.url(),
@@ -69,8 +107,12 @@ const { params, toggleSort } = useTableQuery({
     only: ['products', 'filters'],
 });
 
-
-const currentTab = ref<string>('all');
+const currentTab = computed({
+    get: () => (params.status as string) || 'all',
+    set: (val: string) => {
+        params.status = val === 'all' ? '' : val;
+    },
+});
 const filterMenuOpen = ref(false);
 const activeRowActionsMenu = ref<string | number | null>(null);
 
@@ -78,23 +120,97 @@ const selectedCategories = ref<string[]>([]);
 const selectedStatuses = ref<string[]>([]);
 const minPrice = ref<string>('');
 const maxPrice = ref<string>('');
-const editingProduct = ref<ProductRow | null>(null);
+// Track by ID so the computed always reflects the latest props after Inertia
+// reloads (e.g. after ProductImageManager uploads/deletes/reorders an image).
+const editingProductId = ref<number | null>(null);
+const editingProduct = computed(() =>
+    editingProductId.value !== null
+        ? (props.products.data.find((p) => p.id === editingProductId.value) ?? null)
+        : null,
+);
+const productToDelete = ref<ProductRow | null>(null);
+const deleteDialogOpen = ref(false);
 const createDrawerOpen = ref(Boolean(props.showCreateModal));
 
+const viewDrawerOpen = ref(false);
+const viewingProduct = ref<ProductRow | null>(null);
+
+function openViewDrawer(product: ProductRow) {
+    activeRowActionsMenu.value = null;
+    viewingProduct.value = product;
+    viewDrawerOpen.value = true;
+}
+
+function closeViewDrawer() {
+    viewDrawerOpen.value = false;
+    viewingProduct.value = null;
+}
+
+function switchToEditFromView() {
+    if (!viewingProduct.value) return;
+    const id = viewingProduct.value.id;
+    closeViewDrawer();
+    editingProductId.value = id;
+    createDrawerOpen.value = true;
+}
+
+const viewOnHand = computed(() =>
+    (viewingProduct.value?.inventory_items ?? []).reduce(
+        (total, item) => total + (Number(item.quantity_on_hand) || 0),
+        0,
+    ),
+);
+
+const viewReserved = computed(() =>
+    (viewingProduct.value?.inventory_items ?? []).reduce(
+        (total, item) => total + (Number(item.quantity_reserved) || 0),
+        0,
+    ),
+);
+
+const viewAvailable = computed(() => viewOnHand.value - viewReserved.value);
+
+const viewIsLowStock = computed(() => {
+    if (!viewingProduct.value) return false;
+    return viewOnHand.value <= (viewingProduct.value.low_stock_threshold ?? 0);
+});
+
+const viewStockByVariant = computed(() => {
+    if (!viewingProduct.value) return {};
+    return Object.fromEntries(
+        (viewingProduct.value.inventory_items ?? []).map((item: any) => [
+            item.product_variant_id ?? '',
+            item,
+        ]),
+    );
+});
+
 function openCreateModal() {
-    editingProduct.value = null;
+    editingProductId.value = null;
     createDrawerOpen.value = true;
 }
 
 function openEditModal(product: ProductRow) {
     activeRowActionsMenu.value = null;
-    editingProduct.value = product;
+    editingProductId.value = product.id;
     createDrawerOpen.value = true;
 }
 
 function closeDrawer() {
     createDrawerOpen.value = false;
-    editingProduct.value = null;
+    editingProductId.value = null;
+}
+
+function destroyProduct() {
+    if (!productToDelete.value) return;
+
+    router.delete(productRoutes.destroy.url(productToDelete.value.id), {
+        preserveScroll: true,
+        onFinish: () => {
+            deleteDialogOpen.value = false;
+            productToDelete.value = null;
+        },
+    });
 }
 
 watch(
@@ -116,11 +232,15 @@ const breadcrumbs = [
 function getStatusLabel(status?: string) {
     const s = (status ?? '').toLowerCase().trim();
     if (s === 'live' || s === 'active') return 'Live';
-    if (s === 'must act' || s === 'must_act' || s === 'action needed' || s === 'action_needed' || s === 'out_of_stock') return 'Must Act';
     if (s === 'archived' || s === 'discontinued') return 'Archived';
     if (s === 'draft' || s === 'inactive') return 'Draft';
     return status || 'Live';
 }
+
+const filterStatuses = computed(() => {
+    const unique = new Set((props.options.statuses ?? []).map((st) => getStatusLabel(st)));
+    return Array.from(unique);
+});
 
 function getCategoryName(category?: { id?: number; name: string } | string | null) {
     if (!category) return '—';
@@ -179,17 +299,7 @@ const rows = computed(() => {
     });
 });
 
-const selectedRowIds = ref<(string | number)[]>([]);
-const selectAll = computed({
-    get: () => rows.value.length > 0 && selectedRowIds.value.length === rows.value.length,
-    set: (val: boolean) => {
-        if (val) {
-            selectedRowIds.value = rows.value.map((r) => r.id);
-        } else {
-            selectedRowIds.value = [];
-        }
-    },
-});
+
 
 function toggleCategoryFilter(catName: string) {
     const idx = selectedCategories.value.indexOf(catName);
@@ -277,7 +387,7 @@ function formatPrice(row: ProductRow): string {
                 <div>
                     <h1 class="text-xl font-bold tracking-tight text-zinc-900 dark:text-white">Product List</h1>
                     <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-                        1424 products found. 83% are active.
+                        {{ tabCounts.all }} products found. {{ Math.round((tabCounts.active / (tabCounts.all || 1)) * 100) }}% are active.
                     </p>
                 </div>
                 <div class="flex items-center gap-2.5">
@@ -317,7 +427,7 @@ function formatPrice(row: ProductRow): string {
                                 class="rounded-full px-1.5 py-0.5 text-2xs"
                                 :class="currentTab === 'all' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 font-semibold' : 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400 font-medium'"
                             >
-                                1424
+                                {{ tabCounts.all }}
                             </span>
                         </button>
                         <!-- Live Tab -->
@@ -332,7 +442,7 @@ function formatPrice(row: ProductRow): string {
                                 class="rounded-full px-1.5 py-0.5 text-2xs"
                                 :class="currentTab === 'Live' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 font-semibold' : 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400 font-medium'"
                             >
-                                1267
+                                {{ tabCounts.active }}
                             </span>
                         </button>
                         <!-- Draft Tab -->
@@ -347,7 +457,7 @@ function formatPrice(row: ProductRow): string {
                                 class="rounded-full px-1.5 py-0.5 text-2xs"
                                 :class="currentTab === 'Draft' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 font-semibold' : 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400 font-medium'"
                             >
-                                63
+                                {{ tabCounts.inactive }}
                             </span>
                         </button>
                         <!-- Archived Tab -->
@@ -362,22 +472,7 @@ function formatPrice(row: ProductRow): string {
                                 class="rounded-full px-1.5 py-0.5 text-2xs"
                                 :class="currentTab === 'Archived' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 font-semibold' : 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400 font-medium'"
                             >
-                                185
-                            </span>
-                        </button>
-                        <!-- Action Needed Tab -->
-                        <button
-                            type="button"
-                            class="shrink-0 inline-flex cursor-pointer items-center gap-2 rounded-md px-2.5 py-1.5 text-xs transition-colors"
-                            :class="currentTab === 'Must Act' ? 'bg-blue-50/60 font-semibold text-blue-600 dark:bg-blue-950/30 dark:text-blue-400' : 'font-medium text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white'"
-                            @click="setProductTab('Must Act')"
-                        >
-                            Action Needed
-                            <span
-                                class="rounded-full px-1.5 py-0.5 text-2xs"
-                                :class="currentTab === 'Must Act' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 font-semibold' : 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400 font-medium'"
-                            >
-                                49
+                                {{ tabCounts.archived }}
                             </span>
                         </button>
                     </div>
@@ -441,7 +536,7 @@ function formatPrice(row: ProductRow): string {
                                     <div class="space-y-2 border-t border-zinc-100 pt-2 dark:border-zinc-800">
                                         <label class="block text-2xs font-semibold tracking-wider text-zinc-400 uppercase">Status</label>
                                         <div class="grid grid-cols-2 gap-2 text-xs">
-                                            <label v-for="st in ['Live', 'Must Act', 'Draft', 'Archived']" :key="st" class="flex cursor-pointer items-center gap-2">
+                                            <label v-for="st in filterStatuses" :key="st" class="flex cursor-pointer items-center gap-2">
                                                 <input
                                                     type="checkbox"
                                                     :checked="selectedStatuses.includes(st)"
@@ -483,9 +578,6 @@ function formatPrice(row: ProductRow): string {
                     <table class="w-full table-fixed border-separate border-spacing-0 caption-bottom text-left text-sm align-middle min-w-[1080px]">
                         <thead>
                             <tr class="bg-zinc-50/50 text-2xs font-semibold text-zinc-500 dark:bg-zinc-800/40 dark:text-zinc-400">
-                                <th class="h-10 w-[50px] border-b border-e border-zinc-200 px-4 text-start align-middle dark:border-zinc-800">
-                                    <input v-model="selectAll" type="checkbox" class="size-4 cursor-pointer rounded border-zinc-300 text-zinc-900 focus:ring-0 dark:border-zinc-700" />
-                                </th>
                                 <th class="h-10 w-[260px] select-none whitespace-nowrap border-b border-e border-zinc-200 px-4 text-start align-middle dark:border-zinc-800">
                                     <button type="button" class="group -ms-2 inline-flex h-7 w-full cursor-pointer items-center justify-between gap-1.5 rounded-md px-2 text-xs font-normal text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-white" @click="toggleSort('name')">
                                         <span>Product Info</span>
@@ -522,14 +614,6 @@ function formatPrice(row: ProductRow): string {
                                 :key="row.id"
                                 class="cursor-pointer transition-colors hover:bg-zinc-50/70 dark:hover:bg-zinc-800/40"
                             >
-                                <td class="border-b border-e border-zinc-200 px-4 py-3.5 align-middle dark:border-zinc-800" @click.stop>
-                                    <input
-                                        v-model="selectedRowIds"
-                                        type="checkbox"
-                                        :value="row.id"
-                                        class="size-4 cursor-pointer rounded border-zinc-300 text-zinc-900 focus:ring-0 dark:border-zinc-700"
-                                    />
-                                </td>
                                 <td class="border-b border-e border-zinc-200 px-4 py-3.5 align-middle dark:border-zinc-800">
                                     <div class="flex items-center gap-2.5">
                                         <div class="flex h-[40px] w-[50px] shrink-0 items-center justify-center rounded-md border border-zinc-200 bg-zinc-50 p-1 dark:border-zinc-700 dark:bg-zinc-800/60">
@@ -590,14 +674,14 @@ function formatPrice(row: ProductRow): string {
                                                 Actions
                                             </div>
                                             <div class="-mx-1 my-1 h-px bg-zinc-200 dark:bg-zinc-800"></div>
-                                            <!-- 1. Settings Icon Action -->
+                                            <!-- 1. View Icon Action -->
                                             <button
                                                 type="button"
                                                 class="relative flex w-full cursor-pointer select-none items-center gap-2 rounded-md px-2 py-1.5 text-xs text-zinc-700 outline-hidden transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800/80 dark:hover:text-white"
-                                                @click="activeRowActionsMenu = null"
+                                                @click="openViewDrawer(row)"
                                             >
-                                                <Settings class="size-3.5 opacity-60" />
-                                                <span>Settings</span>
+                                                <Eye class="size-3.5 opacity-60" />
+                                                <span>View</span>
                                             </button>
                                             <!-- 2. Edit (Pencil) Icon Action -->
                                             <button
@@ -613,7 +697,7 @@ function formatPrice(row: ProductRow): string {
                                             <button
                                                 type="button"
                                                 class="relative flex w-full cursor-pointer select-none items-center gap-2 rounded-md px-2 py-1.5 text-xs text-rose-600 outline-hidden transition-colors hover:bg-rose-50 dark:hover:bg-rose-950/40"
-                                                @click="activeRowActionsMenu = null"
+                                                @click="activeRowActionsMenu = null; productToDelete = row; deleteDialogOpen = true"
                                             >
                                                 <Trash2 class="size-3.5 opacity-60" />
                                                 <span>Delete</span>
@@ -687,6 +771,259 @@ function formatPrice(row: ProductRow): string {
                 />
             </div>
         </Drawer>
+
+        <!-- View Product Details Drawer -->
+        <Drawer
+            :open="viewDrawerOpen"
+            :title="viewingProduct?.name ?? 'Product details'"
+            :description="viewingProduct?.sku ? 'SKU: ' + viewingProduct.sku : 'Catalogue product overview and stock'"
+            size="lg"
+            @update:open="viewDrawerOpen = $event"
+        >
+            <template #header-actions>
+                <span
+                    v-if="viewingProduct"
+                    class="inline-flex items-center rounded px-2.5 py-1 text-xs font-semibold"
+                    :class="getStatusBadgeClass(viewingProduct.status)"
+                >
+                    {{ getStatusLabel(viewingProduct.status) }}
+                </span>
+                <button
+                    v-if="viewingProduct"
+                    type="button"
+                    class="inline-flex cursor-pointer items-center gap-1.5 rounded-md border border-zinc-200 bg-white px-2.5 py-1 text-xs font-medium text-zinc-700 shadow-xs transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
+                    @click="switchToEditFromView"
+                >
+                    <Pencil class="size-3" />
+                    <span>Edit</span>
+                </button>
+            </template>
+
+            <div v-if="viewingProduct" class="space-y-6 py-2">
+                <!-- Quick Stats 4-Card Grid -->
+                <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                    <div class="rounded-lg border border-zinc-200 bg-zinc-50/50 p-3.5 dark:border-zinc-800 dark:bg-zinc-900/50">
+                        <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400">Selling Price</p>
+                        <p class="mt-1 text-base font-semibold text-zinc-900 dark:text-white">
+                            {{ money(viewingProduct.selling_price) }}
+                        </p>
+                        <p v-if="viewingProduct.cost_price" class="mt-0.5 text-2xs text-zinc-500 dark:text-zinc-400">
+                            Cost: {{ money(viewingProduct.cost_price) }}
+                        </p>
+                    </div>
+
+                    <div class="rounded-lg border border-zinc-200 bg-zinc-50/50 p-3.5 dark:border-zinc-800 dark:bg-zinc-900/50">
+                        <div class="flex items-center justify-between">
+                            <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400">Stock on Hand</p>
+                            <span
+                                v-if="viewIsLowStock"
+                                class="rounded bg-rose-500/10 px-1.5 py-0.5 text-3xs font-semibold text-rose-600 dark:text-rose-400"
+                            >
+                                Low stock
+                            </span>
+                        </div>
+                        <p class="mt-1 text-base font-semibold text-zinc-900 dark:text-white">
+                            {{ viewOnHand }} units
+                        </p>
+                        <p class="mt-0.5 text-2xs text-zinc-500 dark:text-zinc-400">
+                            Threshold: {{ viewingProduct.low_stock_threshold ?? 0 }}
+                        </p>
+                    </div>
+
+                    <div class="rounded-lg border border-zinc-200 bg-zinc-50/50 p-3.5 dark:border-zinc-800 dark:bg-zinc-900/50">
+                        <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400">Available</p>
+                        <p class="mt-1 text-base font-semibold text-zinc-900 dark:text-white">
+                            {{ viewAvailable }} units
+                        </p>
+                        <p class="mt-0.5 text-2xs text-zinc-500 dark:text-zinc-400">
+                            Reserved: {{ viewReserved }}
+                        </p>
+                    </div>
+
+                    <div class="rounded-lg border border-zinc-200 bg-zinc-50/50 p-3.5 dark:border-zinc-800 dark:bg-zinc-900/50">
+                        <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400">Classification</p>
+                        <p class="mt-1 text-base font-semibold text-zinc-900 dark:text-white capitalize">
+                            {{ viewingProduct.type ?? 'simple' }}
+                        </p>
+                        <p class="mt-0.5 text-2xs text-zinc-500 dark:text-zinc-400">
+                            {{ (viewingProduct.variants?.length ?? viewingProduct.variants_count ?? 0) }} variants
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Product Information Breakdown -->
+                <div class="rounded-lg border border-zinc-200 bg-white p-4 space-y-4 dark:border-zinc-800 dark:bg-zinc-900">
+                    <h4 class="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                        Product Information
+                    </h4>
+                    <dl class="grid grid-cols-1 gap-x-4 gap-y-3 sm:grid-cols-2 text-xs">
+                        <div>
+                            <dt class="text-zinc-500 dark:text-zinc-400">Category</dt>
+                            <dd class="mt-0.5 font-medium text-zinc-900 dark:text-white">
+                                {{ getCategoryName(viewingProduct.category) }}
+                            </dd>
+                        </div>
+                        <div>
+                            <dt class="text-zinc-500 dark:text-zinc-400">Primary Supplier</dt>
+                            <dd class="mt-0.5 font-medium text-zinc-900 dark:text-white">
+                                {{ viewingProduct.primary_supplier?.company_name ?? '—' }}
+                            </dd>
+                        </div>
+                        <div>
+                            <dt class="text-zinc-500 dark:text-zinc-400">Created</dt>
+                            <dd class="mt-0.5 font-medium text-zinc-900 dark:text-white">
+                                {{ date(viewingProduct.created_at) }}
+                            </dd>
+                        </div>
+                        <div>
+                            <dt class="text-zinc-500 dark:text-zinc-400">Last Updated</dt>
+                            <dd class="mt-0.5 font-medium text-zinc-900 dark:text-white">
+                                {{ date(viewingProduct.updated_at) }}
+                            </dd>
+                        </div>
+                        <div v-if="viewingProduct.uuid" class="sm:col-span-2">
+                            <dt class="text-zinc-500 dark:text-zinc-400">Public UUID</dt>
+                            <dd class="mt-0.5 font-mono text-2xs text-zinc-500 dark:text-zinc-400 truncate">
+                                {{ viewingProduct.uuid }}
+                            </dd>
+                        </div>
+                    </dl>
+                </div>
+
+                <!-- Description (if present) -->
+                <div v-if="viewingProduct.description" class="rounded-lg border border-zinc-200 bg-white p-4 space-y-2 dark:border-zinc-800 dark:bg-zinc-900">
+                    <h4 class="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                        Description
+                    </h4>
+                    <p class="text-xs leading-relaxed text-zinc-700 dark:text-zinc-300 whitespace-pre-line">
+                        {{ viewingProduct.description }}
+                    </p>
+                </div>
+
+                <!-- Variants Table (if variable product or has variants) -->
+                <div v-if="viewingProduct.variants && viewingProduct.variants.length > 0" class="rounded-lg border border-zinc-200 bg-white overflow-hidden dark:border-zinc-800 dark:bg-zinc-900">
+                    <div class="border-b border-zinc-200 bg-zinc-50/50 px-4 py-2.5 dark:border-zinc-800 dark:bg-zinc-900/50">
+                        <h4 class="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                            Variants ({{ viewingProduct.variants.length }})
+                        </h4>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-start text-xs">
+                            <thead class="border-b border-zinc-200 bg-zinc-50/20 text-2xs font-semibold uppercase tracking-wider text-zinc-400 dark:border-zinc-800 dark:bg-zinc-900/20 dark:text-zinc-400">
+                                <tr>
+                                    <th class="px-4 py-2.5 text-start">SKU</th>
+                                    <th class="px-4 py-2.5 text-start">Name</th>
+                                    <th class="px-4 py-2.5 text-end">Price</th>
+                                    <th class="px-4 py-2.5 text-center">On Hand</th>
+                                    <th class="px-4 py-2.5 text-center">Reserved</th>
+                                    <th class="px-4 py-2.5 text-start">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-zinc-200 dark:divide-zinc-800">
+                                <tr
+                                    v-for="variant in viewingProduct.variants"
+                                    :key="variant.id"
+                                    class="hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
+                                >
+                                    <td class="px-4 py-2.5 font-mono text-2xs text-zinc-500 dark:text-zinc-400">
+                                        {{ variant.sku || '—' }}
+                                    </td>
+                                    <td class="px-4 py-2.5 font-medium text-zinc-900 dark:text-white">
+                                        {{ variant.name }}
+                                    </td>
+                                    <td class="px-4 py-2.5 text-end font-medium text-zinc-900 dark:text-white">
+                                        {{ money(variant.selling_price) }}
+                                    </td>
+                                    <td class="px-4 py-2.5 text-center font-medium text-zinc-900 dark:text-white">
+                                        {{ viewStockByVariant[variant.id]?.quantity_on_hand ?? 0 }}
+                                    </td>
+                                    <td class="px-4 py-2.5 text-center text-zinc-500 dark:text-zinc-400">
+                                        {{ viewStockByVariant[variant.id]?.quantity_reserved ?? 0 }}
+                                    </td>
+                                    <td class="px-4 py-2.5">
+                                        <span
+                                            class="inline-flex items-center rounded px-1.5 py-0.5 text-3xs font-semibold"
+                                            :class="getStatusBadgeClass(variant.status)"
+                                        >
+                                            {{ getStatusLabel(variant.status) }}
+                                        </span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Linked Suppliers Section -->
+                <div v-if="viewingProduct.suppliers && viewingProduct.suppliers.length > 0" class="rounded-lg border border-zinc-200 bg-white overflow-hidden dark:border-zinc-800 dark:bg-zinc-900">
+                    <div class="border-b border-zinc-200 bg-zinc-50/50 px-4 py-2.5 dark:border-zinc-800 dark:bg-zinc-900/50">
+                        <h4 class="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                            Linked Suppliers ({{ viewingProduct.suppliers.length }})
+                        </h4>
+                    </div>
+                    <ul class="divide-y divide-zinc-200 dark:divide-zinc-800 text-xs">
+                        <li
+                            v-for="supplier in viewingProduct.suppliers"
+                            :key="supplier.id"
+                            class="flex items-center justify-between px-4 py-2.5 text-zinc-700 dark:text-zinc-300"
+                        >
+                            <span>{{ supplier.company_name }}</span>
+                            <span
+                                v-if="supplier.id === viewingProduct.primary_supplier?.id"
+                                class="inline-flex items-center rounded bg-blue-50 px-1.5 py-0.5 text-3xs font-semibold text-blue-700 dark:bg-blue-950/60 dark:text-blue-400"
+                            >
+                                Primary
+                            </span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <template #footer>
+                <button
+                    type="button"
+                    class="cursor-pointer rounded-md border border-zinc-200 bg-white px-3.5 py-1.5 text-xs font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
+                    @click="closeViewDrawer"
+                >
+                    Close
+                </button>
+                <button
+                    type="button"
+                    class="cursor-pointer rounded-md bg-zinc-950 px-3.5 py-1.5 text-xs font-medium text-white shadow-xs transition-colors hover:bg-zinc-800 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-100"
+                    @click="switchToEditFromView"
+                >
+                    Edit product
+                </button>
+            </template>
+        </Drawer>
+
+        <!-- Delete Confirmation Alert Dialog -->
+        <AlertDialog
+            :open="deleteDialogOpen"
+            @update:open="deleteDialogOpen = $event"
+        >
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        This action cannot be undone. This will permanently delete the product
+                        "<span class="font-semibold text-foreground">{{ productToDelete?.name }}</span>"
+                        and remove all variants from our servers.
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel @click="deleteDialogOpen = false">
+                        Cancel
+                    </AlertDialogCancel>
+                    <AlertDialogAction
+                        class="bg-rose-600 hover:bg-rose-700 text-white"
+                        @click="destroyProduct"
+                    >
+                        Delete product
+                    </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
 
     </AppLayout>
 </template>

@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import ProductImageDropzone from './ProductImageDropzone.vue';
+import ProductImageManager, { type ProductImage } from './ProductImageManager.vue';
 
 interface Option {
     id: number;
@@ -48,7 +49,7 @@ export interface ProductPayload {
  */
 const props = defineProps<{
     /** Existing values when editing; omitted when creating. */
-    product?: Partial<ProductPayload> & { id?: string; variants?: VariantRow[] };
+    product?: Partial<ProductPayload> & { id?: number | string; variants?: VariantRow[]; images?: ProductImage[] };
     options: {
         categories?: Option[];
         suppliers?: Option[];
@@ -278,11 +279,21 @@ defineExpose({ form });
 
             <div class="space-y-5">
                 <FormSection
-                    v-if="isCreate"
                     title="Images"
-                    description="The first image represents the product in lists."
+                    :description="
+                        isCreate
+                            ? 'The first image represents the product in lists.'
+                            : 'Upload, reorder or remove images. The first is the primary.'
+                    "
                 >
-                    <ProductImageDropzone v-model="form.images" />
+                    <ProductImageDropzone v-if="isCreate" v-model="form.images" />
+
+                    <ProductImageManager
+                        v-else
+                        :product-id="Number(props.product?.id)"
+                        :images="props.product?.images ?? []"
+                        :editable="true"
+                    />
 
                     <p
                         v-for="message in imageErrors"

@@ -17,7 +17,19 @@ watch(
     () => page.props.flash,
     (flash) => {
         success.value = flash?.success ?? null;
-        error.value = flash?.error ?? null;
+        if (flash?.error) {
+            error.value = flash.error;
+        }
+    },
+    { immediate: true, deep: true },
+);
+
+watch(
+    () => page.props.errors,
+    (errors) => {
+        if (errors?.inventory) {
+            error.value = errors.inventory as string;
+        }
     },
     { immediate: true, deep: true },
 );

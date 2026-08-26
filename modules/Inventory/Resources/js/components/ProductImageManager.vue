@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { router, useForm, usePage } from '@inertiajs/vue3';
-import { ChevronDownIcon, ChevronUpIcon, CloudUploadIcon, ImageIcon, StarIcon, Trash2Icon } from 'lucide-vue-next';
-import { computed, ref } from 'vue';
+import { CloudUploadIcon, ImageIcon, StarIcon, Trash2Icon } from 'lucide-vue-next';
+import { computed, onBeforeUnmount, ref } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 
@@ -61,6 +61,15 @@ const hint = computed(() => {
 
 const uploadForm = useForm<{ images: File[] }>({ images: [] });
 
+/** Files queued for upload; cleared when the server confirms storage. */
+const pendingFiles = ref<File[]>([]);
+const pendingPreviews = ref(new Map<File, string>());
+
+onBeforeUnmount(() => {
+    pendingPreviews.value.forEach((url) => URL.revokeObjectURL(url));
+    pendingPreviews.value.clear();
+});
+
 const ordered = computed(() =>
     [...props.images].sort((a, b) => a.sort_order - b.sort_order || a.id - b.id),
 );
@@ -88,11 +97,28 @@ function upload(files: File[]) {
         return;
     }
 
+    // Show local previews immediately — same pattern as ProductImageDropzone.
+    images.forEach((file) => {
+        if (!pendingPreviews.value.has(file)) {
+            pendingPreviews.value.set(file, URL.createObjectURL(file));
+        }
+    });
+    pendingFiles.value = [...pendingFiles.value, ...images];
+
     uploadForm.images = images;
     uploadForm.post(`/inventory/products/${props.productId}/images`, {
         preserveScroll: true,
         forceFormData: true,
-        onSuccess: () => uploadForm.reset('images'),
+        onSuccess: () => {
+            // Revoke blob URLs once the server has stored the real files.
+            pendingFiles.value.forEach((f) => {
+                const url = pendingPreviews.value.get(f);
+                if (url) URL.revokeObjectURL(url);
+                pendingPreviews.value.delete(f);
+            });
+            pendingFiles.value = [];
+            uploadForm.reset('images');
+        },
     });
 }
 
@@ -110,24 +136,6 @@ function remove(image: ProductImage) {
     });
 }
 
-/** Move an image one place and persist the whole order. */
-function move(image: ProductImage, offset: number) {
-    const ids = ordered.value.map((candidate) => candidate.id);
-    const from = ids.indexOf(image.id);
-    const to = from + offset;
-
-    if (from === -1 || to < 0 || to >= ids.length) {
-        return;
-    }
-
-    ids.splice(to, 0, ids.splice(from, 1)[0]);
-
-    router.patch(
-        `/inventory/products/${props.productId}/images/reorder`,
-        { images: ids },
-        { preserveScroll: true },
-    );
-}
 
 function readableSize(bytes: number | null): string {
     if (!bytes) {
@@ -195,6 +203,27 @@ function readableSize(bytes: number | null): string {
             {{ error }}
         </p>
 
+        <!-- Instant local previews while the upload round-trips to the server -->
+        <ul v-if="pendingFiles.length" class="divide-y divide-border rounded-md border border-border opacity-70">
+            <li
+                v-for="file in pendingFiles"
+                :key="`${file.name}-${file.size}`"
+                class="flex items-center gap-3 p-3"
+            >
+                <div class="flex h-12 w-16 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-muted">
+                    <img
+                        :src="pendingPreviews.get(file)"
+                        :alt="file.name"
+                        class="size-full object-contain"
+                    />
+                </div>
+                <div class="min-w-0 flex-1">
+                    <p class="truncate text-2sm font-medium">{{ file.name }}</p>
+                    <p class="text-2xs text-muted-foreground">Uploading…</p>
+                </div>
+            </li>
+        </ul>
+
         <ul v-if="ordered.length" class="divide-y divide-border rounded-md border border-border">
             <li
                 v-for="(image, index) in ordered"
@@ -225,24 +254,6 @@ function readableSize(bytes: number | null): string {
                 <Badge v-if="image.is_primary" variant="info" size="sm">Primary</Badge>
 
                 <div v-if="editable" class="flex shrink-0 items-center gap-1">
-                    <Button
-                        variant="ghost"
-                        size="icon-dense"
-                        aria-label="Move up"
-                        :disabled="index === 0"
-                        @click="move(image, -1)"
-                    >
-                        <ChevronUpIcon />
-                    </Button>
-                    <Button
-                        variant="ghost"
-                        size="icon-dense"
-                        aria-label="Move down"
-                        :disabled="index === ordered.length - 1"
-                        @click="move(image, 1)"
-                    >
-                        <ChevronDownIcon />
-                    </Button>
                     <Button
                         v-if="!image.is_primary"
                         variant="ghost"

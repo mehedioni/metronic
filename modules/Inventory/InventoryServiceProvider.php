@@ -71,7 +71,9 @@ class InventoryServiceProvider extends ModuleServiceProvider
                 ], 422);
             }
 
-            return back()->withErrors([$exception->errorKey() => $exception->getMessage()]);
+            return back()
+                ->withErrors([$exception->errorKey() => $exception->getMessage()])
+                ->with('error', $exception->getMessage());
         });
     }
 }
