@@ -148,6 +148,11 @@ function submit() {
     form.post(props.action, options);
 }
 
+function capitalize(str?: string): string {
+    if (!str) return '';
+    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+}
+
 defineExpose({ form });
 </script>
 
@@ -253,11 +258,11 @@ defineExpose({ form });
                             </FormField>
 
                             <FormField label="Cost price">
-                                <Input v-model="variant.cost_price" type="number" />
+                                <Input v-model="variant.cost_price" type="number" step="0.01" min="0" />
                             </FormField>
 
                             <FormField label="Selling price">
-                                <Input v-model="variant.selling_price" type="number" />
+                                <Input v-model="variant.selling_price" type="number" step="0.01" min="0" />
                             </FormField>
 
                             <FormField label="Low stock threshold">
@@ -342,7 +347,7 @@ defineExpose({ form });
                                 :key="type"
                                 :value="type"
                             >
-                                {{ type }}
+                                {{ capitalize(type) }}
                             </option>
                         </Select>
                     </FormField>
@@ -354,7 +359,7 @@ defineExpose({ form });
                                 :key="status"
                                 :value="status"
                             >
-                                {{ status }}
+                                {{ capitalize(status) }}
                             </option>
                         </Select>
                     </FormField>
@@ -362,7 +367,7 @@ defineExpose({ form });
 
                 <FormSection title="Pricing">
                     <FormField label="Cost price" :error="form.errors.cost_price">
-                        <Input v-model="form.cost_price" type="number" step="0.01" />
+                        <Input v-model="form.cost_price" type="number" step="0.01" min="0" />
                     </FormField>
 
                     <FormField
@@ -373,6 +378,7 @@ defineExpose({ form });
                             v-model="form.selling_price"
                             type="number"
                             step="0.01"
+                            min="0"
                         />
                     </FormField>
                 </FormSection>

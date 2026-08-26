@@ -267,10 +267,10 @@ const breadcrumbs = [
 
 function getStatusLabel(status?: string) {
     const s = (status ?? '').toLowerCase().trim();
-    if (s === 'live' || s === 'active') return 'Live';
+    if (s === 'live' || s === 'active') return 'Active';
     if (s === 'archived' || s === 'discontinued') return 'Archived';
-    if (s === 'draft' || s === 'inactive') return 'Draft';
-    return status || 'Live';
+    if (s === 'draft' || s === 'inactive') return 'Inactive';
+    return status || 'Active';
 }
 
 const filterStatuses = computed(() => {
@@ -456,14 +456,14 @@ function formatPrice(row: ProductRow): string {
                                 {{ tabCounts.all }}
                             </span>
                         </button>
-                        <!-- Live Tab -->
+                        <!-- Active Tab -->
                         <button
                             type="button"
                             class="shrink-0 inline-flex cursor-pointer items-center gap-2 rounded-md px-2.5 py-1.5 text-xs transition-colors"
                             :class="currentTab === 'active' ? 'bg-blue-50/60 font-semibold text-blue-600 dark:bg-blue-950/30 dark:text-blue-400' : 'font-medium text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white'"
                             @click="setProductTab('active')"
                         >
-                            Live
+                            Active
                             <span
                                 class="rounded-full px-1.5 py-0.5 text-2xs"
                                 :class="currentTab === 'active' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 font-semibold' : 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400 font-medium'"
@@ -471,14 +471,14 @@ function formatPrice(row: ProductRow): string {
                                 {{ tabCounts.active }}
                             </span>
                         </button>
-                        <!-- Draft Tab -->
+                        <!-- Inactive Tab -->
                         <button
                             type="button"
                             class="shrink-0 inline-flex cursor-pointer items-center gap-2 rounded-md px-2.5 py-1.5 text-xs transition-colors"
                             :class="currentTab === 'inactive' ? 'bg-blue-50/60 font-semibold text-blue-600 dark:bg-blue-950/30 dark:text-blue-400' : 'font-medium text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white'"
                             @click="setProductTab('inactive')"
                         >
-                            Draft
+                            Inactive
                             <span
                                 class="rounded-full px-1.5 py-0.5 text-2xs"
                                 :class="currentTab === 'inactive' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 font-semibold' : 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400 font-medium'"

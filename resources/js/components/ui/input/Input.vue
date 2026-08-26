@@ -1,9 +1,14 @@
 <script setup lang="ts">
-import type { HTMLAttributes } from 'vue';
+import type { HTMLAttributes, InputHTMLAttributes } from 'vue';
 import { cn } from '@/lib/utils';
+
+defineOptions({
+    inheritAttrs: false,
+});
 
 const props = defineProps<{
     modelValue?: string | number | null;
+    type?: InputHTMLAttributes['type'];
     /** Renders a leading icon slot and reserves room for it. */
     hasIcon?: boolean;
     invalid?: boolean;
@@ -23,6 +28,8 @@ defineEmits<{ 'update:modelValue': [value: string] }>();
         </span>
 
         <input
+            v-bind="$attrs"
+            :type="type ?? 'text'"
             :value="modelValue ?? ''"
             :class="
                 cn(

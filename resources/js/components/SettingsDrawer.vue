@@ -210,10 +210,10 @@ const saving = computed(() =>
             </div>
 
             <Tabs
-                :model-value="tab"
+                v-model="tab"
                 :tabs="tabs"
+                variant="pills"
                 class="flex min-h-0 flex-1 flex-col"
-                @update:model-value="tab = $event as SettingsTab"
             >
                 <div class="flex-1 space-y-5 px-5 py-5">
                     <TabPanel v-if="canManage" value="general">
