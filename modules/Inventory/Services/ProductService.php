@@ -34,6 +34,7 @@ class ProductService
             ->with([
                 'category:id,name',
                 'primarySupplier:id,company_name',
+                'variants',
                 'inventoryItems:id,product_id,product_variant_id,quantity_on_hand,quantity_reserved',
             ])
             ->withCount('variants')

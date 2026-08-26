@@ -31,8 +31,11 @@ interface ProductRow {
     id: number;
     name: string;
     sku: string | null;
+    description?: string | null;
     status: string;
     type: string;
+    category_id?: number | string | null;
+    primary_supplier_id?: number | string | null;
     selling_price: string | null;
     cost_price: string | null;
     variants_count: number;
@@ -43,6 +46,7 @@ interface ProductRow {
     category: { id: number; name: string } | null;
     primary_supplier: { id: number; company_name: string } | null;
     inventory_items: InventoryRow[];
+    variants?: any[];
 }
 
 const props = defineProps<{
@@ -73,20 +77,34 @@ const selectedCategories = ref<string[]>([]);
 const selectedStatuses = ref<string[]>([]);
 const minPrice = ref<string>('');
 const maxPrice = ref<string>('');
-
-/**
- * Drawer visibility. The Drawer animates itself, so this is a plain boolean
- * rather than a mounted/visible pair driven by timeouts.
- */
+const editingProduct = ref<ProductRow | null>(null);
 const createDrawerOpen = ref(Boolean(props.showCreateModal));
 
 function openCreateModal() {
+    editingProduct.value = null;
     createDrawerOpen.value = true;
+}
+
+function openEditModal(product: ProductRow) {
+    activeRowActionsMenu.value = null;
+    editingProduct.value = product;
+    createDrawerOpen.value = true;
+}
+
+function closeDrawer() {
+    createDrawerOpen.value = false;
+    editingProduct.value = null;
 }
 
 watch(
     () => props.showCreateModal,
-    (open) => (createDrawerOpen.value = Boolean(open)),
+    (open) => {
+        if (open) {
+            openCreateModal();
+        } else {
+            closeDrawer();
+        }
+    },
 );
 
 const breadcrumbs = [
@@ -577,7 +595,7 @@ function formatPrice(row: ProductRow): string {
                                             <button
                                                 type="button"
                                                 class="relative flex w-full cursor-pointer select-none items-center gap-2 rounded-md px-2 py-1.5 text-xs text-zinc-700 outline-hidden transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800/80 dark:hover:text-white"
-                                                @click="activeRowActionsMenu = null"
+                                                @click="openEditModal(row)"
                                             >
                                                 <Pencil class="size-3.5 opacity-60" />
                                                 <span>Edit</span>
@@ -636,18 +654,28 @@ function formatPrice(row: ProductRow): string {
         -->
         <Drawer
             :open="createDrawerOpen"
-            title="Create product"
-            description="Add a product to the catalogue. Stock is added separately, through receiving or an adjustment."
+            :title="editingProduct ? 'Edit product' : 'Create product'"
+            :description="
+                editingProduct
+                    ? 'Update product details, pricing, classification, and variants.'
+                    : 'Add a product to the catalogue. Stock is added separately, through receiving or an adjustment.'
+            "
             size="xl"
-            @update:open="createDrawerOpen = $event"
+            @update:open="!$event ? closeDrawer() : null"
         >
             <div class="py-2">
                 <ProductForm
+                    :key="editingProduct?.id ?? 'new'"
+                    :product="editingProduct ?? undefined"
                     :options="props.options"
-                    :action="productRoutes.store.url()"
-                    method="post"
-                    submit-label="Create product"
-                    @cancel="createDrawerOpen = false"
+                    :action="
+                        editingProduct
+                            ? productRoutes.update.url(editingProduct.id)
+                            : productRoutes.store.url()
+                    "
+                    :method="editingProduct ? 'put' : 'post'"
+                    :submit-label="editingProduct ? 'Save changes' : 'Create product'"
+                    @cancel="closeDrawer"
                 />
             </div>
         </Drawer>

@@ -68,14 +68,30 @@ const form = useForm<ProductPayload>({
     name: props.product?.name ?? '',
     sku: props.product?.sku ?? '',
     description: props.product?.description ?? '',
-    category_id: props.product?.category_id ?? '',
-    primary_supplier_id: props.product?.primary_supplier_id ?? '',
+    category_id:
+        props.product?.category_id !== undefined &&
+        props.product?.category_id !== null
+            ? String(props.product.category_id)
+            : '',
+    primary_supplier_id:
+        props.product?.primary_supplier_id !== undefined &&
+        props.product?.primary_supplier_id !== null
+            ? String(props.product.primary_supplier_id)
+            : '',
     type: props.product?.type ?? 'simple',
     status: props.product?.status ?? 'active',
     cost_price: props.product?.cost_price ?? '',
     selling_price: props.product?.selling_price ?? '',
     low_stock_threshold: props.product?.low_stock_threshold ?? 0,
-    variants: (props.product?.variants ?? []).map((variant) => ({ ...variant })),
+    variants: (props.product?.variants ?? []).map((variant) => ({
+        id: variant.id,
+        sku: variant.sku ?? '',
+        name: variant.name ?? '',
+        cost_price: variant.cost_price ?? '',
+        selling_price: variant.selling_price ?? '',
+        low_stock_threshold: variant.low_stock_threshold ?? 0,
+        status: variant.status ?? 'active',
+    })),
 });
 
 /** A variable product must ship at least one variant — the backend rejects it otherwise. */
@@ -97,7 +113,12 @@ function removeVariant(index: number) {
 }
 
 function submit() {
-    const options = { preserveScroll: true };
+    const options = {
+        preserveScroll: true,
+        onSuccess: () => {
+            emit('cancel');
+        },
+    };
 
     if ((props.method ?? 'post') === 'put') {
         form.put(props.action, options);
