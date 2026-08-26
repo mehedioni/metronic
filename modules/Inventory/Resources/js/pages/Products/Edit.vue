@@ -1,14 +1,19 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
+import { FormSection } from '@/components/form';
 import PageHeader from '@/components/PageHeader.vue';
+import { usePermissions } from '@/composables/usePermissions';
 import AppLayout from '@/layouts/AppLayout.vue';
 import products from '@/routes/inventory/products';
 import ProductForm from '../../components/ProductForm.vue';
+import ProductImageManager from '../../components/ProductImageManager.vue';
 
 const props = defineProps<{
     product: Record<string, any>;
     options: Record<string, any>;
 }>();
+
+const { can } = usePermissions();
 
 const breadcrumbs = [
     { label: 'Store Inventory' },
@@ -27,6 +32,17 @@ const breadcrumbs = [
             :description="props.product.sku ?? undefined"
             :breadcrumbs="breadcrumbs"
         />
+
+        <FormSection
+            title="Images"
+            description="Stored through the application's file service, so the URL follows whichever disk is configured."
+        >
+            <ProductImageManager
+                :product-id="props.product.id"
+                :images="props.product.images ?? []"
+                :editable="can('products.update')"
+            />
+        </FormSection>
 
         <ProductForm
             :product="props.product"

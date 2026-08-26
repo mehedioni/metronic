@@ -18,6 +18,11 @@ export interface SharedData {
         roles: string[];
         permissions: string[];
     };
+    fileLimits: {
+        mimes: string[];
+        maxKilobytes: number;
+        maxPerProduct: number;
+    };
     flash: {
         success: string | null;
         error: string | null;

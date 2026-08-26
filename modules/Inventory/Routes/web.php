@@ -10,6 +10,7 @@ use Modules\Inventory\Http\Controllers\InboundReceiptController;
 use Modules\Inventory\Http\Controllers\InventoryController;
 use Modules\Inventory\Http\Controllers\OrderController;
 use Modules\Inventory\Http\Controllers\ProductController;
+use Modules\Inventory\Http\Controllers\ProductImageController;
 use Modules\Inventory\Http\Controllers\QuoteController;
 use Modules\Inventory\Http\Controllers\ReportController;
 use Modules\Inventory\Http\Controllers\StockMovementController;
@@ -53,6 +54,22 @@ Route::middleware(['auth'])->prefix('inventory')->name('inventory.')->group(func
 
     Route::resource('products', ProductController::class)
         ->middleware('permission:'.Permissions::PRODUCTS_VIEW);
+
+    // Images belong to their product, so they hang off its URL. Changing them
+    // is editing the product, hence products.update rather than a permission
+    // of their own.
+    Route::post('products/{product}/images', [ProductImageController::class, 'store'])
+        ->middleware('permission:'.Permissions::PRODUCTS_UPDATE)
+        ->name('products.images.store');
+    Route::patch('products/{product}/images/reorder', [ProductImageController::class, 'reorder'])
+        ->middleware('permission:'.Permissions::PRODUCTS_UPDATE)
+        ->name('products.images.reorder');
+    Route::patch('products/{product}/images/{image}/primary', [ProductImageController::class, 'makePrimary'])
+        ->middleware('permission:'.Permissions::PRODUCTS_UPDATE)
+        ->name('products.images.primary');
+    Route::delete('products/{product}/images/{image}', [ProductImageController::class, 'destroy'])
+        ->middleware('permission:'.Permissions::PRODUCTS_UPDATE)
+        ->name('products.images.destroy');
 
     Route::get('stock', [InventoryController::class, 'index'])
         ->middleware('permission:'.Permissions::INVENTORY_VIEW)

@@ -3,6 +3,7 @@
 namespace Modules\Inventory\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
@@ -22,6 +23,8 @@ class StoreProductRequest extends FormRequest
      */
     public function rules(): array
     {
+        $images = (array) config('files.images');
+
         return [
             'name' => ['required', 'string', 'max:255'],
             'slug' => ['nullable', 'string', 'max:255', Rule::unique('products', 'slug')->whereNull('deleted_at')],
@@ -35,6 +38,16 @@ class StoreProductRequest extends FormRequest
             'selling_price' => ['nullable', 'numeric', 'min:0', 'max:99999999'],
             'low_stock_threshold' => ['nullable', 'integer', 'min:0'],
             'meta' => ['nullable', 'array'],
+
+            // A product can be created with its images in one submission; the
+            // limits are the same ones the dedicated upload endpoint enforces.
+            'images' => ['nullable', 'array', 'max:'.($images['max_per_product'] ?? 12)],
+            'images.*' => [
+                'file',
+                'image',
+                'mimes:'.implode(',', $images['mimes'] ?? ['jpg', 'png']),
+                'max:'.($images['max_kilobytes'] ?? 5120),
+            ],
 
             'variants' => ['nullable', 'array'],
             'variants.*.id' => ['nullable', 'integer', 'min:1'],
@@ -59,6 +72,16 @@ class StoreProductRequest extends FormRequest
             'suppliers.*.lead_time_days' => ['nullable', 'integer', 'min:0'],
             'suppliers.*.is_preferred' => ['nullable', 'boolean'],
         ];
+    }
+
+    /**
+     * The uploads, if any came with the form.
+     *
+     * @return array<int, UploadedFile>
+     */
+    public function images(): array
+    {
+        return array_values(array_filter((array) $this->file('images', [])));
     }
 
     protected function prepareForValidation(): void

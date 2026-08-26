@@ -14,11 +14,15 @@ use Modules\Inventory\Http\Requests\UpdateProductRequest;
 use Modules\Inventory\Models\Category;
 use Modules\Inventory\Models\Product;
 use Modules\Inventory\Models\Supplier;
+use Modules\Inventory\Services\ProductImageService;
 use Modules\Inventory\Services\ProductService;
 
 class ProductController extends Controller
 {
-    public function __construct(private ProductService $products) {}
+    public function __construct(
+        private ProductService $products,
+        private ProductImageService $images,
+    ) {}
 
     public function index(ListRequest $request): Response
     {
@@ -46,6 +50,11 @@ class ProductController extends Controller
 
         $product = $this->products->create($request->validated());
 
+        // Images need the product's id, so they are stored once it exists.
+        // The same service the edit screen uses, so ordering and the primary
+        // flag behave identically however a product was created.
+        $this->images->add($product, $request->images());
+
         return redirect()
             ->route('inventory.products.show', $product)
             ->with('success', 'Product created.');
@@ -62,6 +71,7 @@ class ProductController extends Controller
                 'variants',
                 'suppliers:id,company_name',
                 'inventoryItems',
+                'images',
             ]),
             'options' => $this->formOptions(),
         ]);
@@ -77,6 +87,7 @@ class ProductController extends Controller
                 'primarySupplier:id,company_name',
                 'variants',
                 'suppliers:id,company_name',
+                'images',
             ]),
             'options' => $this->formOptions(),
         ]);
