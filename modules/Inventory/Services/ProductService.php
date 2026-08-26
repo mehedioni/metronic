@@ -45,7 +45,15 @@ class ProductService
             ->search($filters['search'] ?? null)
             ->forSupplier($filters['supplier_id'] ?? null)
             ->when($filters['category_id'] ?? null, fn ($query, $category) => $query->where('category_id', $category))
-            ->when($filters['status'] ?? null, fn ($query, $status) => $query->where('status', $status))
+            ->when($filters['status'] ?? null, function ($query, $status) {
+                $val = strtolower((string) $status);
+                $map = [
+                    'live' => 'active',
+                    'draft' => 'inactive',
+                ];
+
+                return $query->where('status', $map[$val] ?? $val);
+            })
             ->when($filters['low_stock'] ?? false, fn ($query) => $query->lowStock())
             ->tap(fn ($query) => QuerySorter::apply(
                 $query,

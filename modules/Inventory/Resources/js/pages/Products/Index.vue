@@ -108,9 +108,25 @@ const { params, toggleSort } = useTableQuery({
 });
 
 const currentTab = computed({
-    get: () => (params.status as string) || 'all',
+    get: () => {
+        const s = (params.status as string) || '';
+        if (s === 'active' || s === 'Live' || s === 'live') return 'active';
+        if (s === 'inactive' || s === 'Draft' || s === 'draft') return 'inactive';
+        if (s === 'archived' || s === 'Archived') return 'archived';
+        return 'all';
+    },
     set: (val: string) => {
-        params.status = val === 'all' ? '' : val;
+        if (val === 'all') {
+            params.status = '';
+        } else if (val === 'Live' || val === 'active') {
+            params.status = 'active';
+        } else if (val === 'Draft' || val === 'inactive') {
+            params.status = 'inactive';
+        } else if (val === 'Archived' || val === 'archived') {
+            params.status = 'archived';
+        } else {
+            params.status = val;
+        }
     },
 });
 const filterMenuOpen = ref(false);
@@ -253,23 +269,13 @@ function setProductTab(tab: string) {
     currentTab.value = tab;
 }
 
-// Reactive filtering based on currentTab, search, categories, statuses, price
+// Reactive filtering based on search, categories, statuses, price
 const rows = computed(() => {
     const backendData = props.products?.data && props.products.data.length > 0
         ? props.products.data
         : [];
 
-    // An empty tab shows an empty tab. Substituting demo rows would make the
-    // catalogue look stocked when it is not.
     return backendData.filter((item) => {
-        // Tab Filter matching product-list.html 1:1
-        if (currentTab.value !== 'all') {
-            const st = getStatusLabel(item.status);
-            if (st !== currentTab.value && item.status !== currentTab.value) {
-                return false;
-            }
-        }
-
         // Search Filter
         if (params.search) {
             const q = params.search.toLowerCase();
@@ -434,13 +440,13 @@ function formatPrice(row: ProductRow): string {
                         <button
                             type="button"
                             class="shrink-0 inline-flex cursor-pointer items-center gap-2 rounded-md px-2.5 py-1.5 text-xs transition-colors"
-                            :class="currentTab === 'Live' ? 'bg-blue-50/60 font-semibold text-blue-600 dark:bg-blue-950/30 dark:text-blue-400' : 'font-medium text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white'"
-                            @click="setProductTab('Live')"
+                            :class="currentTab === 'active' ? 'bg-blue-50/60 font-semibold text-blue-600 dark:bg-blue-950/30 dark:text-blue-400' : 'font-medium text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white'"
+                            @click="setProductTab('active')"
                         >
                             Live
                             <span
                                 class="rounded-full px-1.5 py-0.5 text-2xs"
-                                :class="currentTab === 'Live' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 font-semibold' : 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400 font-medium'"
+                                :class="currentTab === 'active' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 font-semibold' : 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400 font-medium'"
                             >
                                 {{ tabCounts.active }}
                             </span>
@@ -449,13 +455,13 @@ function formatPrice(row: ProductRow): string {
                         <button
                             type="button"
                             class="shrink-0 inline-flex cursor-pointer items-center gap-2 rounded-md px-2.5 py-1.5 text-xs transition-colors"
-                            :class="currentTab === 'Draft' ? 'bg-blue-50/60 font-semibold text-blue-600 dark:bg-blue-950/30 dark:text-blue-400' : 'font-medium text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white'"
-                            @click="setProductTab('Draft')"
+                            :class="currentTab === 'inactive' ? 'bg-blue-50/60 font-semibold text-blue-600 dark:bg-blue-950/30 dark:text-blue-400' : 'font-medium text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white'"
+                            @click="setProductTab('inactive')"
                         >
                             Draft
                             <span
                                 class="rounded-full px-1.5 py-0.5 text-2xs"
-                                :class="currentTab === 'Draft' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 font-semibold' : 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400 font-medium'"
+                                :class="currentTab === 'inactive' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 font-semibold' : 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400 font-medium'"
                             >
                                 {{ tabCounts.inactive }}
                             </span>
@@ -464,13 +470,13 @@ function formatPrice(row: ProductRow): string {
                         <button
                             type="button"
                             class="shrink-0 inline-flex cursor-pointer items-center gap-2 rounded-md px-2.5 py-1.5 text-xs transition-colors"
-                            :class="currentTab === 'Archived' ? 'bg-blue-50/60 font-semibold text-blue-600 dark:bg-blue-950/30 dark:text-blue-400' : 'font-medium text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white'"
-                            @click="setProductTab('Archived')"
+                            :class="currentTab === 'archived' ? 'bg-blue-50/60 font-semibold text-blue-600 dark:bg-blue-950/30 dark:text-blue-400' : 'font-medium text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white'"
+                            @click="setProductTab('archived')"
                         >
                             Archived
                             <span
                                 class="rounded-full px-1.5 py-0.5 text-2xs"
-                                :class="currentTab === 'Archived' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 font-semibold' : 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400 font-medium'"
+                                :class="currentTab === 'archived' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 font-semibold' : 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400 font-medium'"
                             >
                                 {{ tabCounts.archived }}
                             </span>
