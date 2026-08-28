@@ -11,6 +11,7 @@ import TableToolbar from '@/components/TableToolbar.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
+import DateRangePicker from '@/components/ui/DateRangePicker.vue';
 import { Drawer } from '@/components/ui/drawer';
 import { Dropdown, DropdownItem } from '@/components/ui/dropdown';
 import { Input } from '@/components/ui/input';
@@ -252,17 +253,10 @@ function exportCurrent() {
                         </option>
                     </Select>
 
-                    <Input
-                        v-model="params.from"
-                        type="date"
-                        class="w-40"
-                        aria-label="From date"
-                    />
-                    <Input
-                        v-model="params.to"
-                        type="date"
-                        class="w-40"
-                        aria-label="To date"
+                    <DateRangePicker
+                        v-model:from="params.from"
+                        v-model:to="params.to"
+                        placeholder="Filter by date"
                     />
                 </template>
             </TableToolbar>
